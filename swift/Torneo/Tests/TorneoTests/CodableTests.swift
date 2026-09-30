@@ -3,7 +3,7 @@ import Testing
 @testable import Torneo
 
 struct CodableTests {
-    // El JSON que escribió la versión Kotlin (`./gradlew :torneo:run --args=kotlin`).
+    // El JSON que escribió la versión Kotlin (`./gradlew :torneo:jvmRun --args=kotlin`).
     private func jsonDeKotlin() throws -> Data {
         let url = try #require(Bundle.module.url(forResource: "torneo", withExtension: "json", subdirectory: "Fixtures"))
         return try Data(contentsOf: url)
