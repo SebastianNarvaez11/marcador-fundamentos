@@ -1,6 +1,6 @@
 // Una fila de la tabla de posiciones. Un struct con propiedades guardadas y una
 // CALCULADA (`diferencia`): no ocupa espacio, se evalúa cada vez que se lee.
-public struct FilaDePosicion: Equatable {
+public struct FilaDePosicion: Equatable, Sendable {
     public let equipo: Equipo
     public let jugados: Int
     public let ganados: Int

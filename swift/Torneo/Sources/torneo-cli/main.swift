@@ -267,3 +267,12 @@ await withTaskGroup(of: Void.self) { grupo in
 print("Marcador tras 1000 goles de cada equipo a la vez: \(await seguro.marcador)")
 let enDirecto = PartidoEnVivo(guion: Ejemplo.rayoContraToros, msPorMinuto: 2)
 print("Marcador final del partido en vivo: \(await enDirecto.jugar())")
+
+print("== f65: el estado de pantalla vive en el actor principal ==")
+// El código de nivel superior de `main.swift` ya corre en el actor principal en
+// Swift 6, así que puede usar una clase `@MainActor` sin `await` en cada línea.
+let seguimiento = SeguimientoEnPantalla()
+seguimiento.seguir(PartidoEnVivo(guion: Ejemplo.rayoContraToros, msPorMinuto: 2))
+await seguimiento.esperarAlFinal()
+print(seguimiento.titular(seguimiento.marcador))
+print("Narración: \(seguimiento.narracion.count) líneas; primera: \(seguimiento.narracion.first ?? "-")")

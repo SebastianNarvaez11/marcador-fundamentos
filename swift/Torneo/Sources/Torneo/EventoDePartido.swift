@@ -1,7 +1,7 @@
 // `enum` con VALORES BRUTOS (raw values): cada caso vale un texto fijo. Aquí
 // coinciden con lo que escribe la versión Kotlin en el JSON («AMARILLA»), y eso
 // hará que en f59 se lea sin código extra. `CaseIterable` da `allCases`.
-public enum ColorDeTarjeta: String, CaseIterable, Codable {
+public enum ColorDeTarjeta: String, CaseIterable, Codable, Sendable {
     case amarilla = "AMARILLA"
     case roja = "ROJA"
 
@@ -20,7 +20,7 @@ public enum ColorDeTarjeta: String, CaseIterable, Codable {
 //
 // El compilador sabe cuáles son TODOS los casos: un `switch` sin `default` que
 // olvide uno no compila (en Kotlin, el `when` sin `else`).
-public enum EventoDePartido: Equatable {
+public enum EventoDePartido: Equatable, Sendable {
     case gol(minuto: Int, jugador: Jugador, equipo: Equipo)
     case tarjeta(minuto: Int, jugador: Jugador, color: ColorDeTarjeta)
     case cambio(minuto: Int, sale: Jugador, entra: Jugador)
@@ -50,7 +50,7 @@ public func describir(_ evento: EventoDePartido) -> String {
 
 // Un partido acaba en victoria (de alguien) o en empate. `.victoria` lleva
 // datos; `.empate` no necesita ninguno (el `data object` de Kotlin).
-public enum Resultado: Equatable {
+public enum Resultado: Equatable, Sendable {
     case victoria(ganador: Equipo, perdedor: Equipo)
     case empate
 

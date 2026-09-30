@@ -1,12 +1,12 @@
 // Una closure guardada en una constante, con su tipo función explícito.
 // Con un solo parámetro, si no se le pone nombre se llama `$0` (el `it` de Kotlin).
 // El cuerpo es una sola expresión: no hace falta `return`.
-public let esGol: (EventoDePartido) -> Bool = {
+public let esGol: @Sendable (EventoDePartido) -> Bool = {
     if case .gol = $0 { true } else { false }
 }
 
 // Con nombres de parámetro y varios parámetros: `evento, limite in …`.
-public let esDelMinutoOAntes: (EventoDePartido, Int) -> Bool = { evento, limite in
+public let esDelMinutoOAntes: @Sendable (EventoDePartido, Int) -> Bool = { evento, limite in
     evento.minuto <= limite
 }
 

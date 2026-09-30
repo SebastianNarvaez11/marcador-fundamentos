@@ -1,6 +1,6 @@
 // Sigue siendo un valor. Desde f53 el marcador ya no se guarda: se DEDUCE de los
 // eventos, así que no puede contradecirlos (como en Kotlin f06).
-public struct Partido: Equatable {
+public struct Partido: Equatable, Sendable {
     public let local: Equipo
     public let visitante: Equipo
     public private(set) var eventos: [EventoDePartido]

@@ -6,7 +6,9 @@ import Foundation
 //
 // Es un `struct` (tipo de valor); en f52 se cuenta qué cambia frente a `class`.
 // `Equatable` y `Hashable` los sintetiza el compilador (en Kotlin, `data class`).
-public struct Jugador: Equatable, Hashable {
+// `Sendable`: se puede pasar entre tareas sin riesgo (Swift 6, f65). Un struct con
+// solo propiedades `let` de tipos Sendable lo es; en un tipo `public` hay que decirlo.
+public struct Jugador: Equatable, Hashable, Sendable {
     public let nombre: String
     public let dorsal: Int?
 

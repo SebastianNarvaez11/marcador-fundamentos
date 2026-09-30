@@ -10,7 +10,7 @@ public final class PartidoEnVivo {
     public let msPorMinuto: Int
 
     // Se llama cuando termina la emisión de `eventos` (por final o por cancelación).
-    private let alTerminarLaEmision: (() -> Void)?
+    private let alTerminarLaEmision: (@Sendable () -> Void)?
 
     // Se llama en `deinit`, es decir, justo cuando ARC libera el objeto. Sirve
     // para que las pruebas (y la consola) vean que de verdad se liberó.
@@ -26,7 +26,7 @@ public final class PartidoEnVivo {
     public init(
         guion: Partido,
         msPorMinuto: Int = 10,
-        alTerminarLaEmision: (() -> Void)? = nil,
+        alTerminarLaEmision: (@Sendable () -> Void)? = nil,
         alLiberarse: (() -> Void)? = nil
     ) {
         self.guion = guion

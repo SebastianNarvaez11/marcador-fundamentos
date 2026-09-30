@@ -1,5 +1,14 @@
+import Synchronization
 import Testing
 @testable import Torneo
+
+// Una bandera que se puede subir desde otra tarea. Un `var` capturado no vale en una
+// closure `@Sendable` (Swift 6): hace falta algo que proteja el valor.
+private final class Bandera: Sendable {
+    private let valor = Mutex(false)
+    func subir() { valor.withLock { $0 = true } }
+    var estaLevantada: Bool { valor.withLock { $0 } }
+}
 
 struct EventosEnVivoTests {
     private func recoger<S: AsyncSequence>(_ secuencia: S) async throws -> [S.Element] {
@@ -41,8 +50,8 @@ struct EventosEnVivoTests {
     }
 
     @Test func primerGolCancelaElResto() async {
-        var terminado = false
-        let enVivo = PartidoEnVivo(guion: Ejemplo.rayoContraToros, msPorMinuto: 5, alTerminarLaEmision: { terminado = true })
+        let terminado = Bandera()
+        let enVivo = PartidoEnVivo(guion: Ejemplo.rayoContraToros, msPorMinuto: 5, alTerminarLaEmision: { terminado.subir() })
         let reloj = ContinuousClock()
         let inicio = reloj.now
         let gol = await enVivo.primerGol()
@@ -50,13 +59,13 @@ struct EventosEnVivoTests {
         #expect(gol == Ejemplo.rayoContraToros.eventos[0])
         #expect(ms < 300)   // el partido entero son ~450 ms
         // El productor se cancela: `onTermination` corre casi al instante.
-        for _ in 0..<50 where !terminado { try? await Task.sleep(for: .milliseconds(10)) }
-        #expect(terminado)
+        for _ in 0..<50 where !terminado.estaLevantada { try? await Task.sleep(for: .milliseconds(10)) }
+        #expect(terminado.estaLevantada)
     }
 
     @Test func cancelarAlConsumidorCancelaAlProductor() async {
-        var terminado = false
-        let enVivo = PartidoEnVivo(guion: Ejemplo.rayoContraToros, msPorMinuto: 10, alTerminarLaEmision: { terminado = true })
+        let terminado = Bandera()
+        let enVivo = PartidoEnVivo(guion: Ejemplo.rayoContraToros, msPorMinuto: 10, alTerminarLaEmision: { terminado.subir() })
         let consumidor = Task { () -> Int in
             var vistos = 0
             for await _ in enVivo.eventos { vistos += 1 }
@@ -66,8 +75,8 @@ struct EventosEnVivoTests {
         consumidor.cancel()
         let vistos = await consumidor.value
         #expect(vistos < 5)
-        for _ in 0..<50 where !terminado { try? await Task.sleep(for: .milliseconds(10)) }
-        #expect(terminado)
+        for _ in 0..<50 where !terminado.estaLevantada { try? await Task.sleep(for: .milliseconds(10)) }
+        #expect(terminado.estaLevantada)
     }
 
     @Test func losMarcadoresEmpiezanEnCeroYSoloCambianConUnGol() async throws {

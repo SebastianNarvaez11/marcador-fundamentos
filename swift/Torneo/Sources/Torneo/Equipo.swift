@@ -1,16 +1,22 @@
+import Synchronization
+
 // `class`: tipo de REFERENCIA. Dos variables pueden apuntar al MISMO equipo, y
 // lo que cambie una lo ve la otra. `final` = nadie hereda (en Kotlin las clases
 // ya son finales por defecto; en Swift hay que decirlo, y además es más rápido).
 //
 // Un `struct` habría copiado el equipo en cada asignación. Un equipo tiene
 // IDENTIDAD (el Rayo FC es ese equipo, no uno «igual»), así que es una clase.
-public final class Equipo {
+public final class Equipo: Sendable {
     public let nombre: String
     public let plantilla: [Jugador]
 
-    // `private(set)`: cualquiera lee el capitán, pero solo esta clase lo cambia
-    // (el `private set` de Kotlin).
-    public private(set) var capitan: Jugador?
+    // Cualquiera lee el capitán, pero solo esta clase lo cambia (el `private set`
+    // de Kotlin). Hasta f64 era un `private(set) var`; para que `Equipo` pueda ser
+    // `Sendable` (f65) el único dato que cambia vive dentro de un `Mutex`, un
+    // cerrojo: solo una tarea a la vez ejecuta el bloque de `withLock`.
+    private let capitanGuardado = Mutex<Jugador?>(nil)
+
+    public var capitan: Jugador? { capitanGuardado.withLock { $0 } }
 
     // `init?` es un inicializador que puede FALLAR: devuelve `Equipo?`, nil si
     // los datos no valen. Es el `require` de Kotlin, pero sin excepción.
@@ -24,14 +30,13 @@ public final class Equipo {
         // Los arrays son tipos de VALOR: esta asignación ya es una copia, y la
         // copia defensiva de Kotlin (`toList()`) aquí no hace falta.
         self.plantilla = plantilla
-        self.capitan = nil
     }
 
     // Devuelve `false` si el jugador no es de este equipo (en Kotlin, `require`).
     @discardableResult
     public func nombrarCapitan(_ jugador: Jugador) -> Bool {
         guard plantilla.contains(jugador) else { return false }
-        capitan = jugador
+        capitanGuardado.withLock { $0 = jugador }
         return true
     }
 

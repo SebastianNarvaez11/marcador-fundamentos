@@ -1,7 +1,7 @@
 // Un protocolo dice QUÉ se puede hacer, sin decir cómo (la `interface` de
 // Kotlin). Quien lo adopte rellena lo que falta. Un protocolo lo pueden adoptar
 // structs, enums y clases; una interfaz de Kotlin solo clases y objetos.
-public protocol Reglamento {
+public protocol Reglamento: Sendable {
     var puntosPorVictoria: Int { get }
     var puntosPorEmpate: Int { get }
 

@@ -4,7 +4,12 @@ import Testing
 // LO QUE NO HAY QUE HACER: una clase normal compartida entre tareas. `golLocal()`
 // lee el marcador, suma uno y lo escribe: tres pasos, y otra tarea puede meterse
 // entre dos de ellos. Vive solo en las pruebas.
-private final class MarcadorInseguro {
+//
+// En modo Swift 6 esto ni compila: `grupo.addTask { inseguro.golLocal() }` da
+// «passing closure as a 'sending' parameter risks causing data races…». Con
+// `@unchecked Sendable` le decimos al compilador «cállate, yo me hago responsable»
+// y el bug vuelve a existir, sin aviso: eso es justo lo que no hay que hacer.
+private final class MarcadorInseguro: @unchecked Sendable {
     var marcador = Marcador(local: 0, visitante: 0)
     func golLocal() {
         marcador = Marcador(local: marcador.local + 1, visitante: marcador.visitante)

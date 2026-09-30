@@ -68,7 +68,7 @@ public func jugarJornada(
     return try await (a, b)
 }
 
-public struct Estadisticas: Equatable {
+public struct Estadisticas: Equatable, Sendable {
     public let goles: Int
     public let tarjetas: Int
     public let cambios: Int
