@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -18,6 +20,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Marcador
 import com.sebastiannarvaez.marcador.torneo.Partido
-import com.sebastiannarvaez.marcador.torneo.marcador
 
 // f32 · PRIMEROS PASOS CON COMPOSE
 //
@@ -65,10 +70,20 @@ fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
     ) { paddingValues ->
         // SIEMPRE se usa paddingValues (si no, el contenido queda tapado por las barras).
         Column(
-            Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
+            Modifier.fillMaxSize().padding(paddingValues).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            TarjetaDePartido(partido, partido.marcador())
+            // f33: los goles ya no vienen del guion: son ESTADO. Cada pulsacion escribe en
+            // el estado y Compose repinta la tarjeta. Con `remember` a proposito: gira
+            // el movil y el marcador vuelve a 0-0 (mira ComparacionDeEstado).
+            var golesLocal by remember { mutableIntStateOf(0) }
+            var golesVisitante by remember { mutableIntStateOf(0) }
+            TarjetaDePartido(partido, Marcador(golesLocal, golesVisitante))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { golesLocal++ }) { Text("Gol ${partido.local.nombre}") }
+                Button(onClick = { golesVisitante++ }) { Text("Gol ${partido.visitante.nombre}") }
+            }
+            ComparacionDeEstado()
             OrdenDeLosModifiers()
             InsigniaSobreEscudo()
         }
