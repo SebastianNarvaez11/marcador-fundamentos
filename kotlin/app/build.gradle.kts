@@ -28,6 +28,11 @@ dependencies {
     // El modulo de dominio: Partido, Torneo, PartidoEnVivo...
     implementation(project(":torneo"))
     implementation(libs.androidx.activity.compose)
+    // lifecycleScope y repeatOnLifecycle: corrutinas atadas al ciclo de vida.
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    // La Activity usa runBlocking, Dispatchers y Flow: las corrutinas que :torneo
+    // solo expone como `implementation` no llegan a :app por transitividad.
+    implementation(libs.kotlinx.coroutines.core)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
