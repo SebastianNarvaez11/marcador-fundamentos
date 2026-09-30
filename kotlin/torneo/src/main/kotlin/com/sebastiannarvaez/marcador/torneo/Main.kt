@@ -67,15 +67,14 @@ fun main() {
     println("Minutos de gol de Ana: ${alFinal.minutosDeGolDe(ana)}")
     repetir(2) { vuelta -> println("Vuelta $vuelta") }
 
-    // Colecciones: una jornada completa, la tabla y los goleadores.
+    // Colecciones: una jornada completa en un torneo, la tabla y los goleadores.
     val lobos = Equipo("Lobos", listOf(Jugador("Pedro", 4)))
-    val jornada = listOf(
-        alFinal,
-        Partido(toros, lobos).registrar(Gol(20, ivan, toros)),
-        Partido(lobos, rayo).registrar(Gol(40, ana, rayo)),
-    )
+    val torneo = Torneo(nombreDelTorneo, listOf(rayo, toros, lobos))
+    torneo.agregar(alFinal)
+    torneo.agregar(Partido(toros, lobos).registrar(Gol(20, ivan, toros)))
+    torneo.agregar(Partido(lobos, rayo).registrar(Gol(40, ana, rayo)))
     println("Pos Equipo  PJ  G  E  P  GF GC  DG Pts")
-    tablaDePosiciones(jornada).forEachIndexed { indice, fila ->
+    torneo.tablaDePosiciones().forEachIndexed { indice, fila ->
         println(
             "%2d  %-7s %2d %2d %2d %2d %3d %2d %3d %3d".format(
                 indice + 1, fila.equipo.nombre, fila.jugados, fila.ganados, fila.empatados,
@@ -83,5 +82,8 @@ fun main() {
             ),
         )
     }
-    tablaDeGoleadores(jornada).forEach { (jugador, goles) -> println("${jugador.nombre}: $goles") }
+    torneo.goleadores().forEach { (jugador, goles) -> println("${jugador.nombre}: $goles") }
+
+    // Inmutabilidad: lo que devuelve el torneo es una copia.
+    println("Partidos en el torneo: ${torneo.partidos.size}")
 }
