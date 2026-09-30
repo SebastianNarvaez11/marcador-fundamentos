@@ -24,7 +24,7 @@ private val CreationExtras.contenedor: AppContainer
 object Fabricas {
     val partido = viewModelFactory {
         initializer {
-            PartidoViewModel(createSavedStateHandle(), contenedor.partidosRepository, contenedor.registrarGol)
+            PartidoViewModel(createSavedStateHandle(), contenedor.partidosRepository, contenedor.registrarGol, contenedor.preferenciasRepository)
         }
     }
 

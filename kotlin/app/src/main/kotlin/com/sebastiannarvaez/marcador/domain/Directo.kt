@@ -34,12 +34,16 @@ import kotlinx.coroutines.launch
 //
 // Antes de f42 el ViewModel hacia todo esto (reloj, avisos, goles de los botones). Ahora
 // el ViewModel solo traduce: esto no depende de Android y por eso se puede probar en la JVM.
+//
+// f46: la DURACION viene de las preferencias (90 o 60). Un partido de 60 minutos ignora los
+// eventos del guion posteriores al 60 y su reloj termina ahi; :torneo no se toca.
 class Directo(
     val partidoId: Int,
-    val partido: Partido,
+    guion: Partido,
     private val msPorMinuto: Long,
-    private val minutosDelPartido: Int = 90,
+    val minutosDelPartido: Int = 90,
 ) {
+    val partido: Partido = guion.copy(eventos = guion.eventos.filter { it.minuto <= minutosDelPartido })
     // Los goles que va marcando el guion (los aplica el bucle de `iniciar`).
     private val golesEnVivo = MutableStateFlow(Marcador(0, 0))
     private val golesAMano = MutableStateFlow(Marcador(0, 0))

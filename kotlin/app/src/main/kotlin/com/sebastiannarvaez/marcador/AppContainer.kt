@@ -1,9 +1,11 @@
 package com.sebastiannarvaez.marcador
 
 import android.content.Context
+import com.sebastiannarvaez.marcador.data.PreferenciasDataStore
 import com.sebastiannarvaez.marcador.data.room.PartidosRepositoryRoom
 import com.sebastiannarvaez.marcador.data.room.crearBaseDeDatos
 import com.sebastiannarvaez.marcador.domain.PartidosRepository
+import com.sebastiannarvaez.marcador.domain.PreferenciasRepository
 import com.sebastiannarvaez.marcador.domain.RegistrarGol
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,6 +40,9 @@ class AppContainer(private val contexto: Context) {
 
     // f45: antes `PartidosRepositoryEnMemoria()`. Cambia UNA linea y nada mas.
     val partidosRepository: PartidosRepository by lazy { PartidosRepositoryRoom(baseDeDatos.partidoDao(), alcance) }
+
+    // f46: los ajustes, en DataStore.
+    val preferenciasRepository: PreferenciasRepository by lazy { PreferenciasDataStore(contexto) }
 
     val registrarGol: RegistrarGol by lazy { RegistrarGol(partidosRepository) }
 }

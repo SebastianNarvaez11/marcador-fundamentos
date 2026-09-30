@@ -130,12 +130,13 @@ fun PanelDelCronometro(
     ultimoAviso: String,
     pausas: Int,
     onEmpezar: () -> Unit,
+    duracion: Int = MINUTOS_DEL_PARTIDO,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Minuto $minuto'", style = MaterialTheme.typography.headlineMedium)
         Button(onClick = onEmpezar, enabled = !corriendo && minuto == 0) {
-            Text(if (minuto >= MINUTOS_DEL_PARTIDO) "Partido terminado" else if (corriendo) "En juego" else "Empezar partido")
+            Text(if (minuto >= duracion) "Partido terminado" else if (corriendo) "En juego" else "Empezar partido")
         }
         Text("Ultimo aviso (cada 15'): $ultimoAviso")
         Text("Veces que la pantalla paso a segundo plano: $pausas")

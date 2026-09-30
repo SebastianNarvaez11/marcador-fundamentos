@@ -30,6 +30,7 @@ sealed interface MarcadorUiState {
         val minuto: Int,
         val corriendo: Boolean,
         val ultimoAviso: String,
+        val duracion: Int = 90,
     ) : MarcadorUiState
 
     data class Error(val mensaje: String) : MarcadorUiState
@@ -42,4 +43,5 @@ sealed interface MarcadorEvento {
     data object Empezar : MarcadorEvento
     data class Gol(val lado: Lado) : MarcadorEvento
     data class Elegir(val partidoId: Int) : MarcadorEvento
+    data class CambiarDuracion(val minutos: Int) : MarcadorEvento
 }

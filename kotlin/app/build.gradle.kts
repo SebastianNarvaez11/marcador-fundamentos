@@ -79,6 +79,8 @@ room3 {
 }
 
 dependencies {
+    // f46: DataStore Preferences: pares clave-valor pequenos, asincronos, con Flow.
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)
     // LA LINEA CLAVE: `ksp(...)` en un modulo com.android.application. El procesador de
     // Room lee las anotaciones al compilar y GENERA MarcadorDatabase_Impl y PartidoDao_Impl.
