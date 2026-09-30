@@ -1,31 +1,37 @@
-import Combine   // `ObservableObject` y `@Published` son de Combine, no de Foundation
 import Foundation
+import Observation
 import Torneo
 
 // f72 · EL MODELO DEL PARTIDO EN DIRECTO, como `ObservableObject`
+// f73 · migrado a `@Observable`
 //
 // Es el `Directo` de Kotlin: cuenta los minutos, aplica los goles del guion y suma los goles
 // «a mano» de los botones. La pantalla no cuenta nada: lee esto y lo pinta.
 //
-// `ObservableObject` + `@Published`: cada vez que cambia una propiedad publicada, SwiftUI
-// recalcula el `body` de las vistas que observan el objeto. (En f73 esto se sustituye por
-// `@Observable`, que es más fino y más corto.)
+// Antes (f72): `final class X: ObservableObject` con `var minuto`. Cada cambio de CUALQUIER
+// propiedad publicada avisaba a todas las vistas que observaban el objeto, lean lo que lean.
+//
+// Ahora (f73): `@Observable`. SwiftUI apunta qué propiedades LEE cada `body` y solo lo recalcula si
+// cambia una de ésas: una vista que solo enseña `minuto` no se redibuja cuando cambia `ultimoAviso`.
+// Sin `@Published`, sin `import Combine`, y los `private(set)` siguen valiendo.
 //
 // UN OBJETO ASÍ TIENE VIDA PROPIA: es una clase, alguien lo crea y alguien lo mantiene vivo.
 // Quién lo mantiene vivo es EXACTAMENTE la diferencia entre `@StateObject` y `@ObservedObject`
 // (mira `PartidoEnDirectoView`).
-final class PartidoEnVivoModelo: ObservableObject {
+@Observable
+final class PartidoEnVivoModelo {
     let partido: Partido
-    private let msPorMinuto: Int
+    @ObservationIgnored private let msPorMinuto: Int
 
-    @Published private(set) var minuto = 0
-    @Published private(set) var corriendo = false
-    @Published private(set) var ultimoAviso = "ninguno"
+    private(set) var minuto = 0
+    private(set) var corriendo = false
+    private(set) var ultimoAviso = "ninguno"
     // Los goles que va marcando el guion y los que se ponen «a mano» con los botones.
-    @Published private(set) var golesEnVivo = Marcador(local: 0, visitante: 0)
-    @Published private(set) var golesAMano = Marcador(local: 0, visitante: 0)
+    private(set) var golesEnVivo = Marcador(local: 0, visitante: 0)
+    private(set) var golesAMano = Marcador(local: 0, visitante: 0)
 
-    private var tarea: Task<Void, Never>?
+    // `@ObservationIgnored`: esta propiedad no la pinta nadie, así que no hace falta observarla.
+    @ObservationIgnored private var tarea: Task<Void, Never>?
 
     init(partido: Partido, msPorMinuto: Int = Configuracion.msPorMinuto) {
         self.partido = partido

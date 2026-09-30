@@ -1,3 +1,5 @@
+import Observation
+import Synchronization
 import Testing
 import Torneo
 @testable import MarcadorApp
@@ -25,5 +27,30 @@ struct MarcadorAppTests {
         #expect(partidos.count == 18)
         #expect(Set(partidos.map(\.id)).count == 18)
         #expect(partidos.first?.id == 1)
+    }
+
+    // f73: `@Observable` avisa cuando cambia lo que se LEYÓ dentro de `withObservationTracking`.
+    @Test func observableAvisaSoloDeLoQueSeLee() {
+        let ajustes = AjustesModelo()
+        // `Mutex`: el `onChange` es @Sendable y no puede mutar una `var` capturada.
+        let avisos = Mutex(0)
+        withObservationTracking {
+            _ = ajustes.duracion
+        } onChange: {
+            avisos.withLock { $0 += 1 }
+        }
+        ajustes.duracion = 60
+        #expect(avisos.withLock { $0 } == 1)
+        #expect(ajustes.duracion == 60)
+    }
+
+    @Test func unModeloSinArrancarSeLibera() {
+        weak var referencia: PartidoEnVivoModelo?
+        do {
+            let modelo = PartidoEnVivoModelo(partido: Ejemplo.rayoContraToros, msPorMinuto: 1)
+            referencia = modelo
+            #expect(referencia != nil)
+        }
+        #expect(referencia == nil)
     }
 }

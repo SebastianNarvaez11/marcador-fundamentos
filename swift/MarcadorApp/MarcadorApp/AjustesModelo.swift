@@ -1,15 +1,18 @@
-import Combine   // `ObservableObject` y `@Published` son de Combine, no de Foundation
 import Foundation
+import Observation
 
-// Los ajustes del usuario, compartidos por toda la app. Es un `ObservableObject`: una CLASE que
-// avisa a SwiftUI cuando cambia alguna propiedad `@Published`.
+// Los ajustes del usuario, compartidos por toda la app.
 //
-// Se inyecta UNA vez en la raíz con `.environmentObject(ajustes)` y cualquier vista descendiente
-// lo lee con `@EnvironmentObject`, sin pasarlo de padre a hijo por el constructor (es la
-// versión de SwiftUI de un `CompositionLocal` de Compose, o de un objeto que Hilt entrega).
-final class AjustesModelo: ObservableObject {
+// f73 · `@Observable` (iOS 17) sustituye a `ObservableObject` + `@Published`. Es una MACRO: al
+// escribirla sobre la clase, el compilador reescribe cada propiedad guardada para que registre
+// quién la lee y avise solo a esas vistas cuando cambie. Ya no hay `@Published` ni `import Combine`.
+//
+// Se inyecta UNA vez en la raíz con `.environment(ajustes)` (antes, `.environmentObject`) y cualquier
+// vista descendiente lo lee con `@Environment(AjustesModelo.self)` (antes, `@EnvironmentObject`).
+@Observable
+final class AjustesModelo {
     static let duraciones = [90, 60]
 
     // 90 o 60 minutos. En f77 pasará a guardarse en el disco (`@AppStorage`).
-    @Published var duracion = 90
+    var duracion = 90
 }

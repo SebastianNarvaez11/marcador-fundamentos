@@ -2,6 +2,7 @@ import SwiftUI
 import Torneo
 
 // f72 · @StateObject FRENTE A @ObservedObject FRENTE A @EnvironmentObject
+// f73 · @State, @Bindable Y @Environment (con `@Observable`)
 //
 // Los tres sirven para que una vista use un `ObservableObject`. Cambia QUIÉN ES EL DUEÑO:
 //
@@ -22,24 +23,44 @@ import Torneo
 // Con `@ObservedObject`, cada recreación ejecuta `init` y fabrica un modelo NUEVO: el minuto
 // vuelve a 0, el marcador a 0-0 y el partido se «reinicia» sin que nadie lo pida. (El modelo
 // viejo se queda huérfano; su bucle sigue corriendo y nadie lo ve.)
+//
+// CON @Observable (f73) DESAPARECE LA TRIPLETA:
+//
+//     antes (ObservableObject)     ahora (@Observable)
+//     @StateObject var m           @State var m              la vista es dueña (crea y conserva)
+//     @ObservedObject var m        var m                     la vista solo mira (a secas)
+//     @EnvironmentObject var m     @Environment(M.self) var m
+//     $m.propiedad                 @Bindable var m → $m.propiedad
+//
+// Sin `@ObservedObject`, el bug de f72 ya no tiene dónde esconderse: una propiedad a secas que
+// se crea en el `init` sigue recreándose. `@State` es lo que conserva el objeto.
+//
+// MATIZ: `State(wrappedValue:)` NO es un autoclosure (el `StateObject` de f72 sí lo era). Cada
+// recreación de la vista ejecuta `PartidoEnVivoModelo(…)` y SwiftUI tira el resultado; solo se
+// queda el de la primera vez. Se ve en el registro: «CREADO» sale una vez por cada redibujado del
+// padre. Como el modelo es barato, no importa; si no lo fuera, se crearía dentro del `.task` (f74).
 struct PartidoEnDirectoView: View {
-    // ARREGLO: `@StateObject`. Y como el valor inicial depende de un parámetro, se crea en el
-    // `init` con `StateObject(wrappedValue:)`, que recibe el objeto en un autoclosure: SwiftUI solo
-    // lo evalúa la PRIMERA vez que se monta la vista; en las recreaciones lo ignora.
-    @StateObject private var modelo: PartidoEnVivoModelo
+    // Dueña del modelo: `@State`. Como el valor inicial depende de un parámetro, se crea en el
+    // `init` con `State(wrappedValue:)`. SwiftUI se queda con el de la PRIMERA vez y conserva ese
+    // aunque la vista se recree.
+    @State private var modelo: PartidoEnVivoModelo
 
-    // Este NO lo crea esta vista: lo puso la raíz de la app. Por eso es @EnvironmentObject.
-    @EnvironmentObject private var ajustes: AjustesModelo
+    // Este NO lo crea esta vista: lo puso la raíz de la app con `.environment(ajustes)`.
+    // Se recoge por TIPO: `AjustesModelo.self`. Si nadie lo puso, la app se detiene, igual que antes.
+    @Environment(AjustesModelo.self) private var ajustes
 
     // Estado propio de la pantalla: cuántas veces pasó a segundo plano (`pausas` en Kotlin).
     @State private var pausas = 0
     @Environment(\.scenePhase) private var fase
 
     init(partido: Partido) {
-        _modelo = StateObject(wrappedValue: PartidoEnVivoModelo(partido: partido))
+        _modelo = State(wrappedValue: PartidoEnVivoModelo(partido: partido))
     }
 
     var body: some View {
+        // `@Bindable` da `$ajustes.duracion` (un Binding) a un objeto `@Observable` que NO es un
+        // @State ni viene con `$`. Se declara aquí, dentro del body, cuando hace falta el binding.
+        @Bindable var ajustes = ajustes
         ScrollView {
             VStack(spacing: 24) {
                 TarjetaDePartido(partido: modelo.partido, marcador: modelo.marcador)
@@ -61,10 +82,10 @@ struct PartidoEnDirectoView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // El @EnvironmentObject en acción: la duración viene de los ajustes de la raíz.
+                // El @Environment en acción: la duración viene de los ajustes de la raíz.
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Duración del partido")
-                    // `$ajustes.duracion`: el `$` de un @EnvironmentObject da un Binding a su propiedad.
+                    // `$ajustes.duracion`: el `$` de un `@Bindable` da un Binding a su propiedad.
                     Picker("Duración", selection: $ajustes.duracion) {
                         ForEach(AjustesModelo.duraciones, id: \.self) { minutos in
                             Text("\(minutos) min").tag(minutos)
