@@ -66,7 +66,25 @@ fun main(args: Array<String>) {
 
         println("== f19: un partido que falla no tumba al otro ==")
         demoErrores()
+
+        println("== f20: un Flow frío, la narración del partido ==")
+        demoFlowFrio()
     }
+}
+
+suspend fun demoFlowFrio() {
+    val enVivo = PartidoEnVivo(Ejemplo.rayoContraToros)
+    // Aún no ha pasado nada: crear el Flow no arranca el partido.
+    val narracion = enVivo.narracion()
+    println("Flow creado; nada ha corrido todavía")
+    narracion.collect { println("  $it") }
+
+    // Cada collect es un partido nuevo: el frío se repite entero.
+    val ms = measureTimeMillis { enVivo.eventos().collect { } }
+    println("Segundo collect: otro partido completo ($ms ms)")
+
+    val gol = enVivo.primerGol()
+    println("Primer gol: ${describir(gol)} (el resto del partido se canceló)")
 }
 
 suspend fun demoErrores() {
