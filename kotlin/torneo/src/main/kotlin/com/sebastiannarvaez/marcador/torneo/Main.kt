@@ -76,7 +76,10 @@ fun main() {
         agregar(Partido(lobos, rayo).registrar(Gol(40, ana, rayo)))
     }
     println(torneo.tablaComoTexto())
-    torneo.goleadores().forEach { (jugador, goles) -> println("${jugador.etiqueta()}: $goles") }
+    val goleadores = torneo.goleadores()
+    for (jugador in goleadores) {
+        println("${goleadores.puesto(jugador)}. ${jugador.etiqueta()}: ${goleadores.puntosDe(jugador)}")
+    }
     println(resumenDeEquipo(rayo))
     println("Capitán de Toros: ${toros.capitanONinguno}")
 

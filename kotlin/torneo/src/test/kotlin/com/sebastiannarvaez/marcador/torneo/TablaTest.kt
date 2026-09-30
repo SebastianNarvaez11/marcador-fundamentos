@@ -67,10 +67,8 @@ class TablaTest {
 
     @Test
     fun goleadoresOrdenadosDeMasAMenos() {
-        val tabla = partidos.goleadores()
-        assertEquals(
-            listOf(ana to 3, marta to 2, luis to 1, Jugador("Pedro", 4) to 1),
-            tabla,
-        )
+        val ranking = partidos.goleadores()
+        assertEquals(listOf(ana, marta, luis, Jugador("Pedro", 4)), ranking.ordenados)
+        assertEquals(listOf(3, 2, 1, 1), ranking.map { ranking.puntosDe(it) })
     }
 }

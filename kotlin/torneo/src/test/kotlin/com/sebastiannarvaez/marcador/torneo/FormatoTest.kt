@@ -27,7 +27,7 @@ class FormatoTest {
     fun extensionSobreListaDePartidos() {
         val partidos = listOf(Partido(rayo, toros).registrar(Gol(1, ana, rayo)))
         assertEquals("Rayo", partidos.tablaDePosiciones().first().equipo.nombre)
-        assertEquals(listOf(ana to 1), partidos.goleadores())
+        assertEquals(listOf(ana), partidos.goleadores().ordenados)
     }
 
     @Test

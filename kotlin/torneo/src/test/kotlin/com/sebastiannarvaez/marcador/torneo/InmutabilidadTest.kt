@@ -75,6 +75,6 @@ class InmutabilidadTest {
         val torneo = Torneo("Copa", listOf(rayo, toros))
         torneo.agregar(Partido(rayo, toros).registrar(Gol(3, ana, rayo)))
         assertEquals("Rayo", torneo.tablaDePosiciones().first().equipo.nombre)
-        assertEquals(listOf(ana to 1), torneo.goleadores())
+        assertEquals(listOf(ana), torneo.goleadores().ordenados)
     }
 }

@@ -32,7 +32,7 @@ class Torneo(
 
     fun tablaDePosiciones(): List<FilaDePosicion> = partidosJugados.tablaDePosiciones(equipos, reglamento)
 
-    fun goleadores(): List<Pair<Jugador, Int>> = partidosJugados.goleadores()
+    fun goleadores(): Ranking<Jugador> = partidosJugados.goleadores()
 
     // `companion object`: lo que en otros lenguajes es «estático». Se usa con el
     // nombre de la clase: Torneo.conEquipos(...), Torneo.MINIMO_DE_EQUIPOS.

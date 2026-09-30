@@ -38,36 +38,42 @@ fun List<Partido>.tablaDePosiciones(
     // Un Set no admite repetidos: une los equipos dados con los que ya jugaron.
     val todos: Set<Equipo> = (equipos + marcadoresPorEquipo.keys).toSet()
 
-    return todos
-        .map { equipo ->
-            val marcadores = marcadoresPorEquipo[equipo].orEmpty()
-            FilaDePosicion(
-                equipo = equipo,
-                jugados = marcadores.size,
-                ganados = marcadores.count { (aFavor, enContra) -> aFavor > enContra },
-                empatados = marcadores.count { (aFavor, enContra) -> aFavor == enContra },
-                perdidos = marcadores.count { (aFavor, enContra) -> aFavor < enContra },
-                golesAFavor = marcadores.sumOf { it.first },
-                golesEnContra = marcadores.sumOf { it.second },
-                puntos = marcadores.sumOf { (aFavor, enContra) -> reglamento.puntosPor(aFavor, enContra) },
-            )
-        }
-        .sortedWith(
-            compareByDescending<FilaDePosicion> { it.puntos }
-                .thenByDescending { it.diferencia }
-                .thenByDescending { it.golesAFavor }
-                .thenBy { it.equipo.nombre },
+    val filas = todos.map { equipo ->
+        val marcadores = marcadoresPorEquipo[equipo].orEmpty()
+        FilaDePosicion(
+            equipo = equipo,
+            jugados = marcadores.size,
+            ganados = marcadores.count { (aFavor, enContra) -> aFavor > enContra },
+            empatados = marcadores.count { (aFavor, enContra) -> aFavor == enContra },
+            perdidos = marcadores.count { (aFavor, enContra) -> aFavor < enContra },
+            golesAFavor = marcadores.sumOf { it.first },
+            golesEnContra = marcadores.sumOf { it.second },
+            puntos = marcadores.sumOf { (aFavor, enContra) -> reglamento.puntosPor(aFavor, enContra) },
         )
+    }
+
+    // La tabla es un Ranking<FilaDePosicion> puntuado por los puntos de la liga.
+    return Ranking(
+        elementos = filas,
+        puntos = { it.puntos },
+        desempate = compareByDescending<FilaDePosicion> { it.diferencia }
+            .thenByDescending { it.golesAFavor }
+            .thenBy { it.equipo.nombre },
+    ).ordenados
 }
 
-// Tabla de goleadores: cada jugador con sus goles, de más a menos.
+// Tabla de goleadores: otro Ranking, esta vez de Jugador puntuado por sus goles.
 // Usa una Sequence: las operaciones se encadenan y se ejecutan elemento a
 // elemento, sin crear una lista intermedia entre paso y paso.
-fun List<Partido>.goleadores(): List<Pair<Jugador, Int>> =
-    asSequence()
+fun List<Partido>.goleadores(): Ranking<Jugador> {
+    val goles: Map<Jugador, Int> = asSequence()
         .flatMap { it.eventos.asSequence() }
         .filterIsInstance<Gol>()
         .groupingBy { it.jugador }
         .eachCount()
-        .toList()
-        .sortedWith(compareByDescending<Pair<Jugador, Int>> { it.second }.thenBy { it.first.nombre })
+    return Ranking(
+        elementos = goles.keys,
+        puntos = { goles.getValue(it) },
+        desempate = compareBy { it.nombre },
+    )
+}
