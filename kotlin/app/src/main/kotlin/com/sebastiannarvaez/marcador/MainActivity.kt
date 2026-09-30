@@ -29,7 +29,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.FilaDePosicion
-import com.sebastiannarvaez.marcador.ui.PantallaMarcador
+import com.sebastiannarvaez.marcador.ui.AppMarcador
 import com.sebastiannarvaez.marcador.torneo.PartidoEnVivo
 import com.sebastiannarvaez.marcador.torneo.probabilidadDeVictoria
 import kotlinx.coroutines.Dispatchers
@@ -175,7 +175,7 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 // f32: la pantalla de verdad es PantallaMarcador (ui/). Los botones de
                 // demostracion de F3 siguen ahi, detras de un boton, para no perderlos.
-                if (verDemosDeF3) DemosDeF3(tabla) else PantallaMarcador(onVerDemos = { verDemosDeF3 = true })
+                if (verDemosDeF3) DemosDeF3(tabla) else AppMarcador(onVerDemos = { verDemosDeF3 = true })
             }
         }
     }
