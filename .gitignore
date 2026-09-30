@@ -1,10 +1,27 @@
-.gradle/
-build/
-local.properties
-.idea/
+# Gradle y Kotlin
+.gradle
+.kotlin
+**/build/
+
+# Android Studio / IntelliJ
 *.iml
+.idea
+captures
+.externalNativeBuild
+.cxx
+
+# Rutas de esta maquina
+local.properties
+
+# Swift / Xcode
+.build
+.swiftpm
+xcuserdata
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+
 .DS_Store
-.build/
-xcuserdata/
+torneo.json
 DerivedData/
 *.xcuserstate
