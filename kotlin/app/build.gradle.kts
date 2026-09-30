@@ -1,6 +1,10 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
+    // f45: KSP (Kotlin Symbol Processing) es el motor que ejecuta procesadores como el de
+    // Room; el plugin `androidx.room3` de Room solo configura donde se exportan los esquemas.
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 android {
@@ -68,7 +72,17 @@ kotlin {
     jvmToolchain(17)
 }
 
+// Los esquemas exportados (app/schemas/.../1.json, 2.json) se VERSIONAN con el codigo:
+// son lo unico con lo que Room puede comparar dos versiones y escribir la migracion.
+room3 {
+    schemaDirectory("$projectDir/schemas")
+}
+
 dependencies {
+    implementation(libs.androidx.room.runtime)
+    // LA LINEA CLAVE: `ksp(...)` en un modulo com.android.application. El procesador de
+    // Room lee las anotaciones al compilar y GENERA MarcadorDatabase_Impl y PartidoDao_Impl.
+    ksp(libs.androidx.room.compiler)
     // El modulo de dominio: Partido, Torneo, PartidoEnVivo...
     implementation(project(":torneo"))
     implementation(libs.androidx.activity.compose)

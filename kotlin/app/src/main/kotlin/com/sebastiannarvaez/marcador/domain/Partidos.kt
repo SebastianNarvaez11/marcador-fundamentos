@@ -29,7 +29,12 @@ interface PartidosRepository {
     suspend fun partido(id: Int): Partido?
 
     suspend fun registrarGol(partidoId: Int, gol: Gol)
+
+    fun observarGoleadores(): Flow<List<Goleador>>
 }
+
+// Cuantos goles lleva un jugador (f47 los pinta). Se calcula en la base con GROUP BY.
+data class Goleador(val jugador: String, val goles: Int)
 
 // Las tablas y los goleadores no se guardan: se CALCULAN a partir de los partidos. Guardar
 // ademas la tabla seria tener dos fuentes de verdad que se pueden contradecir.

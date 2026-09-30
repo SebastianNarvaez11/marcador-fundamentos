@@ -12,7 +12,7 @@ import android.util.Log
 class MarcadorApplication : Application() {
     // f44: el contenedor de dependencias. Las Activities y los ViewModels lo alcanzan
     // desde la Application; nadie mas construye repositorios.
-    val contenedor = AppContainer()
+    val contenedor by lazy { AppContainer(this) }
 
     override fun onCreate() {
         super.onCreate()
