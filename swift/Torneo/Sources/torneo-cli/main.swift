@@ -235,3 +235,23 @@ for resultado in supervisados {
     case let .failure(error): print("Falló: \((error as? SuspendidoPorApagon).map { "se fue la luz en el minuto \($0.minuto)" } ?? "\(error)")")
     }
 }
+
+print("== f63: un AsyncStream frío, la narración del partido ==")
+let enVivoRapido = PartidoEnVivo(guion: Ejemplo.rayoContraToros, msPorMinuto: 2)
+// Aún no ha pasado nada: pedir el stream no arranca el partido.
+let narracion = enVivoRapido.narracion
+print("Stream creado; nada ha corrido todavía")
+for await linea in narracion { print("  \(linea)") }
+
+// Cada recorrido es un partido nuevo: el frío se repite entero.
+var cuantos = 0
+for await _ in enVivoRapido.eventos { cuantos += 1 }
+print("Segundo recorrido: otro partido completo (\(cuantos) eventos)")
+
+if let gol = await enVivoRapido.primerGol() {
+    print("Primer gol: \(describir(gol)) (el resto del partido se canceló)")
+}
+
+print("Marcadores: ", terminator: "")
+for await marcador in enVivoRapido.marcadores { print(marcador, terminator: " ") }
+print()
