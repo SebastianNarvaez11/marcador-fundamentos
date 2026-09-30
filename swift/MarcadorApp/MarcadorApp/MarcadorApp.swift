@@ -13,10 +13,15 @@ struct MarcadorApp: App {
     // la escena y no de una pantalla.
     @Environment(\.scenePhase) private var fase
 
+    // f72: `@StateObject` en la raíz: la app es la dueña de los ajustes (nacen una vez y viven
+    // mientras viva la app) y los reparte con `.environmentObject`.
+    @StateObject private var ajustes = AjustesModelo()
+
     var body: some Scene {
         // `WindowGroup` es la escena normal de una app de iOS: una ventana con esta vista raíz.
         WindowGroup {
             ContentView()
+                .environmentObject(ajustes)
         }
         // `onChange(of:)` con dos parámetros (antiguo, nuevo) es la forma de iOS 17+.
         .onChange(of: fase) { antigua, nueva in

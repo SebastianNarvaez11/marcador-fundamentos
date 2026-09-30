@@ -19,6 +19,33 @@ final class MarcadorAppUITests: XCTestCase {
         capturar(app, "f69-marcador")
     }
 
+    // f72: el partido NO se reinicia cuando el padre se redibuja (con @ObservedObject sí lo hacía).
+    @MainActor
+    func testElPartidoSobreviveAlRedibujadoDelPadre() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-msPorMinuto", "40"]
+        app.launch()
+        app.buttons["partido-1"].tap()
+        app.buttons["Empezar partido"].tap()
+        let minuto = app.staticTexts["minuto"]
+        // Espera a que el reloj pase del minuto 10.
+        let pasaDel10 = NSPredicate { objeto, _ in
+            let texto = (objeto as? XCUIElement)?.label ?? ""
+            let numero = Int(texto.filter(\.isNumber)) ?? 0
+            return numero >= 10
+        }
+        expectation(for: pasaDel10, evaluatedWith: minuto)
+        waitForExpectations(timeout: 15)
+        let antes = minuto.label
+        capturar(app, "f72-antes-de-redibujar")
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Redibujar'")).firstMatch.tap()
+        let despues = minuto.label
+        capturar(app, "f72-despues-de-redibujar")
+        let numeroAntes = Int(antes.filter(\.isNumber)) ?? 0
+        let numeroDespues = Int(despues.filter(\.isNumber)) ?? -1
+        XCTAssertGreaterThanOrEqual(numeroDespues, numeroAntes, "El partido se reinició: antes «\(antes)», después «\(despues)»")
+    }
+
     // f71: la lista de partidos muestra las filas con su marcador.
     @MainActor
     func testLaListaMuestraLosPartidos() throws {

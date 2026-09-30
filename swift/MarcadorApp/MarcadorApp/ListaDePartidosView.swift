@@ -17,18 +17,30 @@ import Torneo
 struct ListaDePartidosView: View {
     let partidos: [PartidoDeLista]
 
+    // f72: el partido tocado se abre en una hoja modal (la navegación de verdad llega en f76).
+    // `sheet(item:)` se abre cuando el valor deja de ser nil, y necesita `Identifiable`.
+    @State private var elegido: PartidoDeLista?
+
     var body: some View {
         // `PartidoDeLista` es `Identifiable`, así que basta pasarle la colección.
         // Equivale a `List(partidos, id: \.id)`.
         List(partidos) { item in
-            FilaDePartido(
-                local: item.partido.local.nombre,
-                visitante: item.partido.visitante.nombre,
-                resultado: item.partido.marcador().description
-            )
+            Button {
+                elegido = item
+            } label: {
+                FilaDePartido(
+                    local: item.partido.local.nombre,
+                    visitante: item.partido.visitante.nombre,
+                    resultado: item.partido.marcador().description
+                )
+            }
+            .buttonStyle(.plain)
             .accessibilityIdentifier("partido-\(item.id)")
         }
         .listStyle(.plain)
+        .sheet(item: $elegido) { item in
+            PartidoContenedor(item: item)
+        }
     }
 }
 
