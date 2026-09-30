@@ -1,7 +1,8 @@
 package com.sebastiannarvaez.marcador.ui
 
-import com.sebastiannarvaez.marcador.data.DatosDeEjemplo
+import com.sebastiannarvaez.marcador.data.Repositorios
 import com.sebastiannarvaez.marcador.domain.Directo
+import com.sebastiannarvaez.marcador.domain.RegistrarGol
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -52,6 +53,11 @@ import kotlinx.coroutines.launch
 // los botones se pierden con `am kill`, y esta bien: se reconstruye el partido, no el directo.
 class PartidoViewModel(private val estadoGuardado: SavedStateHandle) : ViewModel() {
 
+    // f43: por ahora el repositorio se saca del singleton (ver Repositorios). Es una
+    // dependencia OCULTA; f44 la convierte en un parametro.
+    private val repositorio = Repositorios.partidos
+    private val registrarGol = RegistrarGol(repositorio)
+
     // Un StateFlow LEIDO DEL HANDLE: cada vez que se escribe `estadoGuardado[CLAVE]`, cambia.
     val partidoId: StateFlow<Int> = estadoGuardado.getStateFlow(CLAVE_PARTIDO, 1)
 
@@ -92,26 +98,34 @@ class PartidoViewModel(private val estadoGuardado: SavedStateHandle) : ViewModel
     // UNICA puerta de entrada de los eventos de la pantalla.
     fun alEvento(evento: MarcadorEvento) = when (evento) {
         MarcadorEvento.Empezar -> (carga.value as? Carga.Lista)?.let { trabajos = it.directo.iniciar(viewModelScope) } ?: Unit
-        is MarcadorEvento.Gol -> (carga.value as? Carga.Lista)?.directo?.golAMano(evento.lado) ?: Unit
+        is MarcadorEvento.Gol -> (carga.value as? Carga.Lista)?.directo?.let { directo ->
+            // Se ve al instante en el directo Y se guarda con el caso de uso.
+            directo.golAMano(evento.lado)
+            // El `Result` con el fallo (no existe el partido, plantilla vacia) se descarta:
+            // por ahora no hay donde mostrarlo, y el gol ya se ve en el directo.
+            viewModelScope.launch {
+                registrarGol(directo.partidoId, evento.lado, directo.instante.value.minuto)
+            }
+            Unit
+        } ?: Unit
         is MarcadorEvento.Elegir -> cargar(evento.partidoId)
     }
 
     // Elegir un partido: para el directo, y pasa por `Cargando`.
-    // El `delay` simula una lectura lenta (con Room, en f45, la lectura es real).
+    // La lectura va al repositorio: es `suspend`, asi que ya puede tardar (con Room, f45).
     private fun cargar(id: Int) {
         trabajos.forEach { it.cancel() }
         trabajos = emptyList()
         carga.value = Carga.EnCurso
         viewModelScope.launch {
-            delay(400)
-            val elegido = DatosDeEjemplo.partidos.firstOrNull { it.id == id }
+            val elegido = repositorio.partido(id)
             if (elegido == null) {
                 carga.value = Carga.Fallo("No existe el partido n.º $id")
             } else {
                 // Solo se guarda el id si es valido: un id malo en el handle
                 // rompería la app tambien tras un am kill.
                 estadoGuardado[CLAVE_PARTIDO] = id
-                carga.value = Carga.Lista(Directo(id, elegido.partido, MS_POR_MINUTO))
+                carga.value = Carga.Lista(Directo(id, elegido, MS_POR_MINUTO))
             }
         }
     }

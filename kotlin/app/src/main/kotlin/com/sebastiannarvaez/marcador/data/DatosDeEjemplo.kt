@@ -1,5 +1,6 @@
 package com.sebastiannarvaez.marcador.data
 
+import com.sebastiannarvaez.marcador.domain.PartidoDeLista
 import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Equipo
 import com.sebastiannarvaez.marcador.torneo.EventoDePartido
@@ -16,11 +17,6 @@ import com.sebastiannarvaez.marcador.torneo.Torneo
 // tres vueltas de todos contra todos: 18 partidos, con marcadores repartidos de forma
 // determinista. Hasta F5 (Room) no hay datos guardados: esto hace de «base de datos».
 //
-// La lista de partidos necesita un identificador ESTABLE para cada fila (la `key` de
-// LazyColumn). `Partido` no tiene id (dos partidos pueden repetir equipos), asi que la
-// pantalla trabaja con este envoltorio.
-data class PartidoDeLista(val id: Int, val partido: Partido)
-
 object DatosDeEjemplo {
     val torneo: Torneo = Torneo("Copa Barrio", listOf(Ejemplo.rayo, Ejemplo.toros, Ejemplo.lobos, Ejemplo.aguilas))
         .also { torneo ->

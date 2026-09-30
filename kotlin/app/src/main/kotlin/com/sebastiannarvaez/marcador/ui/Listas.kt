@@ -16,7 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import com.sebastiannarvaez.marcador.data.DatosDeEjemplo
-import com.sebastiannarvaez.marcador.data.PartidoDeLista
+import com.sebastiannarvaez.marcador.domain.PartidoDeLista
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue

@@ -8,13 +8,13 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import com.sebastiannarvaez.marcador.data.DatosDeEjemplo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 // f35 · RAIZ DE LA APP: tres pestañas. No es navegacion de verdad (Navigation 3 llega
@@ -30,10 +30,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
     var pestana by rememberSaveable { mutableIntStateOf(0) }
     val titulos = listOf("Marcador", "Partidos", "Tablas", "Recomp.")
-    val torneo = DatosDeEjemplo.torneo
     // El ViewModel se pide AQUI, en la raiz, y se pasa hacia abajo: la lista de partidos
     // elige y la pantalla del marcador muestra, los dos con la MISMA instancia.
     val viewModel: PartidoViewModel = viewModel()
+    val listaViewModel: ListaViewModel = viewModel()
+    val partidos by listaViewModel.partidos.collectAsStateWithLifecycle()
+    val torneo by listaViewModel.torneo.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
@@ -58,7 +60,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                 topBar = { CenterAlignedTopAppBar(title = { Text("Partidos") }) },
                 contentWindowInsets = WindowInsets(0),
             ) { interior -> PantallaPartidos(
-                DatosDeEjemplo.partidos,
+                partidos,
                 onElegir = { id ->
                     viewModel.alEvento(MarcadorEvento.Elegir(id))
                     pestana = 0
