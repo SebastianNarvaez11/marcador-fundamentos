@@ -19,6 +19,29 @@ fun main(args: Array<String>) {
         println("== f15: un partido suspendido ==")
         val final = jugarPartido(Ejemplo.rayoContraToros)
         println("Final: ${final.golesLocal}-${final.golesVisitante} con ${final.eventos.size} eventos")
+
+        println("== f16: dos partidos a la vez con launch ==")
+        val tiempo = measureTimeMillis {
+            // Cada `launch` arranca una corrutina hija y sigue sin esperarla.
+            // `coroutineScope` espera a que terminen las dos antes de continuar.
+            coroutineScope {
+                for (guion in listOf(Ejemplo.rayoContraToros, Ejemplo.lobosContraAguilas)) {
+                    launch {
+                        val final = jugarPartido(guion)
+                        println("Pitido final: ${final.local.nombre} ${final.golesLocal}-${final.golesVisitante} ${final.visitante.nombre}")
+                    }
+                }
+            }
+        }
+        println("Los dos partidos duraron $tiempo ms (uno solo dura algo más de 1 s)")
+
+        println("== f16: estadísticas con async ==")
+        val (uno, otro) = jugarJornada(Ejemplo.rayoContraToros, Ejemplo.lobosContraAguilas)
+        val tiempoEstadisticas = measureTimeMillis {
+            println(estadisticasDe(uno))
+            println(estadisticasDe(otro))
+        }
+        println("Dos estadísticas en $tiempoEstadisticas ms (cada una son 3 consultas de 50 ms en paralelo)")
     }
 }
 

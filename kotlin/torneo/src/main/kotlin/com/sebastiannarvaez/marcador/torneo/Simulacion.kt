@@ -1,5 +1,7 @@
 package com.sebastiannarvaez.marcador.torneo
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 
 const val MINUTOS_DEL_PARTIDO = 90
@@ -23,4 +25,30 @@ suspend fun jugarPartido(partido: Partido, msPorMinuto: Long = 10): Partido {
         partido.eventos.filter { it.minuto == minuto }.forEach { jugado = jugado.registrar(it) }
     }
     return jugado
+}
+
+// `async` lanza una corrutina que DEVUELVE un valor: un `Deferred<T>` (una
+// promesa). `await()` espera ese valor. `launch` (en Main.kt) es «lanza y
+// olvida»: devuelve un `Job` sin resultado. Regla: si necesitas el resultado,
+// `async`; si solo quieres que ocurra, `launch`.
+//
+// Dos partidos a la vez: los dos `async` arrancan antes del primer `await`, así
+// que juegan en paralelo. El total dura lo que el más largo, no la suma.
+suspend fun jugarJornada(primero: Partido, segundo: Partido, msPorMinuto: Long = 10): Pair<Partido, Partido> =
+    coroutineScope {
+        val a = async { jugarPartido(primero, msPorMinuto) }
+        val b = async { jugarPartido(segundo, msPorMinuto) }
+        a.await() to b.await()
+    }
+
+data class Estadisticas(val goles: Int, val tarjetas: Int, val cambios: Int)
+
+// Tres consultas independientes (aquí simuladas con una espera de `msPorConsulta`,
+// como si fueran a una base de datos). Con `async` corren a la vez y el total es
+// ~1 consulta; una detrás de otra serían ~3.
+suspend fun estadisticasDe(partido: Partido, msPorConsulta: Long = 50): Estadisticas = coroutineScope {
+    val goles = async { delay(msPorConsulta); partido.eventos.count { it is Gol } }
+    val tarjetas = async { delay(msPorConsulta); partido.eventos.count { it is Tarjeta } }
+    val cambios = async { delay(msPorConsulta); partido.eventos.count { it is Cambio } }
+    Estadisticas(goles.await(), tarjetas.await(), cambios.await())
 }
