@@ -1,9 +1,11 @@
 package com.sebastiannarvaez.marcador.torneo
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -70,16 +72,25 @@ suspend fun <T> intentar(bloque: suspend () -> T): Result<T> = try {
 }
 
 // Un alcance PROPIO: la clase decide cuándo empieza y cuándo acaba la vida de
-// todo lo que lanza. `Job()` es el padre de todas las corrutinas del alcance;
+// todo lo que lanza. El Job del alcance es el padre de todas las corrutinas;
 // cancelarlo las cancela a todas. Al pitar el final, `pitarElFinal()`.
-class Transmisor {
-    private val trabajo = Job()
-    private val alcance = CoroutineScope(Dispatchers.Default + trabajo)
+//
+// Con `SupervisorJob` (f19), un partido que falla no cancela al alcance ni a los
+// demás partidos. Su error llega al CoroutineExceptionHandler, que aquí avisa
+// con `alFallar`. Sin handler, un error en un `launch` de la raíz acaba en la
+// consola como «Exception in thread …».
+class Transmisor(
+    private val alFallar: (Throwable) -> Unit = {},
+    private val jugar: suspend (Partido, Long) -> Partido = { partido, ms -> jugarConCronometro(partido, ms) },
+) {
+    private val trabajo = SupervisorJob()
+    private val manejador = CoroutineExceptionHandler { _, error -> alFallar(error) }
+    private val alcance = CoroutineScope(Dispatchers.Default + trabajo + manejador)
 
     val activo: Boolean get() = trabajo.isActive
 
     fun transmitir(partido: Partido, msPorMinuto: Long = 10, alFinal: (Partido) -> Unit = {}): Job =
-        alcance.launch { alFinal(jugarConCronometro(partido, msPorMinuto)) }
+        alcance.launch { alFinal(jugar(partido, msPorMinuto)) }
 
     fun pitarElFinal() = trabajo.cancel()
 }

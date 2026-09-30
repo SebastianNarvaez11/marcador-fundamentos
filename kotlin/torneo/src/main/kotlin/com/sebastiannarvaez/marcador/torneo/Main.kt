@@ -63,7 +63,32 @@ fun main(args: Array<String>) {
 
         println("== f18: guardar en IO y calcular la tabla en Default ==")
         demoDispatchers()
+
+        println("== f19: un partido que falla no tumba al otro ==")
+        demoErrores()
     }
+}
+
+suspend fun demoErrores() {
+    val resultados = jugarJornadaSupervisada(listOf(Ejemplo.rayoContraToros, Ejemplo.lobosContraAguilas)) { partido ->
+        if (partido.local === Ejemplo.lobos) jugarConApagon(partido, minutoDelApagon = 30) else jugarPartido(partido)
+    }
+    for (resultado in resultados) {
+        resultado
+            .onSuccess { println("Terminó ${it.local.nombre}-${it.visitante.nombre}: ${it.golesLocal}-${it.golesVisitante}") }
+            .onFailure { println("Falló: ${it.message}") }
+    }
+
+    // El mismo caso con un alcance propio: el error de un `launch` raíz no llega a
+    // quien lo lanzó, llega al CoroutineExceptionHandler.
+    val transmisor = Transmisor(alFallar = { println("  handler: ${it.message}") }, jugar = { partido, ms ->
+        if (partido.local === Ejemplo.lobos) jugarConApagon(partido, ms, minutoDelApagon = 30) else jugarPartido(partido, ms)
+    })
+    listOf(Ejemplo.rayoContraToros, Ejemplo.lobosContraAguilas)
+        .map { transmisor.transmitir(it) { final -> println("  terminó ${final.local.nombre}") } }
+        .forEach { it.join() }
+    println("Transmisor sigue activo tras el fallo: ${transmisor.activo}")
+    transmisor.pitarElFinal()
 }
 
 suspend fun demoDispatchers() {
