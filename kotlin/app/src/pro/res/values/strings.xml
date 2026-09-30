@@ -1,0 +1,4 @@
+<resources>
+    <!-- Este fichero solo existe en el flavor «pro»: sustituye al app_name de main. -->
+    <string name="app_name">Marcador Pro</string>
+</resources>

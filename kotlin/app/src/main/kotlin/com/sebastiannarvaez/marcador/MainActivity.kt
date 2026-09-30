@@ -11,6 +11,8 @@ import android.Manifest
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -168,8 +170,10 @@ class MainActivity : ComponentActivity() {
         val tabla = Ejemplo.torneoConPartidos().tablaDePosiciones()
         setContent {
             MaterialTheme {
-                Column(Modifier.padding(24.dp)) {
+                Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
                     Text("Marcador")
+                    // f31: datos que solo conoce la compilacion (BuildConfig se genera).
+                    Text("Modo: ${BuildConfig.MODO} · plan ${BuildConfig.PLAN} · ${BuildConfig.APPLICATION_ID}")
                     // f28: intents. El primero es EXPLICITO (nombras la clase destino).
                     Button(onClick = { abrirDetalle() }) { Text("Ver detalle (intent explicito)") }
                     Button(onClick = { compartir(Ejemplo.rayoContraToros.resumen()) }) {

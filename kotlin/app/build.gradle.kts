@@ -15,8 +15,52 @@ android {
         versionName = "1.0"
     }
 
+    // FLAVORS: versiones distintas de la MISMA app (gratis y de pago, por ejemplo).
+    // Cada flavor pertenece a una «dimension»; con una sola, las variantes salen de
+    // multiplicar flavor x build type: gratisDebug, gratisRelease, proDebug, proRelease.
+    flavorDimensions += "plan"
+    productFlavors {
+        create("gratis") {
+            dimension = "plan"
+            // Un campo constante que el codigo lee como BuildConfig.PLAN.
+            // Ojo a las comillas: el tercer argumento se pega TAL CUAL en Java.
+            buildConfigField("String", "PLAN", "\"gratis\"")
+        }
+        create("pro") {
+            dimension = "plan"
+            // Se suma al applicationId: com.sebastiannarvaez.marcador.pro. Sin sufijo
+            // distinto, gratis y pro serian «la misma app» para Android y una pisaria
+            // a la otra al instalarla. Ademas hay app/src/pro/res con otro app_name.
+            applicationIdSuffix = ".pro"
+            buildConfigField("String", "PLAN", "\"pro\"")
+        }
+    }
+
+    // BUILD TYPES: como se construye, no que se construye. `debug` y `release`
+    // existen siempre; aqui se ajustan.
+    buildTypes {
+        debug {
+            // Se suma al applicationId: com.sebastiannarvaez.marcador.debug. Asi la
+            // version debug y la de produccion conviven instaladas en el mismo movil.
+            applicationIdSuffix = ".debug"
+            // Sale en «Informacion de la app»: 1.0-debug.
+            versionNameSuffix = "-debug"
+            buildConfigField("String", "MODO", "\"DEBUG\"")
+        }
+        release {
+            // Sin minificar de momento: R8 (recortar y ofuscar el codigo) queda para
+            // cuando toque publicar, porque hay que probar la app ya recortada.
+            isMinifyEnabled = false
+            buildConfigField("String", "MODO", "\"PRODUCCION\"")
+        }
+    }
+
     buildFeatures {
         compose = true
+        // Desde AGP 8 BuildConfig NO se genera salvo que lo pidas. Sin esta linea, AGP 9
+        // falla al CONFIGURAR el proyecto: «Build Type 'debug' contains custom BuildConfig
+        // fields, but the feature is disabled.»
+        buildConfig = true
     }
 }
 
@@ -36,8 +80,8 @@ dependencies {
     // solo expone como `implementation` no llegan a :app por transitividad.
     implementation(libs.kotlinx.coroutines.core)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.material3)
+    // Un bundle del catalogo (gradle/libs.versions.toml): varias librerias con un nombre.
+    implementation(libs.bundles.compose)
     // LeakCanary: vigila las Activity destruidas y avisa si alguna no se libera.
     // `debugImplementation` = solo en la variante debug: no viaja en la app de
     // produccion. No hace falta escribir codigo: se instala solo al arrancar.

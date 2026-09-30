@@ -33,6 +33,11 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
+# Un bundle agrupa librerias que siempre van juntas: en build.gradle.kts basta
+# `implementation(libs.bundles.compose)`.
+[bundles]
+compose = ["androidx-compose-ui", "androidx-compose-material3"]
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
