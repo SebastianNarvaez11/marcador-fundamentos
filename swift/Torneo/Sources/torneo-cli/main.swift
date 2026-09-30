@@ -255,3 +255,15 @@ if let gol = await enVivoRapido.primerGol() {
 print("Marcadores: ", terminator: "")
 for await marcador in enVivoRapido.marcadores { print(marcador, terminator: " ") }
 print()
+
+print("== f64: dos goles a la vez ya no se pisan ==")
+let seguro = MarcadorSeguro()
+await withTaskGroup(of: Void.self) { grupo in
+    for _ in 0..<1_000 {
+        grupo.addTask { await seguro.golLocal() }
+        grupo.addTask { await seguro.golVisitante() }
+    }
+}
+print("Marcador tras 1000 goles de cada equipo a la vez: \(await seguro.marcador)")
+let enDirecto = PartidoEnVivo(guion: Ejemplo.rayoContraToros, msPorMinuto: 2)
+print("Marcador final del partido en vivo: \(await enDirecto.jugar())")

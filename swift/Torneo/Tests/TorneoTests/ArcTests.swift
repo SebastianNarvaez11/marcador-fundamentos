@@ -34,6 +34,7 @@ struct ArcTests {
             segunda = partido   // contador: 2
         }   // contador: 1
         #expect(referenciaDebil != nil)
+        #expect(segunda != nil)
         segunda = nil   // contador: 0
         #expect(referenciaDebil == nil)
     }

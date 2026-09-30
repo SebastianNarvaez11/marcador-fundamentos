@@ -16,6 +16,10 @@ public final class PartidoEnVivo {
     // para que las pruebas (y la consola) vean que de verdad se liberó.
     private let alLiberarse: (() -> Void)?
 
+    // El marcador del partido, protegido por un actor (f64): quien lo mira y quien
+    // lo actualiza pueden ser tareas distintas.
+    public let marcadorSeguro = MarcadorSeguro()
+
     // `strong` es lo normal: esta referencia mantiene vivo al narrador.
     public var narrador: Narrador?
 
@@ -91,6 +95,16 @@ public final class PartidoEnVivo {
         await eventos.first { evento in
             if case .gol = evento { true } else { false }
         }
+    }
+
+    // Juega el partido entero y va anotando cada evento en el actor. Devuelve el
+    // marcador final. Cada `await` sobre el actor es un posible punto de espera.
+    @discardableResult
+    public func jugar() async -> Marcador {
+        for await evento in eventos {
+            await marcadorSeguro.registrar(evento, en: guion)
+        }
+        return await marcadorSeguro.marcador
     }
 
     // El marcador tras cada gol, empezando en 0-0: el `scan` + `distinctUntilChanged`
