@@ -18,4 +18,12 @@ struct MarcadorAppTests {
         #expect(antes == Marcador(local: 0, visitante: 0))
         #expect(despues.goles == 1)
     }
+
+    // f71: los datos de ejemplo son los mismos que en Android: 18 partidos con id único.
+    @Test func losDatosDeEjemploTienenDieciochoPartidosConIdUnico() {
+        let partidos = DatosDeEjemplo.partidos
+        #expect(partidos.count == 18)
+        #expect(Set(partidos.map(\.id)).count == 18)
+        #expect(partidos.first?.id == 1)
+    }
 }

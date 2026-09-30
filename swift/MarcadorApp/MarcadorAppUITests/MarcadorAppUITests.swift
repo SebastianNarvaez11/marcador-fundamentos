@@ -13,9 +13,41 @@ final class MarcadorAppUITests: XCTestCase {
     func testArrancaYMuestraElMarcador() throws {
         let app = XCUIApplication()
         app.launch()
+        app.tabBars.buttons["Marcador"].tap()
         XCTAssertTrue(app.staticTexts["Rayo FC"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["0 - 0"].exists)
         capturar(app, "f69-marcador")
+    }
+
+    // f71: la lista de partidos muestra las filas con su marcador.
+    @MainActor
+    func testLaListaMuestraLosPartidos() throws {
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(app.otherElements["partido-1"].waitForExistence(timeout: 5)
+            || app.staticTexts["Rayo FC"].waitForExistence(timeout: 5))
+        capturar(app, "f71-lista")
+    }
+
+    // f71: identidad por posición (A) frente a identidad por dato (B).
+    @MainActor
+    func testIdentidadPorPosicionFrenteAIdentidadPorDato() throws {
+        let app = XCUIApplication()
+        app.launch()
+        app.tabBars.buttons["Laboratorio"].tap()
+        let marcaA = app.switches["A Ana"]
+        let marcaB = app.switches["B Ana"]
+        XCTAssertTrue(marcaA.waitForExistence(timeout: 5))
+        marcaA.tap()
+        marcaB.tap()
+        app.buttons["Insertar arriba"].tap()
+        // A: la marca se queda en la POSICIÓN 0, que ahora es «Nuevo1»; «Ana» ya no está marcada.
+        XCTAssertEqual(app.switches["A Nuevo1"].value as? String, "1")
+        XCTAssertEqual(app.switches["A Ana"].value as? String, "0")
+        // B: la marca sigue al DATO: «Ana» conserva la suya y «Nuevo1» empieza sin marcar.
+        XCTAssertEqual(app.switches["B Ana"].value as? String, "1")
+        XCTAssertEqual(app.switches["B Nuevo1"].value as? String, "0")
+        capturar(app, "f71-identidad")
     }
 
     // f70: cada botón cambia el @State y la tarjeta se redibuja.
@@ -23,6 +55,7 @@ final class MarcadorAppUITests: XCTestCase {
     func testLosBotonesDeGolCambianElMarcador() throws {
         let app = XCUIApplication()
         app.launch()
+        app.tabBars.buttons["Marcador"].tap()
         app.buttons["Gol Rayo FC"].tap()
         app.buttons["Gol Rayo FC"].tap()
         app.buttons["Gol Toros"].tap()

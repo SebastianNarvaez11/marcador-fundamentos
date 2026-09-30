@@ -10,6 +10,7 @@ struct LaboratorioView: View {
                 Button("Ciclo de vida (UIKit)") { mostrandoControlador = true }
                     .buttonStyle(.borderedProminent)
                 OrdenDeModifiers()
+                IdentidadView()
             }
             .padding()
         }
