@@ -17,7 +17,14 @@ let package = Package(
         // El programa de consola: depende de la librería.
         .executableTarget(name: "torneo-cli", dependencies: ["Torneo"]),
         // Las pruebas, con Swift Testing (`import Testing`).
-        .testTarget(name: "TorneoTests", dependencies: ["Torneo"]),
+        // `resources`: ficheros que viajan con las pruebas. `.copy("Fixtures")` copia la
+        // carpeta tal cual y se lee con `Bundle.module`, que SwiftPM genera solo cuando
+        // hay recursos. Ahí vive el `torneo.json` que escribió la versión Kotlin.
+        .testTarget(
+            name: "TorneoTests",
+            dependencies: ["Torneo"],
+            resources: [.copy("Fixtures")]
+        ),
     ],
     // Con `swift-tools-version: 6.2` el modo de lenguaje por defecto YA es Swift 6,
     // con la concurrencia estricta activada. Hasta f64 se trabaja en modo Swift 5

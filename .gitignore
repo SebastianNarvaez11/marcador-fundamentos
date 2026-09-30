@@ -25,3 +25,5 @@ xcuserdata
 torneo.json
 DerivedData/
 *.xcuserstate
+# El torneo.json que escribe Kotlin se ignora, pero el que usan las pruebas de Swift se guarda.
+!swift/Torneo/Tests/TorneoTests/Fixtures/torneo.json

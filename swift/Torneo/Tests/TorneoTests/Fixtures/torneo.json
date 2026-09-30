@@ -1,0 +1,114 @@
+{
+    "nombre": "Copa Barrio",
+    "equipos": [
+        {
+            "nombre": "Rayo FC",
+            "plantilla": [
+                {
+                    "nombre": "Ana",
+                    "dorsal": 9
+                },
+                {
+                    "nombre": "Luis"
+                },
+                {
+                    "nombre": "Marta",
+                    "dorsal": 1
+                }
+            ],
+            "capitan": "Ana"
+        },
+        {
+            "nombre": "Toros",
+            "plantilla": [
+                {
+                    "nombre": "Iván",
+                    "dorsal": 7
+                }
+            ]
+        },
+        {
+            "nombre": "Lobos",
+            "plantilla": [
+                {
+                    "nombre": "Pedro",
+                    "dorsal": 4
+                }
+            ]
+        }
+    ],
+    "partidos": [
+        {
+            "local": "Rayo FC",
+            "visitante": "Toros",
+            "eventos": [
+                {
+                    "tipo": "gol",
+                    "minuto": 12,
+                    "jugador": "Ana",
+                    "equipo": "Rayo FC"
+                },
+                {
+                    "tipo": "tarjeta",
+                    "minuto": 30,
+                    "jugador": "Iván",
+                    "color": "AMARILLA"
+                },
+                {
+                    "tipo": "gol",
+                    "minuto": 55,
+                    "jugador": "Iván",
+                    "equipo": "Toros"
+                },
+                {
+                    "tipo": "gol",
+                    "minuto": 80,
+                    "jugador": "Ana",
+                    "equipo": "Rayo FC"
+                },
+                {
+                    "tipo": "cambio",
+                    "minuto": 85,
+                    "sale": "Ana",
+                    "entra": "Luis"
+                }
+            ]
+        },
+        {
+            "local": "Toros",
+            "visitante": "Lobos",
+            "eventos": [
+                {
+                    "tipo": "gol",
+                    "minuto": 20,
+                    "jugador": "Iván",
+                    "equipo": "Toros"
+                }
+            ]
+        },
+        {
+            "local": "Lobos",
+            "visitante": "Rayo FC",
+            "eventos": [
+                {
+                    "tipo": "gol",
+                    "minuto": 40,
+                    "jugador": "Ana",
+                    "equipo": "Rayo FC"
+                }
+            ]
+        },
+        {
+            "local": "Lobos",
+            "visitante": "Toros",
+            "eventos": [
+                {
+                    "tipo": "gol",
+                    "minuto": 10,
+                    "jugador": "Pedro",
+                    "equipo": "Lobos"
+                }
+            ]
+        }
+    ]
+}

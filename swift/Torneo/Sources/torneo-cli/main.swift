@@ -1,3 +1,4 @@
+import Foundation
 import Torneo
 
 // `let` es constante (como `val` de Kotlin); `var` se puede reasignar.
@@ -153,3 +154,15 @@ for texto in ["10", "diez", "150"] {
     }
 }
 print("Con try?: \(String(describing: try? dorsalValido("diez")))")
+
+// Codable: el torneo entero, a JSON y de vuelta.
+do {
+    let datos = try torneo.aJson()
+    let ficheroGuardado = URL(fileURLWithPath: "torneo-swift.json")
+    try datos.write(to: ficheroGuardado)
+    let cargado = try torneoDesdeJson(Data(contentsOf: ficheroGuardado))
+    print("Cargado: \(cargado.nombre), \(cargado.partidos.count) partidos, líder \(cargado.tablaDePosiciones().first?.equipo.nombre ?? "nadie")")
+    try? FileManager.default.removeItem(at: ficheroGuardado)
+} catch {
+    print("No se pudo guardar o cargar: \(error)")
+}

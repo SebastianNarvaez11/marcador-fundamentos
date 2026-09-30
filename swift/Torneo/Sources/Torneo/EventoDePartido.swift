@@ -1,7 +1,7 @@
 // `enum` con VALORES BRUTOS (raw values): cada caso vale un texto fijo. Aquí
 // coinciden con lo que escribe la versión Kotlin en el JSON («AMARILLA»), y eso
 // hará que en f59 se lea sin código extra. `CaseIterable` da `allCases`.
-public enum ColorDeTarjeta: String, CaseIterable {
+public enum ColorDeTarjeta: String, CaseIterable, Codable {
     case amarilla = "AMARILLA"
     case roja = "ROJA"
 
