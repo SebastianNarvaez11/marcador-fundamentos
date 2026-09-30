@@ -1,6 +1,5 @@
 package com.sebastiannarvaez.marcador.ui
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,29 +17,21 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Marcador
-import com.sebastiannarvaez.marcador.torneo.despuesDe
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 import com.sebastiannarvaez.marcador.torneo.Partido
 
 // f32 · PRIMEROS PASOS CON COMPOSE
@@ -66,93 +57,23 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
-    // f34 · COMPOSABLE CON ESTADO (el «contenedor»): es el unico sitio que POSEE los
-    // goles. No dibuja nada por su cuenta: crea el estado, lo pasa hacia abajo y
-    // recoge los eventos que suben. Se le llama tambien «stateful».
-    // Aqui pasa de `remember` a `rememberSaveable`: ahora si sobrevive a rotar.
-    val partido = Ejemplo.rayoContraToros
+    // f39 · EL BUG DE f38 DESAPARECE. El partido ya no vive en `remember` sino en el
+    // ViewModel: `viewModel()` pide la instancia al ViewModelStore de la Activity, que
+    // sobrevive a la rotacion. La primera vez la crea; despues devuelve la misma.
+    // La pantalla solo LEE estado y AVISA de eventos: no sabe que existe un PartidoEnVivo.
+    val viewModel: PartidoViewModel = viewModel()
+    val partido = viewModel.partido
 
-    // f38 · EL PARTIDO EN VIVO VIVE EN LA COMPOSICION, A PROPOSITO.
-    //
-    // `remember { MutableStateFlow(...) }` crea el marcador del partido la primera vez y lo
-    // guarda mientras el composable siga en la composicion (igual que el minuto y el resto
-    // del reloj, mas abajo). Al ROTAR, Android destruye la Activity, la composicion se
-    // descarta y `remember` empieza de cero: NACE OTRO partido, sin empezar, en 0-0. El
-    // reloj que lo hacia avanzar es un LaunchedEffect (f37) y muere con la composicion.
-    //
-    // UN SOLO RELOJ. El bucle de `RelojDelPartido` es la unica fuente del tiempo: en cada
-    // minuto aplica los goles del guion al marcador y, si toca, calcula el aviso con ESE
-    // marcador. (Con un segundo reloj, el de `PartidoEnVivo`, en otro hilo, el aviso podia
-    // leer el marcador un gol por detras.)
-    //
-    // COMO REPRODUCIRLO: pulsa «Empezar partido», espera a que haya algun gol (el primero
-    // llega en unos 3 s) y gira el movil (adb shell settings put system accelerometer_rotation 0
-    //   adb shell settings put system user_rotation 1). El marcador vuelve a 0-0, el
-    // minuto a 0' y el boton vuelve a decir «Empezar partido». No es un fallo de
-    // collectAsStateWithLifecycle: el fallo es que el partido no debia vivir aqui.
-    // Lo arregla F5: un ViewModel sobrevive a la rotacion y el partido vive en el.
-    val marcadorEnVivo = remember { MutableStateFlow(Marcador(0, 0)) }
+    // collectAsStateWithLifecycle (f38) sobre los StateFlow del ViewModel.
+    val marcador by viewModel.marcador.collectAsStateWithLifecycle()
+    val minuto by viewModel.minuto.collectAsStateWithLifecycle()
+    val corriendo by viewModel.corriendo.collectAsStateWithLifecycle()
+    val ultimoAviso by viewModel.ultimoAviso.collectAsStateWithLifecycle()
+    val estado = EstadoMarcador(partido, marcador)
 
-    // Goles «a mano» (los botones de f33/f34), sumados a los del partido en vivo.
-    // Tambien en `remember`: es parte del mismo partido y se reinicia con el.
-    var golesLocalAMano by remember { mutableIntStateOf(0) }
-    var golesVisitanteAMano by remember { mutableIntStateOf(0) }
-
-    // RECOGER UN StateFlow EN COMPOSE. `marcadorEnVivo` es un StateFlow<Marcador> (f22):
-    // siempre tiene valor, asi que no hace falta valor inicial. Hay dos formas de
-    // convertirlo en un State de Compose:
-    //
-    //   collectAsState()              recoge mientras el composable este en la composicion.
-    //                                 Con la app en segundo plano (Home) SIGUE recogiendo:
-    //                                 la Activity esta parada, pero la composicion existe
-    //                                 y el flujo sigue trabajando para nadie.
-    //   collectAsStateWithLifecycle() recoge solo mientras el ciclo de vida este al menos
-    //                                 en STARTED (visible): al pasar a STOPPED CANCELA la
-    //                                 recogida, y al volver la REANUDA con el ultimo valor.
-    //                                 Es lo mismo que repeatOnLifecycle(STARTED) de f26, ya
-    //                                 empaquetado. Es la opcion por defecto en Android.
-    //
-    // El interruptor de abajo deja probar las dos; `onEach` escribe en Logcat cada valor
-    // que llega (adb logcat -s Recoleccion): con la app en segundo plano, solo se ven
-    // lineas con collectAsState.
-    var conCicloDeVida by remember { mutableStateOf(true) }
-    val flujo = remember {
-        marcadorEnVivo.onEach {
-            Log.d("Recoleccion", "llega $it (${if (conCicloDeVida) "con ciclo de vida" else "collectAsState"})")
-        }
-    }
-    val marcadorDelPartido by if (conCicloDeVida) {
-        flujo.collectAsStateWithLifecycle(initialValue = marcadorEnVivo.value)
-    } else {
-        flujo.collectAsState(initial = marcadorEnVivo.value)
-    }
-    val estado = EstadoMarcador(
-        partido,
-        Marcador(marcadorDelPartido.local + golesLocalAMano, marcadorDelPartido.visitante + golesVisitanteAMano),
-    )
-
-    // f37: el reloj, el observador y el titulo. Tambien en `remember`: el minuto es del partido.
-    var minuto by remember { mutableIntStateOf(0) }
-    var corriendo by remember { mutableStateOf(false) }
-    var ultimoAviso by remember { mutableStateOf("ninguno") }
+    // Esto SI es estado de la pantalla (cuantas veces paso a segundo plano), y
+    // rememberSaveable basta: es un Int.
     var pausas by rememberSaveable { mutableIntStateOf(0) }
-
-    RelojDelPartido(corriendo, minutoActual = minuto, msPorMinuto = MS_POR_MINUTO) { nuevoMinuto ->
-        // 1) Los goles del guion que caen en este minuto, al marcador.
-        marcadorEnVivo.update { antes ->
-            partido.eventos.filter { it.minuto == nuevoMinuto }.fold(antes) { m, evento -> m.despuesDe(evento, partido) }
-        }
-        minuto = nuevoMinuto
-        if (nuevoMinuto % 15 == 0) {
-            // 2) El aviso, con el marcador que ACABAMOS de calcular (no con `estado`, que es
-            // el que la pantalla recogio en la composicion anterior y puede ir un gol por
-            // detras). Sin rememberUpdatedState en el reloj, `golesLocalAMano` seria el de
-            // cuando arranco el efecto.
-            val vivo = marcadorEnVivo.value
-            ultimoAviso = "minuto $nuevoMinuto con ${Marcador(vivo.local + golesLocalAMano, vivo.visitante + golesVisitanteAMano)}"
-        }
-        if (nuevoMinuto >= MINUTOS_DEL_PARTIDO) corriendo = false
-    }
     ObservadorDelCiclo(alPararse = { pausas++ })
     TituloDeLaActividad(estado.marcador)
 
@@ -170,24 +91,14 @@ fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
         // SIEMPRE se usa paddingValues (si no, el contenido queda tapado por las barras).
         MarcadorContent(
             estado = estado,
-            onGol = { lado ->
-                when (lado) {
-                    Lado.LOCAL -> golesLocalAMano++
-                    Lado.VISITANTE -> golesVisitanteAMano++
-                }
-            },
+            onGol = viewModel::golAMano,
             modifier = Modifier.padding(paddingValues),
             // Un slot mas: lo que sobra de la pantalla (demos de f32 y f33) se inyecta desde fuera.
             extras = {
                 PanelDelCronometro(
                     minuto, corriendo, ultimoAviso, pausas,
-                    // Empezar = poner en marcha el unico reloj (f37).
-                    onEmpezar = { corriendo = true },
+                    onEmpezar = viewModel::empezar,
                 )
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Switch(checked = conCicloDeVida, onCheckedChange = { conCicloDeVida = it })
-                    Text(if (conCicloDeVida) "collectAsStateWithLifecycle" else "collectAsState (sin ciclo de vida)")
-                }
                 ComparacionDeEstado()
                 OrdenDeLosModifiers()
                 InsigniaSobreEscudo()
@@ -195,8 +106,6 @@ fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
         )
     }
 }
-
-private const val MS_POR_MINUTO = 250L
 
 // Column apila en vertical, Row en horizontal, Box SUPERPONE (el ultimo hijo va encima).
 // Alineacion: en una Row, `verticalAlignment` (eje transversal) y `horizontalArrangement`

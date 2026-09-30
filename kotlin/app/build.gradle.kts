@@ -76,6 +76,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     // LocalLifecycleOwner y collectAsStateWithLifecycle (Compose + ciclo de vida).
     implementation(libs.androidx.lifecycle.runtime.compose)
+    // viewModel() para Compose; trae tambien lifecycle-viewmodel (ViewModel, viewModelScope).
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     // WorkManager: trabajo diferible que el sistema garantiza ejecutar aunque la app se cierre.
     implementation(libs.androidx.work.runtime.ktx)
     // La Activity usa runBlocking, Dispatchers y Flow: las corrutinas que :torneo
