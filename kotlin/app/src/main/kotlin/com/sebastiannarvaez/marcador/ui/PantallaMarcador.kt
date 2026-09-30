@@ -29,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -63,8 +62,11 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 @Composable
 fun PantallaMarcador(
     onVerDemos: () -> Unit,
+    onVerGoleadores: () -> Unit,
+    onVolver: () -> Unit,
+    onProvocarError: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: PartidoViewModel = viewModel(factory = Fabricas.partido),
+    viewModel: PartidoViewModel,
 ) {
     val estado by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -73,7 +75,7 @@ fun PantallaMarcador(
     var pausas by rememberSaveable { mutableIntStateOf(0) }
     ObservadorDelCiclo(alPararse = { pausas++ })
 
-    PantallaMarcadorContenido(estado, pausas, viewModel::alEvento, onVerDemos, modifier)
+    PantallaMarcadorContenido(estado, pausas, viewModel::alEvento, onVerDemos, onVerGoleadores, onVolver, onProvocarError, modifier)
 }
 
 // SIN ESTADO: recibe el UiState y una lambda de eventos. Se puede previsualizar con
@@ -85,6 +87,9 @@ fun PantallaMarcadorContenido(
     pausas: Int,
     onEvento: (MarcadorEvento) -> Unit,
     onVerDemos: () -> Unit,
+    onVerGoleadores: () -> Unit,
+    onVolver: () -> Unit,
+    onProvocarError: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -110,7 +115,9 @@ fun PantallaMarcadorContenido(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(estado.mensaje, color = MaterialTheme.colorScheme.error)
-                Button(onClick = { onEvento(MarcadorEvento.Elegir(1)) }) { Text("Volver al partido 1") }
+                // f47: «volver» es navegar (quitar esta clave de la pila), no cambiar de partido
+                // dentro del ViewModel: el id del partido vive en la PartidoKey, en un solo sitio.
+                Button(onClick = onVolver) { Text("Volver") }
             }
             is MarcadorUiState.Exito -> {
                 TituloDeLaActividad(estado.marcador)
@@ -121,7 +128,9 @@ fun PantallaMarcadorContenido(
                     modifier = Modifier.padding(paddingValues),
                     // Un slot mas: lo que sobra de la pantalla (demos de f32 y f33) se inyecta desde fuera.
                     extras = {
-                        Text("Partido n.º ${estado.partidoId} (elegido en la pestana Partidos)")
+                        Text("Partido n.º ${estado.partidoId} (elegido en la lista de partidos)")
+                        // f47: empuja otra clave en la pila de Navigation 3.
+                        Button(onClick = onVerGoleadores) { Text("Ver goleadores") }
                         PanelDelCronometro(
                             estado.minuto, estado.corriendo, estado.ultimoAviso, pausas,
                             onEmpezar = { onEvento(MarcadorEvento.Empezar) },
@@ -138,8 +147,8 @@ fun PantallaMarcadorContenido(
                                 )
                             }
                         }
-                        // Para VER la variante Error: pide un partido que no existe.
-                        Button(onClick = { onEvento(MarcadorEvento.Elegir(99)) }) { Text("Provocar error (partido 99)") }
+                        // Para VER la variante Error: navega a un partido que no existe.
+                        Button(onClick = onProvocarError) { Text("Provocar error (partido 99)") }
                         ComparacionDeEstado()
                         OrdenDeLosModifiers()
                         InsigniaSobreEscudo()
@@ -238,7 +247,8 @@ private fun PantallaMarcadorPreview() {
     MaterialTheme {
         PantallaMarcadorContenido(
             MarcadorUiState.Exito(1, Ejemplo.rayoContraToros, Marcador(2, 1), 45, true, "minuto 30 con 1-1"),
-            pausas = 0, onEvento = {}, onVerDemos = {},
+            pausas = 0, onEvento = {}, onVerDemos = {}, onVerGoleadores = {},
+            onVolver = {}, onProvocarError = {},
         )
     }
 }

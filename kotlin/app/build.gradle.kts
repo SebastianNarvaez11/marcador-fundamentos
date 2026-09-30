@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
+    // f47: las claves de Navigation 3 son @Serializable (la pila sobrevive a am kill).
+    alias(libs.plugins.kotlinxSerialization)
     // f45: KSP (Kotlin Symbol Processing) es el motor que ejecuta procesadores como el de
     // Room; el plugin `androidx.room3` de Room solo configura donde se exportan los esquemas.
     alias(libs.plugins.ksp)
@@ -79,6 +81,12 @@ room3 {
 }
 
 dependencies {
+    // f47: Navigation 3, la misma que la Pokedex. `runtime` = NavKey y la pila; `ui` = NavDisplay;
+    // `viewmodel-navigation3` = un almacen de ViewModel POR ENTRADA de la pila.
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.kotlinx.serialization.json)
     // f46: DataStore Preferences: pares clave-valor pequenos, asincronos, con Flow.
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)

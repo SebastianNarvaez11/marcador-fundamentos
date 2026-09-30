@@ -42,6 +42,5 @@ sealed interface MarcadorUiState {
 sealed interface MarcadorEvento {
     data object Empezar : MarcadorEvento
     data class Gol(val lado: Lado) : MarcadorEvento
-    data class Elegir(val partidoId: Int) : MarcadorEvento
     data class CambiarDuracion(val minutos: Int) : MarcadorEvento
 }

@@ -58,12 +58,13 @@ class PartidoViewModel(
     private val repositorio: PartidosRepository,
     private val registrarGol: RegistrarGol,
     private val preferencias: PreferenciasRepository,
+    partidoInicial: Int = 1,
 ) : ViewModel() {
 
     // f44: las dependencias LLEGAN por el constructor (antes, f43, salian de un singleton
     // oculto). Este ViewModel no sabe si el repositorio es de memoria, de Room o de mentira.
     // Un StateFlow LEIDO DEL HANDLE: cada vez que se escribe `estadoGuardado[CLAVE]`, cambia.
-    val partidoId: StateFlow<Int> = estadoGuardado.getStateFlow(CLAVE_PARTIDO, 1)
+    val partidoId: StateFlow<Int> = estadoGuardado.getStateFlow(CLAVE_PARTIDO, partidoInicial)
 
     // Los pasos de la carga. PRIVADO: la pantalla solo ve MarcadorUiState.
     private sealed interface Carga {
@@ -113,7 +114,6 @@ class PartidoViewModel(
             }
             Unit
         } ?: Unit
-        is MarcadorEvento.Elegir -> cargar(evento.partidoId)
         // f46: se guarda en DataStore y se recarga el partido: el reloj y el guion cambian.
         is MarcadorEvento.CambiarDuracion -> {
             viewModelScope.launch {
@@ -124,7 +124,9 @@ class PartidoViewModel(
         }
     }
 
-    // Elegir un partido: para el directo, y pasa por `Cargando`.
+    // Cargar el partido `id`: para el directo, y pasa por `Cargando`. Desde f47 el id llega en la
+    // NavKey de la pantalla y solo se pide aqui (al crear y al cambiar la duracion): nadie lo cambia
+    // desde dentro, asi que el handle y la clave no pueden discrepar.
     // La lectura va al repositorio: es `suspend`, asi que ya puede tardar (con Room, f45).
     private fun cargar(id: Int) {
         trabajos.forEach { it.cancel() }

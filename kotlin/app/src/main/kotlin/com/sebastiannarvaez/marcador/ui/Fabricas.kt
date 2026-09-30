@@ -22,13 +22,22 @@ private val CreationExtras.contenedor: AppContainer
     get() = (this[APPLICATION_KEY] as MarcadorApplication).contenedor
 
 object Fabricas {
-    val partido = viewModelFactory {
+    // Una fabrica POR PARTIDO: el id de la pantalla (el de la NavKey) es el partido inicial.
+    // Si el sistema restauro un handle (am kill), manda el id guardado.
+    fun partido(partidoId: Int) = viewModelFactory {
         initializer {
-            PartidoViewModel(createSavedStateHandle(), contenedor.partidosRepository, contenedor.registrarGol, contenedor.preferenciasRepository)
+            PartidoViewModel(
+                createSavedStateHandle(), contenedor.partidosRepository, contenedor.registrarGol,
+                contenedor.preferenciasRepository, partidoId,
+            )
         }
     }
 
     val lista = viewModelFactory {
         initializer { ListaViewModel(contenedor.partidosRepository) }
+    }
+
+    val goleadores = viewModelFactory {
+        initializer { GoleadoresViewModel(contenedor.partidosRepository) }
     }
 }
