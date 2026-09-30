@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import com.sebastiannarvaez.marcador.torneo.Gol
 
 const val CANAL_GOLES = "goles"
+const val CANAL_RECORDATORIOS = "recordatorios"
 
 // Un CANAL agrupa notificaciones del mismo tipo. Desde Android 8 (API 26) toda
 // notificacion pertenece a uno, y es el USUARIO quien decide (en Ajustes) su
@@ -24,7 +25,10 @@ fun crearCanalDeGoles(contexto: Context) {
     val canal = NotificationChannel(CANAL_GOLES, "Goles", NotificationManager.IMPORTANCE_HIGH).apply {
         description = "Avisa cuando se marca un gol"
     }
-    contexto.getSystemService(NotificationManager::class.java).createNotificationChannel(canal)
+    val recordatorios = NotificationChannel(CANAL_RECORDATORIOS, "Recordatorios", NotificationManager.IMPORTANCE_DEFAULT)
+    val gestor = contexto.getSystemService(NotificationManager::class.java)
+    gestor.createNotificationChannel(canal)
+    gestor.createNotificationChannel(recordatorios)
 }
 
 // Desde Android 13 (API 33) publicar notificaciones es un permiso PELIGROSO: hay
