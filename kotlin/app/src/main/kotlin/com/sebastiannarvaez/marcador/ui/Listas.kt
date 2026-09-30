@@ -1,6 +1,7 @@
 package com.sebastiannarvaez.marcador.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,10 +9,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -22,6 +29,7 @@ import com.sebastiannarvaez.marcador.torneo.FilaDePosicion
 import com.sebastiannarvaez.marcador.torneo.Jugador
 import com.sebastiannarvaez.marcador.torneo.Torneo
 import com.sebastiannarvaez.marcador.torneo.marcador
+import kotlinx.coroutines.launch
 
 // f35 · LISTAS CON LazyColumn
 //
@@ -45,13 +53,34 @@ import com.sebastiannarvaez.marcador.torneo.marcador
 
 @Composable
 fun PantallaPartidos(partidos: List<PartidoDeLista>, modifier: Modifier = Modifier) {
-    LazyColumn(
-        modifier,
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        items(partidos, key = { it.id }) { item ->
-            FilaDePartido(item.partido.local.nombre, item.partido.visitante.nombre, item.partido.marcador().toString())
+    // f37 · LazyListState es el estado del scroll. Se lee `firstVisibleItemIndex`, que
+    // cambia con CADA pixel de desplazamiento; si el `if` dependiera de el directamente,
+    // esta funcion se recompondria continuamente. derivedStateOf lo evita: calcula
+    // «¿ya bajo de la fila 3?» y solo avisa cuando ese BOOLEANO cambia (2 veces en total).
+    val estadoDeLista = rememberLazyListState()
+    val mostrarBotonSubir by remember { derivedStateOf { estadoDeLista.firstVisibleItemIndex > 3 } }
+
+    // rememberCoroutineScope: un scope atado a esta composicion para lanzar corrutinas
+    // desde un callback. `animateScrollToItem` es suspend, y un onClick no lo es;
+    // LaunchedEffect aqui no vale porque no se puede llamar dentro de un onClick. El scope
+    // se cancela cuando este composable sale de la composicion.
+    val alcance = rememberCoroutineScope()
+
+    Box(modifier) {
+        LazyColumn(
+            state = estadoDeLista,
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(partidos, key = { it.id }) { item ->
+                FilaDePartido(item.partido.local.nombre, item.partido.visitante.nombre, item.partido.marcador().toString())
+            }
+        }
+        if (mostrarBotonSubir) {
+            SmallFloatingActionButton(
+                onClick = { alcance.launch { estadoDeLista.animateScrollToItem(0) } },
+                modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+            ) { Text("↑") }
         }
     }
 }

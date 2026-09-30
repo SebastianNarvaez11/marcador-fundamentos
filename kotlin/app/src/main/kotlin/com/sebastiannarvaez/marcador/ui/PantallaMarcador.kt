@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -65,6 +66,26 @@ fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
     var golesVisitante by rememberSaveable { mutableIntStateOf(0) }
     val estado = EstadoMarcador(partido, Marcador(golesLocal, golesVisitante))
 
+    // f37: el reloj, el observador y el titulo. El estado es de este contenedor;
+    // los efectos (Efectos.kt) trabajan con el.
+    var minuto by rememberSaveable { mutableIntStateOf(0) }
+    var corriendo by rememberSaveable { mutableStateOf(false) }
+    var ultimoAviso by rememberSaveable { mutableStateOf("ninguno") }
+    var pausas by rememberSaveable { mutableIntStateOf(0) }
+
+    RelojDelPartido(corriendo, minutoActual = minuto, msPorMinuto = 250) { nuevoMinuto ->
+        minuto = nuevoMinuto
+        if (nuevoMinuto % 15 == 0) {
+            // `estado` es un VALOR capturado (no un State): esta lambda nace con el marcador
+            // de la composicion en que se creo. Sin rememberUpdatedState en el reloj, aqui
+            // saldria siempre el marcador de cuando arranco el efecto.
+            ultimoAviso = "minuto $nuevoMinuto con ${estado.marcador}"
+        }
+        if (nuevoMinuto >= MINUTOS_DEL_PARTIDO) corriendo = false
+    }
+    ObservadorDelCiclo(alPararse = { pausas++ })
+    TituloDeLaActividad(estado.marcador)
+
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets(0),
@@ -88,6 +109,11 @@ fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
             modifier = Modifier.padding(paddingValues),
             // Un slot mas: lo que sobra de la pantalla (demos de f32 y f33) se inyecta desde fuera.
             extras = {
+                PanelDelCronometro(
+                    minuto, corriendo, ultimoAviso, pausas,
+                    onAlternar = { corriendo = !corriendo },
+                    onReiniciar = { corriendo = false; minuto = 0; ultimoAviso = "ninguno" },
+                )
                 ComparacionDeEstado()
                 OrdenDeLosModifiers()
                 InsigniaSobreEscudo()

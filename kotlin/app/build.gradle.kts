@@ -74,6 +74,8 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     // lifecycleScope y repeatOnLifecycle: corrutinas atadas al ciclo de vida.
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    // LocalLifecycleOwner y collectAsStateWithLifecycle (Compose + ciclo de vida).
+    implementation(libs.androidx.lifecycle.runtime.compose)
     // WorkManager: trabajo diferible que el sistema garantiza ejecutar aunque la app se cierre.
     implementation(libs.androidx.work.runtime.ktx)
     // La Activity usa runBlocking, Dispatchers y Flow: las corrutinas que :torneo
