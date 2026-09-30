@@ -6,6 +6,10 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
+import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.runtime.getValue
@@ -54,6 +58,28 @@ class MainActivity : ComponentActivity() {
 
     // Este se guarda en el Bundle de onSaveInstanceState y se restaura en onCreate.
     private var golesQueSobreviven by mutableIntStateOf(0)
+
+    // ---- f29 ----
+    // El dialogo del permiso es asincrono: pides y la respuesta llega despues, a este
+    // lambda. Hay que registrarlo ANTES de que la Activity llegue a STARTED (por eso es
+    // una propiedad, no algo dentro de un onClick).
+    private val pedirPermisoDeAvisos =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { concedido ->
+            avisosActivados = concedido
+            if (!concedido) {
+                // El usuario dijo que no: se explica y se sigue sin avisos. No se insiste.
+                Toast.makeText(this, "Sin permiso no hay avisos de gol", Toast.LENGTH_LONG).show()
+            }
+        }
+    private var avisosActivados by mutableStateOf(false)
+
+    private fun activarAvisos() {
+        if (puedeNotificar(this)) {
+            avisosActivados = true
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            pedirPermisoDeAvisos.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     // ---- f26 ----
     private var resultadoDelCalculo by mutableStateOf("sin calcular")
@@ -124,6 +150,17 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        avisosActivados = puedeNotificar(this)
+
+        // Cada gol del partido en vivo se convierte en una notificacion. `goles` es
+        // un SharedFlow: solo ve los goles que ocurren MIENTRAS se recoge. Sin
+        // repeatOnLifecycle a proposito: con la app en segundo plano tambien avisa
+        // (hasta que la Activity se destruye; para avisar sin pantalla haria falta
+        // un servicio, ver f30).
+        lifecycleScope.launch {
+            partidoEnVivo.goles.collect { gol -> notificarGol(applicationContext, gol) }
+        }
+
         // Si `savedInstanceState` no es null, Android nos devuelve lo que guardamos.
         golesQueSobreviven = savedInstanceState?.getInt(CLAVE_GOLES) ?: 0
 
@@ -140,6 +177,10 @@ class MainActivity : ComponentActivity() {
                     }
                     Button(onClick = { abrirEnlace("https://kotlinlang.org") }) {
                         Text("Abrir web (ACTION_VIEW)")
+                    }
+                    // f29: permiso y notificacion.
+                    Button(onClick = { activarAvisos() }) {
+                        Text(if (avisosActivados) "Avisos de gol: activados" else "Activar avisos de gol")
                     }
                     Button(onClick = { calcularBloqueando() }) {
                         Text("Calcular (BLOQUEA: ANR)")

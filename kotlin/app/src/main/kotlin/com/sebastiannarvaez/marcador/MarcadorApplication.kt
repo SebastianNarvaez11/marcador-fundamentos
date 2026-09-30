@@ -12,6 +12,7 @@ import android.util.Log
 class MarcadorApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        crearCanalDeGoles(this)
         Log.d("Ciclo", "MarcadorApplication onCreate (pid ${android.os.Process.myPid()})")
     }
 }

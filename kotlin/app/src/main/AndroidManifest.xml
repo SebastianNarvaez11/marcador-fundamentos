@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Permiso PELIGROSO desde la API 33: declararlo aqui no basta, ademas se pide
+         en tiempo de ejecucion. Sin la linea, el dialogo nunca aparece y el
+         sistema deniega siempre. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".MarcadorApplication"
         android:allowBackup="true"
