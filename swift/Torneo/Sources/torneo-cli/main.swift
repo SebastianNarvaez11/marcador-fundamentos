@@ -41,3 +41,25 @@ print(presentar(nil))
 for texto in ["10", " 7 ", "diez", ""] {
     print("«\(texto)» -> \(dorsalDesdeTexto(texto).map(String.init) ?? "no es un dorsal")")
 }
+
+// Struct frente a class.
+let ana = jugadores[0]
+let ivan = Jugador(nombre: "Iván", dorsal: 7)
+let rayo = Equipo(nombre: "Rayo FC", plantilla: jugadores)!
+rayo.nombrarCapitan(ana)
+print("\(rayo), capitán: \(rayo.capitan?.nombre ?? "sin capitán")")
+print("Toros con dorsales repetidos: \(Equipo(nombre: "Toros", plantilla: [Jugador(nombre: "A", dorsal: 7), Jugador(nombre: "B", dorsal: 7)]) == nil ? "nil" : "creado")")
+
+let toros = Equipo(nombre: "Toros", plantilla: [ivan])!
+let inicio = Partido(local: rayo, visitante: toros)
+var alFinal = inicio            // COPIA: struct
+alFinal.registrarGolLocal()
+alFinal.registrarGolLocal()
+alFinal.registrarGolVisitante()
+print("Antes: \(inicio.golesLocal)-\(inicio.golesVisitante), después: \(alFinal.golesLocal)-\(alFinal.golesVisitante)")
+print("¿Mismo equipo local en las dos copias? \(inicio.local === alFinal.local)")
+
+let torneo = Torneo(nombre: nombreDelTorneo, equipos: [rayo, toros])
+let mismoTorneo = torneo        // MISMA referencia: class
+mismoTorneo.registrar(alFinal)
+print("Partidos vistos desde `torneo`: \(torneo.partidos.count)")
