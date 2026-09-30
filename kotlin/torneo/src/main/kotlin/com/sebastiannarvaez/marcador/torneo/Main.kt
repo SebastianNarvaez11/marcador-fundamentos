@@ -40,4 +40,14 @@ fun main() {
     println("$rayo, capitán: ${rayo.capitan?.nombre}")
     val error = runCatching { Equipo("Toros", listOf(Jugador("A", 7), Jugador("B", 7))) }
     println("Toros: ${error.exceptionOrNull()?.message}")
+
+    // data class: copy, == frente a ===, desestructuración.
+    val toros = Equipo("Toros", listOf(Jugador("Iván", 7)))
+    val inicio = Partido(rayo, toros)
+    val alFinal = inicio.conGolLocal().conGolLocal().conGolVisitante()
+    val (_, _, golesLocal, golesVisitante) = alFinal
+    println("Antes: ${inicio.golesLocal}-${inicio.golesVisitante}, después: $golesLocal-$golesVisitante")
+    val ana = jugadores.first()
+    println("¿Misma ficha? ${ana == Jugador("Ana", 9)} (==), ${ana === Jugador("Ana", 9)} (===)")
+    println("Con otro dorsal: ${ana.copy(dorsal = 10)}")
 }

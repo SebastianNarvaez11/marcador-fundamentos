@@ -1,7 +1,9 @@
 package com.sebastiannarvaez.marcador.torneo
 
 // `Int?` es un Int que puede ser null: en el amateur hay jugadores sin dorsal.
-class Jugador(val nombre: String, val dorsal: Int?) {
+// `data class`: el compilador genera equals, hashCode, toString, copy y
+// componentN a partir de las propiedades del constructor primario.
+data class Jugador(val nombre: String, val dorsal: Int?) {
 
     // `?.let`: el bloque solo corre si el dorsal no es null.
     // `?:` (elvis): el valor de reserva cuando lo de la izquierda es null.
