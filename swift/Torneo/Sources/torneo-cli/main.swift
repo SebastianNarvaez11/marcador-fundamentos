@@ -63,6 +63,20 @@ for evento in alFinal.eventos { print(describir(evento)) }
 print("Marcador: \(alFinal.golesLocal)-\(alFinal.golesVisitante) -> \(alFinal.resultado().titular)")
 print("Colores de tarjeta: \(ColorDeTarjeta.allCases.map(\.rawValue))")
 
+// Closures: filtrar eventos y sacar goleadores.
+print("Tarjetas: \(alFinal.eventos { if case .tarjeta = $0 { true } else { false } }.map(describir))")
+print("Primera mitad: \(alFinal.eventos(antesDelMinuto(45)).count) eventos")
+print("Goleadores: \(alFinal.goleadores().map(\.nombre))")
+print("Minutos de gol de Ana: \(alFinal.minutosDeGolDe(ana))")
+repetir(2) { vuelta in print("Vuelta \(vuelta)") }
+let siguiente = contador()
+print("Contador: \(siguiente()), \(siguiente()), \(siguiente())")
+alResolver(alFinal) { ganador in
+    print("Ganó \(ganador.nombre)")
+} enEmpate: {
+    print("Tablas")
+}
+
 let torneo = Torneo(nombre: nombreDelTorneo, equipos: [rayo, toros])
 let mismoTorneo = torneo        // MISMA referencia: class
 mismoTorneo.registrar(alFinal)

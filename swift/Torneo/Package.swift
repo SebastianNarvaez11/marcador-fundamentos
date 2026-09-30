@@ -18,5 +18,9 @@ let package = Package(
         .executableTarget(name: "torneo-cli", dependencies: ["Torneo"]),
         // Las pruebas, con Swift Testing (`import Testing`).
         .testTarget(name: "TorneoTests", dependencies: ["Torneo"]),
-    ]
+    ],
+    // Con `swift-tools-version: 6.2` el modo de lenguaje por defecto YA es Swift 6,
+    // con la concurrencia estricta activada. Hasta f64 se trabaja en modo Swift 5
+    // para poder aprender cada tema por separado; en f65 se quita esta línea.
+    swiftLanguageModes: [.v5]
 )

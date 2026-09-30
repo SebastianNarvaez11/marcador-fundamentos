@@ -44,4 +44,33 @@ public struct Partido: Equatable {
             .empate
         }
     }
+
+    // Función de orden superior: recibe una función como parámetro.
+    // `(EventoDePartido) -> Bool` es un tipo función: toma un evento y devuelve
+    // si cumple. Al llamarla, la closure va fuera de los paréntesis (trailing
+    // closure): `partido.eventos { … }` y, sin nombre, se usa `$0`.
+    // (Como en Kotlin, una propiedad `eventos` y una función `eventos(_:)` se llevan bien.)
+    public func eventos(_ filtro: (EventoDePartido) -> Bool) -> [EventoDePartido] {
+        eventos.filter(filtro)
+    }
+
+    // `compactMap` transforma y descarta los nil: cada gol se convierte en su
+    // jugador y lo demás (tarjetas, cambios) desaparece. Es el
+    // `filterIsInstance<Gol>().map(Gol::jugador)` de Kotlin en un solo paso.
+    public func goleadores() -> [Jugador] {
+        eventos.compactMap { evento in
+            if case let .gol(_, jugador, _) = evento { jugador } else { nil }
+        }
+    }
+
+    // `return` dentro de una closure sale SOLO de la closure (el `return@forEach`
+    // de Kotlin): aquí funciona como un `continue`. No hace falta etiqueta.
+    public func minutosDeGolDe(_ jugador: Jugador) -> [Int] {
+        var minutos: [Int] = []
+        eventos.forEach { evento in
+            guard case let .gol(minuto, autor, _) = evento else { return }
+            if autor == jugador { minutos.append(minuto) }
+        }
+        return minutos
+    }
 }
