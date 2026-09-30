@@ -99,6 +99,21 @@ print("Líder: \(lider(goleadores)?.nombre ?? "nadie"); nombres: \(nombres(de: g
 let porLongitud = Ranking(elementos: ["Rayo FC", "Toros", "Lobos"], puntos: \.count)
 print("Ranking de textos: \(porLongitud.ordenados)")
 
+// Colecciones: la tabla de posiciones de una jornada completa.
+let copa = Torneo(nombre: nombreDelTorneo, equipos: [rayo, toros, lobos])
+do {
+    try copa.registrar(alFinal)
+    try copa.registrar(partidoDeToros)
+    try copa.registrar(Partido(local: lobos, visitante: rayo).registrando(.gol(minuto: 40, jugador: ana, equipo: rayo)))
+} catch {
+    print("No se pudo registrar: \(error.localizedDescription)")
+}
+print(copa.tablaComoTexto())
+let foto = copa.instantanea()
+print("Tabla calculada \(foto.calculosDeLaTabla) veces antes de leerla")
+print("Líder: \(foto.tabla.first?.equipo.nombre ?? "nadie")")
+print("Líder otra vez: \(foto.tabla.first?.equipo.nombre ?? "nadie") (calculada \(foto.calculosDeLaTabla) vez)")
+
 let torneo = Torneo(nombre: nombreDelTorneo, equipos: [rayo, toros, lobos])
 let mismoTorneo = torneo        // MISMA referencia: class
 do {

@@ -14,12 +14,30 @@ public final class Torneo {
     // COPIA (los arrays son de valor). Kotlin necesitaba una lista privada, un
     // getter con `toList()` y explicar el `as MutableList`: aquí el lenguaje ya
     // lo evita.
-    public private(set) var partidos: [Partido] = []
+    //
+    // `didSet` corre DESPUÉS de cada cambio de la propiedad: aquí invalida la
+    // tabla guardada, que ya no vale. (`willSet` correría antes.)
+    public private(set) var partidos: [Partido] = [] {
+        didSet { tablaEnCache = nil }
+    }
+
+    private var tablaEnCache: [FilaDePosicion]?
 
     public init(nombre: String, equipos: [Equipo], reglamento: any Reglamento = ReglamentoLiga()) {
         self.nombre = nombre
         self.equipos = equipos
         self.reglamento = reglamento
+    }
+
+    // Propiedad calculada de solo lectura, sin campo propio.
+    public var cantidadDePartidos: Int { partidos.count }
+
+    // La tabla se calcula la primera vez y se reutiliza hasta el siguiente partido.
+    public func tablaDePosiciones() -> [FilaDePosicion] {
+        if let guardada = tablaEnCache { return guardada }
+        let tabla = partidos.tablaDePosiciones(equipos: equipos, reglamento: reglamento)
+        tablaEnCache = tabla
+        return tabla
     }
 
     // Registrar puede fallar (equipo no inscrito, gol de alguien ajeno…), y eso no
@@ -77,5 +95,13 @@ public final class Torneo {
                 throw .cambioConAjenos
             }
         }
+    }
+}
+
+extension Torneo {
+    // Los partidos son valores, así que la foto no se ve afectada por lo que se
+    // registre después.
+    public func instantanea() -> InstantaneaDelTorneo {
+        InstantaneaDelTorneo(partidos: partidos, equipos: equipos, reglamento: reglamento)
     }
 }

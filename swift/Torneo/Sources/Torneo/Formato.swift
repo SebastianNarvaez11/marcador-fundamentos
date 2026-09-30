@@ -9,3 +9,35 @@ extension Jugador {
 extension Equipo {
     public var capitanONinguno: String { capitan?.nombre ?? "sin capitán" }
 }
+
+// Rellena con espacios hasta `ancho`, a la izquierda o a la derecha. (Kotlin usa
+// `"%-8s".format(...)`; `String(format:)` de Swift no funciona bien con `String`
+// con `%s`, y con `%@` obliga a importar Foundation.)
+func relleno(_ texto: String, ancho: Int, alDerecha: Bool = false) -> String {
+    let faltan = max(0, ancho - texto.count)
+    let espacios = String(repeating: " ", count: faltan)
+    return alDerecha ? espacios + texto : texto + espacios
+}
+
+extension FilaDePosicion {
+    // Mismo formato que el `"%2d  %-8s %2d %2d %2d %2d %3d %2d %3d %3d"` de Kotlin.
+    public func aTexto(puesto: Int) -> String {
+        let numeros = [
+            (jugados, 2), (ganados, 2), (empatados, 2), (perdidos, 2),
+            (golesAFavor, 3), (golesEnContra, 2), (diferencia, 3), (puntos, 3),
+        ].map { relleno(String($0.0), ancho: $0.1, alDerecha: true) }
+        return relleno(String(puesto), ancho: 2, alDerecha: true) + "  "
+            + relleno(equipo.nombre, ancho: 8) + " "
+            + numeros.joined(separator: " ")
+    }
+}
+
+extension Torneo {
+    public func tablaComoTexto() -> String {
+        var lineas = ["Pos Equipo    PJ  G  E  P  GF GC  DG Pts"]
+        for (indice, fila) in tablaDePosiciones().enumerated() {
+            lineas.append(fila.aTexto(puesto: indice + 1))
+        }
+        return lineas.joined(separator: "\n")
+    }
+}
