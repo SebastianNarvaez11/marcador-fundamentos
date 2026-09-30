@@ -1,11 +1,10 @@
 package com.sebastiannarvaez.marcador.ui
 
+import com.sebastiannarvaez.marcador.data.DatosDeEjemplo
+import com.sebastiannarvaez.marcador.domain.Directo
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sebastiannarvaez.marcador.torneo.Marcador
-import com.sebastiannarvaez.marcador.torneo.Partido
-import com.sebastiannarvaez.marcador.torneo.despuesDe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -16,7 +15,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 // f39 · VIEWMODEL
@@ -60,37 +58,28 @@ class PartidoViewModel(private val estadoGuardado: SavedStateHandle) : ViewModel
     // Los pasos de la carga. PRIVADO: la pantalla solo ve MarcadorUiState.
     private sealed interface Carga {
         data object EnCurso : Carga
-        data class Lista(val id: Int, val partido: Partido) : Carga
+        data class Lista(val directo: Directo) : Carga
         data class Fallo(val motivo: String) : Carga
     }
 
     private val carga = MutableStateFlow<Carga>(Carga.EnCurso)
-    private val minutoActual = MutableStateFlow(0)
-    private val enMarcha = MutableStateFlow(false)
-    private val avisoActual = MutableStateFlow("ninguno")
-    private val golesAMano = MutableStateFlow(Marcador(0, 0))
-    // Los goles que va marcando el guion del partido elegido (los aplica el reloj de `empezar`).
-    private val golesEnVivo = MutableStateFlow(Marcador(0, 0))
     private var trabajos: List<Job> = emptyList()
 
     // f41 · EL ESTADO QUE VE LA PANTALLA, en un solo StateFlow.
-    // flatMapLatest (f21): cada vez que cambia la carga, se descarta el flujo anterior.
-    // combine (f21) junta los flujos del partido en UN MarcadorUiState.Exito coherente.
+    // f42 · Ya no calcula nada: traduce el `Directo` (dominio) a un MarcadorUiState.
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<MarcadorUiState> = carga.flatMapLatest { paso ->
         when (paso) {
             Carga.EnCurso -> flowOf(MarcadorUiState.Cargando)
             is Carga.Fallo -> flowOf(MarcadorUiState.Error(paso.motivo))
-            is Carga.Lista -> combine(
-                golesEnVivo, golesAMano, minutoActual, enMarcha, avisoActual,
-            ) { vivo, mano, minuto, corriendo, aviso ->
+            is Carga.Lista -> combine(paso.directo.marcador, paso.directo.instante) { marcador, instante ->
                 MarcadorUiState.Exito(
-                    partidoId = paso.id,
-                    partido = paso.partido,
-                    marcador = Marcador(vivo.local + mano.local, vivo.visitante + mano.visitante),
-                    minuto = minuto,
-                    corriendo = corriendo,
-                    ultimoAviso = aviso,
+                    partidoId = paso.directo.partidoId,
+                    partido = paso.directo.partido,
+                    marcador = marcador,
+                    minuto = instante.minuto,
+                    corriendo = instante.corriendo,
+                    ultimoAviso = instante.ultimoAviso,
                 )
             }
         }
@@ -102,28 +91,16 @@ class PartidoViewModel(private val estadoGuardado: SavedStateHandle) : ViewModel
 
     // UNICA puerta de entrada de los eventos de la pantalla.
     fun alEvento(evento: MarcadorEvento) = when (evento) {
-        MarcadorEvento.Empezar -> empezar()
-        is MarcadorEvento.Gol -> golAMano(evento.lado)
+        MarcadorEvento.Empezar -> (carga.value as? Carga.Lista)?.let { trabajos = it.directo.iniciar(viewModelScope) } ?: Unit
+        is MarcadorEvento.Gol -> (carga.value as? Carga.Lista)?.directo?.golAMano(evento.lado) ?: Unit
         is MarcadorEvento.Elegir -> cargar(evento.partidoId)
     }
 
-    private fun golAMano(lado: Lado) = golesAMano.update {
-        when (lado) {
-            Lado.LOCAL -> it.copy(local = it.local + 1)
-            Lado.VISITANTE -> it.copy(visitante = it.visitante + 1)
-        }
-    }
-
-    // Elegir un partido: para el directo, lo pone a cero y pasa por `Cargando`.
+    // Elegir un partido: para el directo, y pasa por `Cargando`.
     // El `delay` simula una lectura lenta (con Room, en f45, la lectura es real).
     private fun cargar(id: Int) {
         trabajos.forEach { it.cancel() }
         trabajos = emptyList()
-        minutoActual.value = 0
-        enMarcha.value = false
-        avisoActual.value = "ninguno"
-        golesAMano.value = Marcador(0, 0)
-        golesEnVivo.value = Marcador(0, 0)
         carga.value = Carga.EnCurso
         viewModelScope.launch {
             delay(400)
@@ -134,38 +111,9 @@ class PartidoViewModel(private val estadoGuardado: SavedStateHandle) : ViewModel
                 // Solo se guarda el id si es valido: un id malo en el handle
                 // rompería la app tambien tras un am kill.
                 estadoGuardado[CLAVE_PARTIDO] = id
-                carga.value = Carga.Lista(id, elegido.partido)
+                carga.value = Carga.Lista(Directo(id, elegido.partido, MS_POR_MINUTO))
             }
         }
-    }
-
-    private fun empezar() {
-        val lista = carga.value as? Carga.Lista ?: return
-        if (enMarcha.value || minutoActual.value > 0) return
-        enMarcha.value = true
-        // UN SOLO RELOJ, en el scope del ViewModel (sobrevive a rotar). En cada minuto el
-        // mismo bucle aplica los goles del guion y, si toca, calcula el aviso con ESE
-        // marcador. (Otro reloj para los goles, en otro hilo, dejaba el aviso un gol por
-        // detras; y leer `uiState.value` tampoco vale: es el de la ultima combinacion.)
-        val guion = lista.partido
-        trabajos = listOf(
-            viewModelScope.launch {
-                while (minutoActual.value < MINUTOS_DEL_PARTIDO) {
-                    delay(MS_POR_MINUTO)
-                    val nuevo = minutoActual.value + 1
-                    golesEnVivo.update { antes ->
-                        guion.eventos.filter { it.minuto == nuevo }.fold(antes) { m, evento -> m.despuesDe(evento, guion) }
-                    }
-                    minutoActual.value = nuevo
-                    if (nuevo % 15 == 0) {
-                        val vivo = golesEnVivo.value
-                        val mano = golesAMano.value
-                        avisoActual.value = "minuto $nuevo con ${Marcador(vivo.local + mano.local, vivo.visitante + mano.visitante)}"
-                    }
-                }
-                enMarcha.value = false
-            },
-        )
     }
 
     companion object {

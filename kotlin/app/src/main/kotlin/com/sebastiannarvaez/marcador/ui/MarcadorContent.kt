@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sebastiannarvaez.marcador.domain.Lado
 import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Marcador
 import com.sebastiannarvaez.marcador.torneo.Partido
@@ -38,9 +39,6 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 
 // Que se pinta. Es un dato inmutable: para cambiar el marcador se crea otro.
 data class EstadoMarcador(val partido: Partido, val marcador: Marcador)
-
-// Un evento de la pantalla, sin logica: «han marcado los de aqui».
-enum class Lado { LOCAL, VISITANTE }
 
 // SIN ESTADO («stateless»): mismos parametros, misma pantalla. No hay `remember`
 // aqui dentro (salvo el scroll, que es estado de presentacion, no de dominio).

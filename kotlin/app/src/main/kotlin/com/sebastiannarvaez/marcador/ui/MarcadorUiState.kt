@@ -1,5 +1,6 @@
 package com.sebastiannarvaez.marcador.ui
 
+import com.sebastiannarvaez.marcador.domain.Lado
 import com.sebastiannarvaez.marcador.torneo.Marcador
 import com.sebastiannarvaez.marcador.torneo.Partido
 
