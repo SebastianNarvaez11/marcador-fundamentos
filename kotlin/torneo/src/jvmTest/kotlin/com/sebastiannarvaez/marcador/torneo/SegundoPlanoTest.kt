@@ -16,8 +16,8 @@ class SegundoPlanoTest {
     fun guardarYCargarEnSegundoPlanoDevuelveElMismoTorneo() = runBlocking {
         val fichero = ficheroTemporal()
         val torneo = Ejemplo.torneoConPartidos()
-        torneo.guardarEnSegundoPlano(fichero).getOrThrow()
-        val cargado = cargarTorneoEnSegundoPlano(fichero).getOrThrow()
+        torneo.guardarEnSegundoPlano(fichero.path).getOrThrow()
+        val cargado = cargarTorneoEnSegundoPlano(fichero.path).getOrThrow()
         assertEquals(torneo.nombre, cargado.nombre)
         assertEquals(torneo.partidos.size, cargado.partidos.size)
         assertEquals(torneo.goleadores().map { it.nombre }, cargado.goleadores().map { it.nombre })
@@ -33,21 +33,21 @@ class SegundoPlanoTest {
     fun cerrarJornadaGuardaYDevuelveLaTabla() = runBlocking {
         val fichero = ficheroTemporal()
         val torneo = Ejemplo.torneoConPartidos()
-        val tabla = torneo.cerrarJornada(fichero)
+        val tabla = torneo.cerrarJornada(fichero.path)
         assertEquals(4, tabla.size)
         assertTrue(fichero.length() > 0)
     }
 
     @Test
     fun guardarEnUnaRutaImposibleDevuelveFalloSinLanzar() = runBlocking {
-        val resultado = Ejemplo.torneoConPartidos().guardarEnSegundoPlano(File("/no/existe/torneo.json"))
+        val resultado = Ejemplo.torneoConPartidos().guardarEnSegundoPlano("/no/existe/torneo.json")
         assertTrue(resultado.isFailure)
     }
 
     @Test
     fun cerrarJornadaPropagaElErrorDelGuardado() {
         assertFailsWith<Exception> {
-            runBlocking { Ejemplo.torneoConPartidos().cerrarJornada(File("/no/existe/torneo.json")) }
+            runBlocking { Ejemplo.torneoConPartidos().cerrarJornada("/no/existe/torneo.json") }
         }
     }
 

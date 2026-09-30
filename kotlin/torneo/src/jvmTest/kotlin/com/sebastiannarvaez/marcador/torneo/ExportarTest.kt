@@ -23,7 +23,7 @@ class ExportarTest {
         val torneo = torneo().apply {
             registrar(rayo, toros, listOf(Gol(1, ana, rayo))).getOrThrow()
         }
-        assertTrue(torneo.exportarTabla(destino).isSuccess)
+        assertTrue(torneo.exportarTabla(destino.path).isSuccess)
         val lineas = destino.readLines()
         assertEquals(3, lineas.size)
         assertTrue(lineas[1].contains("Rayo"))
@@ -32,7 +32,7 @@ class ExportarTest {
 
     @Test
     fun exportarEnUnaCarpetaQueNoExisteDevuelveFailure() {
-        val destino = File("/carpeta/que/no/existe/tabla.txt")
+        val destino = "/carpeta/que/no/existe/tabla.txt"
         val error = torneo().exportarTabla(destino).exceptionOrNull()
         assertIs<IOException>(error)
     }

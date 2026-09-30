@@ -119,9 +119,9 @@ fun demoKotlin() {
         println("«$texto» -> ${dorsalDesdeTexto(texto) ?: "no es un dorsal"}")
     }
 
-    // `use` cierra el fichero aunque falle la escritura.
+    // `escribirTexto` cierra el fichero por dentro; si la escritura falla, llega como Result.
     val destino = File.createTempFile("tabla", ".txt")
-    torneo.exportarTabla(destino)
+    torneo.exportarTabla(destino.path)
         .onSuccess { println("Tabla escrita en ${destino.name} (${destino.length()} bytes)") }
         .onFailure { println("No se pudo exportar: ${it.message}") }
     destino.delete()
@@ -133,11 +133,11 @@ fun demoKotlin() {
     println("Líder otra vez: ${foto.tabla.first().equipo.nombre} (calculada ${foto.calculosDeLaTabla} vez)")
 
     // kotlinx.serialization: el torneo entero, a torneo.json y de vuelta.
-    val fichero = File("torneo.json")
-    torneo.guardar(fichero)
-        .onSuccess { println("Guardado en ${fichero.absolutePath}") }
+    val ruta = File("torneo.json").absolutePath
+    torneo.guardar(ruta)
+        .onSuccess { println("Guardado en $ruta") }
         .onFailure { println("No se pudo guardar: ${it.message}") }
-    cargarTorneo(fichero)
+    cargarTorneo(ruta)
         .onSuccess { println("Cargado: ${it.nombre}, ${it.partidos.size} partidos, líder ${it.tablaDePosiciones().first().equipo.nombre}") }
         .onFailure { println("No se pudo cargar: ${it.message}") }
 }

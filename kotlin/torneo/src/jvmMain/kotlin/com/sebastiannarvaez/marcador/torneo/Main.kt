@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
-import java.io.File
 import kotlin.system.measureTimeMillis
 
 // Punto de entrada de consola: ./gradlew :torneo:jvmRun
@@ -162,12 +161,12 @@ suspend fun demoErrores() {
 
 suspend fun demoDispatchers() {
     val torneo = Ejemplo.torneoConPartidos()
-    val fichero = File("torneo.json")
+    val ruta = "torneo.json"
     println("Empiezo en: ${Thread.currentThread().name}")
     withContext(Dispatchers.IO) { println("Guardar corre en: ${Thread.currentThread().name}") }
     withContext(Dispatchers.Default) { println("Calcular corre en: ${Thread.currentThread().name}") }
-    val tabla = torneo.cerrarJornada(fichero)
-    println("Guardado en ${fichero.absolutePath}; líder: ${tabla.first().equipo.nombre} con ${tabla.first().puntos} puntos")
+    val tabla = torneo.cerrarJornada(ruta)
+    println("Guardado en $ruta; líder: ${tabla.first().equipo.nombre} con ${tabla.first().puntos} puntos")
     println("Vuelvo a: ${Thread.currentThread().name}")
     // Dispatchers.Main en consola: no existe.
     val main = runCatching { withContext(Dispatchers.Main) { } }

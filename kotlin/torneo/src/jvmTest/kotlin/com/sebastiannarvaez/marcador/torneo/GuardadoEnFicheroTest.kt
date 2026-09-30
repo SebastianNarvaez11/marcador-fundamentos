@@ -14,14 +14,9 @@ class GuardadoEnFicheroTest {
     fun cargaDesdeFichero() {
         val carpeta = createTempDirectory("marcador").toFile()
         val fichero = carpeta.resolve("torneo.json")
-        assertTrue(torneoDeEjemplo().guardar(fichero).isSuccess)
-        val cargado = cargarTorneo(fichero).getOrThrow()
+        assertTrue(torneoDeEjemplo().guardar(fichero.path).isSuccess)
+        val cargado = cargarTorneo(fichero.path).getOrThrow()
         assertEquals(torneoDeEjemplo().nombre, cargado.nombre)
         carpeta.deleteRecursively()
-    }
-
-    @Test
-    fun unFicheroQueNoExisteEsFailure() {
-        assertTrue(cargarTorneo(java.io.File("/no/existe/torneo.json")).isFailure)
     }
 }

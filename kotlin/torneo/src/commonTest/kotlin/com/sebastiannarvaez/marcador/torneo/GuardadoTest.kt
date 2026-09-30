@@ -50,6 +50,14 @@ class GuardadoTest {
         )
     }
 
+    // f82: con rutas (String) en vez de java.io.File, esta prueba ya corre tambien en iOS.
+    @Test
+    fun unaRutaQueNoExisteEsFailure() {
+        assertTrue(cargarTorneo("/no/existe/torneo.json").isFailure)
+        assertTrue(torneoDeEjemplo().guardar("/no/existe/torneo.json").isFailure)
+        assertTrue(torneoDeEjemplo().exportarTabla("/no/existe/tabla.txt").isFailure)
+    }
+
     @Test
     fun jsonRotoEsFailure() {
         assertTrue(torneoDesdeJson("{ esto no es json").isFailure)

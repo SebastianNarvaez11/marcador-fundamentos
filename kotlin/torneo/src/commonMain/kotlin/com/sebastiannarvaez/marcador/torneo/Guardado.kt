@@ -129,3 +129,10 @@ fun torneoDesdeJson(texto: String): Result<Torneo> = runCatching {
         guardado.partidos.forEach { registrar(it.aPartido(porNombre)).getOrThrow() }
     }
 }
+
+// f82: antes recibian un java.io.File; ahora una ruta y `leerTexto`/`escribirTexto` (Ficheros.kt).
+fun Torneo.guardar(ruta: String): Result<Unit> = runCatching { escribirTexto(ruta, aJson()) }
+
+fun cargarTorneo(ruta: String): Result<Torneo> = runCatching { leerTexto(ruta) }.mapCatching {
+    torneoDesdeJson(it).getOrThrow()
+}
