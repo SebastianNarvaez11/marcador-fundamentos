@@ -142,6 +142,15 @@ class MainActivity : ComponentActivity() {
                         Text("Empezar partido")
                     }
                     Text("Marcador en vivo: $marcadorEnVivo")
+                    // f27. Para reproducir la fuga: pulsa el primero, gira el movil y
+                    // pulsa Home; a los pocos segundos LeakCanary avisa en Logcat (tag
+                    // LeakCanary) y con una notificacion. El segundo es el arreglo.
+                    Button(onClick = { RegistroDeContexto.guardarSinCuidado(this@MainActivity) }) {
+                        Text("Guardar Activity (FUGA)")
+                    }
+                    Button(onClick = { RegistroDeContexto.guardarConCuidado(this@MainActivity) }) {
+                        Text("Guardar applicationContext (bien)")
+                    }
                     Button(onClick = { golesQueSePierden++ }) {
                         Text("Gol (se pierde al rotar): $golesQueSePierden")
                     }

@@ -36,4 +36,8 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
+    // LeakCanary: vigila las Activity destruidas y avisa si alguna no se libera.
+    // `debugImplementation` = solo en la variante debug: no viaja en la app de
+    // produccion. No hace falta escribir codigo: se instala solo al arrancar.
+    debugImplementation(libs.leakcanary.android)
 }
