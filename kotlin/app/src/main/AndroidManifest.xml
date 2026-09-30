@@ -17,6 +17,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Segunda pantalla. exported="true" porque tiene intent-filter y otras apps
+             (el navegador, adb) deben poder lanzarla. Casa con marcador://partido/<n>:
+             VIEW = «ver esto»; DEFAULT = imprescindible para los intents implicitos
+             de startActivity; BROWSABLE = permite abrirla desde un enlace del navegador. -->
+        <activity
+            android:name=".DetalleActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="marcador" android:host="partido" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

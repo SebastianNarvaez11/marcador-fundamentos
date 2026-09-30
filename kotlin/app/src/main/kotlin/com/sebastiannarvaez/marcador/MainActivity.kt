@@ -71,6 +71,14 @@ class MainActivity : ComponentActivity() {
     //
     // Para reproducirlo: pulsa el boton y, MIENTRAS esta bloqueado, toca la pantalla
     // varias veces. A los ~5 s aparece el dialogo del ANR.
+    // Intent EXPLICITO: el destino es una clase tuya, sin ambiguedad. Los datos
+    // viajan como extras (clave, valor).
+    private fun abrirDetalle() {
+        val intent = Intent(this, DetalleActivity::class.java)
+            .putExtra(DetalleActivity.EXTRA_RESUMEN, Ejemplo.rayoContraToros.resumen())
+        startActivity(intent)
+    }
+
     private fun calcularBloqueando() {
         val ms = measureTimeMillis {
             val p = runBlocking { probabilidadDeVictoria(Ejemplo.rayoContraToros, SIMULACIONES) }
@@ -125,6 +133,14 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 Column(Modifier.padding(24.dp)) {
                     Text("Marcador")
+                    // f28: intents. El primero es EXPLICITO (nombras la clase destino).
+                    Button(onClick = { abrirDetalle() }) { Text("Ver detalle (intent explicito)") }
+                    Button(onClick = { compartir(Ejemplo.rayoContraToros.resumen()) }) {
+                        Text("Compartir resultado (ACTION_SEND)")
+                    }
+                    Button(onClick = { abrirEnlace("https://kotlinlang.org") }) {
+                        Text("Abrir web (ACTION_VIEW)")
+                    }
                     Button(onClick = { calcularBloqueando() }) {
                         Text("Calcular (BLOQUEA: ANR)")
                     }
