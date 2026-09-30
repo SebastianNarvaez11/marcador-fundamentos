@@ -77,6 +77,17 @@ alResolver(alFinal) { ganador in
     print("Tablas")
 }
 
+// Protocolos: el reglamento se puede cambiar por otro.
+print(ReglamentoLiga())
+let reglamentoAntiguo = ReglamentoPersonalizado(puntosPorVictoria: 2, puntosPorEmpate: 1)
+let torneoAntiguo = Torneo(nombre: "Copa Antigua", equipos: [rayo, toros], reglamento: reglamentoAntiguo)
+print("Con reglas antiguas, una victoria vale \(torneoAntiguo.reglamento.puntosPor(golesAFavor: 2, golesEnContra: 0))")
+print("Etiqueta: \(ana.etiqueta()); capitán de Toros: \(toros.capitanONinguno)")
+
+// Hashable: un jugador puede ser clave de un diccionario o entrar en un Set.
+let golesPorJugador = Dictionary(grouping: alFinal.goleadores(), by: { $0 }).mapValues(\.count)
+print("Goles de Ana: \(golesPorJugador[ana] ?? 0)")
+
 let torneo = Torneo(nombre: nombreDelTorneo, equipos: [rayo, toros])
 let mismoTorneo = torneo        // MISMA referencia: class
 mismoTorneo.registrar(alFinal)
