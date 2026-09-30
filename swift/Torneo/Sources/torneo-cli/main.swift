@@ -99,7 +99,42 @@ print("Líder: \(lider(goleadores)?.nombre ?? "nadie"); nombres: \(nombres(de: g
 let porLongitud = Ranking(elementos: ["Rayo FC", "Toros", "Lobos"], puntos: \.count)
 print("Ranking de textos: \(porLongitud.ordenados)")
 
-let torneo = Torneo(nombre: nombreDelTorneo, equipos: [rayo, toros])
+let torneo = Torneo(nombre: nombreDelTorneo, equipos: [rayo, toros, lobos])
 let mismoTorneo = torneo        // MISMA referencia: class
-mismoTorneo.registrar(alFinal)
+do {
+    try mismoTorneo.registrar(alFinal)
+} catch {
+    print("No se registró: \(error.localizedDescription)")
+}
 print("Partidos vistos desde `torneo`: \(torneo.partidos.count)")
+
+// Errores: un registro inválido no tumba el programa.
+let intruso = Jugador(nombre: "Intruso", dorsal: 99)
+do {
+    try torneo.registrar(local: lobos, visitante: toros, eventos: [.gol(minuto: 10, jugador: intruso, equipo: lobos)])
+    print("Registrado")
+} catch {
+    // Con `throws(ErrorDeTorneo)`, `error` es un ErrorDeTorneo, no un `any Error`.
+    print("No se registró: \(error.localizedDescription)")
+}
+
+// `Result`: el error como valor, como el `Result` de Kotlin.
+let partidoValido = Partido(local: lobos, visitante: toros)
+    .registrando(.gol(minuto: 10, jugador: lobos.plantilla[0], equipo: lobos))
+switch torneo.intentarRegistrar(partidoValido) {
+case let .success(partido): print("Marcador: \(partido.golesLocal)-\(partido.golesVisitante)")
+case let .failure(error): print("Error: \(error)")
+}
+print("Partidos: \((try? torneo.registrar(local: lobos, visitante: lobos).eventos.count) ?? -1)")
+
+// `throws` de verdad: `try`, `try?` y `do/catch` con patrones.
+for texto in ["10", "diez", "150"] {
+    do {
+        print("«\(texto)» -> dorsal \(try dorsalValido(texto))")
+    } catch ErrorDeDorsal.noEsUnNumero(let escrito) {
+        print("«\(escrito)» no es un número")
+    } catch {
+        print("«\(texto)» -> \(error)")
+    }
+}
+print("Con try?: \(String(describing: try? dorsalValido("diez")))")

@@ -22,7 +22,60 @@ public final class Torneo {
         self.reglamento = reglamento
     }
 
-    public func registrar(_ partido: Partido) {
+    // Registrar puede fallar (equipo no inscrito, gol de alguien ajeno…), y eso no
+    // es una situación excepcional sino esperable. `throws(ErrorDeTorneo)` es un
+    // `throws` TIPADO (Swift 6): el compilador sabe que solo puede lanzar ese
+    // error, así que quien lo capture no necesita un `catch` genérico. Con
+    // `throws` a secas el error sería un `any Error` cualquiera.
+    // Devuelve el partido registrado; `@discardableResult` permite ignorarlo.
+    @discardableResult
+    public func registrar(_ partido: Partido) throws(ErrorDeTorneo) -> Partido {
+        guard partido.local != partido.visitante else { throw .equipoContraSiMismo }
+        guard equipos.contains(partido.local), equipos.contains(partido.visitante) else {
+            throw .equiposNoInscritos(torneo: nombre)
+        }
+        for evento in partido.eventos {
+            try validar(evento, en: partido)
+        }
         partidos.append(partido)
+        return partido
+    }
+
+    @discardableResult
+    public func registrar(
+        local: Equipo,
+        visitante: Equipo,
+        eventos: [EventoDePartido] = []
+    ) throws(ErrorDeTorneo) -> Partido {
+        try registrar(Partido(local: local, visitante: visitante, eventos: eventos))
+    }
+
+    // El equivalente del `Result<Partido>` de Kotlin: el error pasa a ser un valor.
+    // Con `throws` tipado, `Result { … }` conserva el tipo del error.
+    public func intentarRegistrar(_ partido: Partido) -> Result<Partido, ErrorDeTorneo> {
+        Result { () throws(ErrorDeTorneo) in try registrar(partido) }
+    }
+
+    private func validar(_ evento: EventoDePartido, en partido: Partido) throws(ErrorDeTorneo) {
+        guard (0...120).contains(evento.minuto) else { throw .minutoFueraDelPartido(evento.minuto) }
+        let jugadoresDelPartido = partido.local.plantilla + partido.visitante.plantilla
+        // `switch` exhaustivo sobre el enum: si aparece un evento nuevo, no compila.
+        switch evento {
+        case let .gol(_, jugador, equipo):
+            guard equipo == partido.local || equipo == partido.visitante else {
+                throw .golDeEquipoAjeno(equipo: equipo.nombre)
+            }
+            guard equipo.plantilla.contains(jugador) else {
+                throw .jugadorNoJuegaEnElEquipo(jugador: jugador.nombre, equipo: equipo.nombre)
+            }
+        case let .tarjeta(_, jugador, _):
+            guard jugadoresDelPartido.contains(jugador) else {
+                throw .jugadorNoJuegaElPartido(jugador: jugador.nombre)
+            }
+        case let .cambio(_, sale, entra):
+            guard jugadoresDelPartido.contains(sale), jugadoresDelPartido.contains(entra) else {
+                throw .cambioConAjenos
+            }
+        }
     }
 }

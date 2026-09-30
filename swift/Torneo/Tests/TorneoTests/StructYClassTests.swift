@@ -89,21 +89,21 @@ struct StructYClassTests {
 
     // ---- Torneo (class) ----
 
-    @Test func torneoAcumulaPartidosYLoQueSaleEsUnaCopia() {
+    @Test func torneoAcumulaPartidosYLoQueSaleEsUnaCopia() throws {
         let (rayo, toros) = equipos()
         let torneo = Torneo(nombre: "Copa", equipos: [rayo, toros])
         var visto = torneo.partidos
         visto.append(Partido(local: rayo, visitante: toros))   // cambia la copia local
         #expect(torneo.partidos.isEmpty)
-        torneo.registrar(Partido(local: rayo, visitante: toros))
+        try torneo.registrar(Partido(local: rayo, visitante: toros))
         #expect(torneo.partidos.count == 1)
     }
 
-    @Test func dosVariablesDelMismoTorneoVenLoMismo() {
+    @Test func dosVariablesDelMismoTorneoVenLoMismo() throws {
         let (rayo, toros) = equipos()
         let torneo = Torneo(nombre: "Copa", equipos: [rayo, toros])
         let mismo = torneo
-        mismo.registrar(Partido(local: rayo, visitante: toros))
+        try mismo.registrar(Partido(local: rayo, visitante: toros))
         #expect(torneo.partidos.count == 1)
     }
 }

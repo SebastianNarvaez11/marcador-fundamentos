@@ -14,7 +14,8 @@ public final class Equipo {
 
     // `init?` es un inicializador que puede FALLAR: devuelve `Equipo?`, nil si
     // los datos no valen. Es el `require` de Kotlin, pero sin excepción.
-    // (En f57 lo cambiaremos por `throws`, para saber POR QUÉ falló.)
+    // (f57 cuenta cuándo conviene `throws`: para saber POR QUÉ falló. Aquí basta
+    // con `nil`, porque quien crea un equipo solo necesita saber si salió.)
     public init?(nombre: String, plantilla: [Jugador]) {
         guard !nombre.isEmpty else { return nil }
         let dorsales = plantilla.compactMap(\.dorsal)
