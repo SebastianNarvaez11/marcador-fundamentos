@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 @Composable
 fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
     var pestana by rememberSaveable { mutableIntStateOf(0) }
-    val titulos = listOf("Marcador", "Partidos", "Tablas")
+    val titulos = listOf("Marcador", "Partidos", "Tablas", "Recomp.")
     val torneo = DatosDeEjemplo.torneo
 
     Scaffold(
@@ -53,6 +53,11 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                 topBar = { CenterAlignedTopAppBar(title = { Text("Partidos") }) },
                 contentWindowInsets = WindowInsets(0),
             ) { interior -> PantallaPartidos(DatosDeEjemplo.partidos, Modifier.padding(interior)) }
+            3 -> Scaffold(
+                Modifier.padding(paddingValues),
+                topBar = { CenterAlignedTopAppBar(title = { Text("Recomposicion") }) },
+                contentWindowInsets = WindowInsets(0),
+            ) { interior -> PantallaRecomposicion(torneo, Modifier.padding(interior)) }
             else -> Scaffold(
                 Modifier.padding(paddingValues),
                 topBar = { CenterAlignedTopAppBar(title = { Text("Tablas") }) },
