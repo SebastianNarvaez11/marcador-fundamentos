@@ -1,5 +1,10 @@
 package com.sebastiannarvaez.marcador.torneo
 
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -42,7 +47,54 @@ fun main(args: Array<String>) {
             println(estadisticasDe(otro))
         }
         println("Dos estadísticas en $tiempoEstadisticas ms (cada una son 3 consultas de 50 ms en paralelo)")
+
+        println("== f17: el cronómetro se cancela al pitar el final ==")
+        val conReloj = jugarConCronometro(Ejemplo.rayoContraToros) { minuto ->
+            if (minuto % 15 == 0) println("  reloj: minuto $minuto")
+        }
+        println("Final ${conReloj.golesLocal}-${conReloj.golesVisitante}; el reloj ya no corre")
+
+        println("== f17: un alcance propio y cancelación cooperativa ==")
+        demoTransmisorPropio()
+        println("== f17: por qué no GlobalScope ==")
+        demoGlobalScope()
     }
+}
+
+// El Transmisor tiene su propio alcance. Se transmiten dos partidos y, a mitad,
+// se pita el final del día: los dos se cancelan sin que ninguno llegue al 90.
+suspend fun demoTransmisorPropio() = coroutineScope {
+    val transmisor = Transmisor()
+    val trabajos = listOf(Ejemplo.rayoContraToros, Ejemplo.lobosContraAguilas).map { guion ->
+        transmisor.transmitir(guion) { println("Terminó ${it.local.nombre}: eso no debería verse") }
+    }
+    delay(300)
+    transmisor.pitarElFinal()
+    trabajos.forEach { it.join() }
+    println("Cancelados: ${trabajos.map { it.isCancelled }}, transmisor activo: ${transmisor.activo}")
+
+    // Un bucle de cálculo sin suspender solo se cancela si mira `ensureActive()`.
+    // Va en Dispatchers.Default: en el hilo de runBlocking, el bucle ocuparía el
+    // único hilo y ni siquiera podríamos llegar a llamar a cancelAndJoin().
+    val calculo = launch(Dispatchers.Default) { println("resultado: ${probabilidadDeVictoria(Ejemplo.rayoContraToros, simulaciones = 2_000_000_000)}") }
+    delay(100)
+    val ms = measureTimeMillis { calculo.cancelAndJoin() }
+    println("El cálculo pesado se canceló en $ms ms")
+}
+
+// GlobalScope no tiene padre: sus corrutinas no se cancelan con nadie. Aquí el
+// padre se cancela y el huérfano sigue vivo hasta que lo cancelamos a mano.
+@OptIn(DelicateCoroutinesApi::class)
+suspend fun demoGlobalScope() = coroutineScope {
+    var huerfano: Job? = null
+    val padre = launch {
+        huerfano = GlobalScope.launch { jugarPartido(Ejemplo.rayoContraToros) }
+        delay(1_000)
+    }
+    delay(50)
+    padre.cancelAndJoin()
+    println("Padre cancelado: ${padre.isCancelled}. Huérfano activo: ${huerfano?.isActive}")
+    huerfano?.cancel() // limpiarlo a mano es justo la carga que el alcance estructurado evita
 }
 
 // 10.000 esperas de 100 ms. Con corrutinas tardan ~100 ms en total, porque

@@ -1,0 +1,85 @@
+package com.sebastiannarvaez.marcador.torneo
+
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlin.random.Random
+
+// Concurrencia estructurada: toda corrutina vive dentro de un alcance
+// (CoroutineScope) y el alcance no termina hasta que terminan sus hijas.
+// Si el alcance se cancela, se cancelan todas las hijas. Nada queda huérfano.
+
+// Una función de extensión sobre CoroutineScope: `launch` sin nombre de alcance
+// dentro es `this.launch`, es decir, hija de quien la llame.
+// `isActive` es la forma cooperativa de mirar «¿me han cancelado?».
+fun CoroutineScope.cronometro(msPorMinuto: Long, alMinuto: (Int) -> Unit): Job = launch {
+    var minuto = 0
+    while (isActive) {
+        delay(msPorMinuto)
+        minuto++
+        alMinuto(minuto)
+    }
+}
+
+// El cronómetro es infinito. `coroutineScope` no termina mientras tenga hijas
+// vivas, así que si nadie lo cancelara, esta función no volvería nunca.
+// Al pitar el final se cancela el reloj y el alcance puede cerrarse.
+suspend fun jugarConCronometro(
+    partido: Partido,
+    msPorMinuto: Long = 10,
+    alMinuto: (Int) -> Unit = {},
+): Partido = coroutineScope {
+    val reloj = cronometro(msPorMinuto, alMinuto)
+    val final = jugarPartido(partido, msPorMinuto)
+    reloj.cancel()
+    final
+}
+
+// La cancelación es COOPERATIVA: cancelar solo marca al Job. Las funciones
+// suspendidas de la librería (`delay`, `await`…) comprueban la marca y lanzan
+// CancellationException. Un bucle que solo calcula, sin suspender nunca,
+// tiene que mirar él mismo con `ensureActive()`; si no, no se entera.
+suspend fun probabilidadDeVictoria(partido: Partido, simulaciones: Int = 5_000_000): Double {
+    val fuerzaLocal = partido.golesLocal + 1
+    val fuerzaVisitante = partido.golesVisitante + 1
+    var victoriasLocales = 0
+    for (i in 1..simulaciones) {
+        // Cada mil vueltas, ¿sigo vivo? Lanza CancellationException si no.
+        if (i % 1_000 == 0) currentCoroutineContext().ensureActive()
+        if (Random.nextInt(fuerzaLocal + fuerzaVisitante) < fuerzaLocal) victoriasLocales++
+    }
+    return victoriasLocales.toDouble() / simulaciones
+}
+
+// `runCatching` y `catch (e: Exception)` atrapan TAMBIÉN la CancellationException,
+// porque es una Exception. Si la tragas, la corrutina cancelada sigue como si
+// nada. Regla: atrápala y vuelve a lanzarla.
+suspend fun <T> intentar(bloque: suspend () -> T): Result<T> = try {
+    Result.success(bloque())
+} catch (cancelacion: CancellationException) {
+    throw cancelacion
+} catch (error: Exception) {
+    Result.failure(error)
+}
+
+// Un alcance PROPIO: la clase decide cuándo empieza y cuándo acaba la vida de
+// todo lo que lanza. `Job()` es el padre de todas las corrutinas del alcance;
+// cancelarlo las cancela a todas. Al pitar el final, `pitarElFinal()`.
+class Transmisor {
+    private val trabajo = Job()
+    private val alcance = CoroutineScope(Dispatchers.Default + trabajo)
+
+    val activo: Boolean get() = trabajo.isActive
+
+    fun transmitir(partido: Partido, msPorMinuto: Long = 10, alFinal: (Partido) -> Unit = {}): Job =
+        alcance.launch { alFinal(jugarConCronometro(partido, msPorMinuto)) }
+
+    fun pitarElFinal() = trabajo.cancel()
+}
