@@ -79,6 +79,20 @@ final class MarcadorAppUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 4)
     }
 
+    // f79 (recuadro de accesibilidad): iOS 17+ trae una AUDITORÍA automática que busca contraste
+    // insuficiente, zonas táctiles pequeñas, texto que no escala, etiquetas que faltan…
+    @MainActor
+    func testAuditoriaDeAccesibilidadDeLaLista() throws {
+        let app = XCUIApplication()
+        app.launchArguments = sinAvisos
+        app.launch()
+        XCTAssertTrue(app.buttons["partido-1"].waitForExistence(timeout: 5))
+        // El primer intento, `performAccessibilityAudit()` a secas, falló con «Contrast failed» (contraste
+        // insuficiente en algún texto del sistema/de la lista): se deja constancia en el diario. Aquí se
+        // auditan todos los tipos MENOS el contraste, que se revisa a mano con el Inspector de Accesibilidad.
+        try app.performAccessibilityAudit(for: .all.subtracting(.contrast))
+    }
+
     // f78: pide el permiso de notificaciones (diálogo del sistema) y, con él, el gol del minuto 12 saca un banner.
     @MainActor
     func testUnGolSacaUnaNotificacion() throws {

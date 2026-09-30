@@ -4,25 +4,11 @@ import Torneo
 
 // f75 · Pruebas del ViewModel con el repositorio en memoria (en f79 se sustituye por un falso).
 // `@MainActor`: el ViewModel lo es, y el target de pruebas no tiene el aislamiento por defecto.
-// f78 · El espía: un falso que solo anota lo que le piden (el ViewModel no sabe que no es el de verdad).
-final class NotificadorEspia: Notificador {
-    var permitido = true
-    private(set) var avisos: [(minuto: Int, jugador: String, equipo: String)] = []
-
-    func notificarGol(minuto: Int, jugador: String, equipo: String) {
-        avisos.append((minuto, jugador, equipo))
-    }
-}
-
 @MainActor
 struct PartidoViewModelTests {
 
-    private func repositorio() -> RepositorioDePartidos {
-        RepositorioDePartidos(
-            equipos: [Ejemplo.rayo, Ejemplo.toros],
-            partidos: [PartidoDeLista(id: 1, partido: Ejemplo.rayoContraToros)]
-        )
-    }
+    // f79: el repositorio es un FALSO (ver `Dobles.swift`): sin disco y con los goles anotados.
+    private func repositorio() -> RepositorioFalso { RepositorioFalso() }
 
     @Test func jugarAplicaLosGolesDelGuionYActualizaElEstado() async {
         let viewModel = PartidoViewModel(partidoId: 1, repositorio: repositorio(), msPorMinuto: 0)
@@ -53,8 +39,24 @@ struct PartidoViewModelTests {
         let viewModel = PartidoViewModel(partidoId: 1, repositorio: repo, msPorMinuto: 0)
         viewModel.alGol(.visitante)
         #expect(viewModel.marcador == Marcador(local: 0, visitante: 1))
-        // El repositorio ya tiene un gol más (el 2-1 de ejemplo pasa a 2-2).
-        #expect(repo.partido(id: 1)?.marcador() == Marcador(local: 2, visitante: 2))
+        // El falso anotó UN gol, del equipo visitante, con el jugador que tocaba por turno
+        // (Toros lleva 1 gol de 2 jugadores: le toca el índice 1, Sofía).
+        #expect(repo.golesRegistrados.count == 1)
+        #expect(repo.golesRegistrados.first?.partidoId == 1)
+        guard case let .gol(minuto, jugador, equipo)? = repo.golesRegistrados.first?.gol else {
+            Issue.record("Se esperaba un gol")
+            return
+        }
+        #expect(minuto == 0)
+        #expect(jugador.nombre == "Sofía")
+        #expect(equipo == Ejemplo.toros)
+    }
+
+    // El ViewModel pregunta por SU partido, no por otro.
+    @Test func elViewModelPideAlRepositorioSuPartido() {
+        let repo = repositorio()
+        _ = PartidoViewModel(partidoId: 1, repositorio: repo, msPorMinuto: 0)
+        #expect(repo.consultas == [1])
     }
 
     @Test func cancelarLaTareaDetieneElPartido() async {
