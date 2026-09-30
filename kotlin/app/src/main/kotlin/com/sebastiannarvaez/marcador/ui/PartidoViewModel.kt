@@ -1,10 +1,12 @@
 package com.sebastiannarvaez.marcador.ui
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sebastiannarvaez.marcador.torneo.Ejemplo
+import com.sebastiannarvaez.marcador.torneo.Partido
 import com.sebastiannarvaez.marcador.torneo.Marcador
 import com.sebastiannarvaez.marcador.torneo.despuesDe
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -36,13 +38,30 @@ import kotlinx.coroutines.launch
 // vida del ViewModel: lo que se lanza aqui sigue vivo al rotar y muere al irse la pantalla.
 // Por eso NO se usa GlobalScope: no lo cancela nadie, y una corrutina que sostiene
 // `this` en un proceso que dura horas es una fuga (f27).
-class PartidoViewModel : ViewModel() {
+//
+// f40 · SAVEDSTATEHANDLE. El ViewModel sobrevive a rotar pero NO a la muerte del
+// proceso: si Android mata la app en segundo plano para ganar memoria, al volver el
+// ViewModel es nuevo y su estado, cero. Para lo pequeno que DEBE sobrevivir, Android da
+// un `SavedStateHandle`: un mapa clave-valor que se guarda en el mismo Bundle de
+// onSaveInstanceState (f25) y que el sistema conserva FUERA del proceso. Se pide como
+// parametro del constructor y la fabrica por defecto de `viewModel()` lo entiende.
+//
+// Regla: en el handle va lo POCO y BARATO que hace falta para reconstruir la pantalla
+// (un identificador), no el objeto entero (un partido entero no cabe en un Bundle).
+// Aqui: el id del partido seleccionado. El minuto, el marcador en vivo y los goles de
+// los botones se pierden con `am kill`, y esta bien: se reconstruye el partido, no el directo.
+class PartidoViewModel(private val estadoGuardado: SavedStateHandle) : ViewModel() {
 
-    val partido = Ejemplo.rayoContraToros
+    // Un StateFlow LEIDO DEL HANDLE: cada vez que se escribe `estadoGuardado[CLAVE]`, cambia.
+    val partidoId: StateFlow<Int> = estadoGuardado.getStateFlow(CLAVE_PARTIDO, 1)
 
-    // EL PARTIDO, que en f38 vivia en `remember` y moria al rotar, vive ahora aqui: el
-    // marcador que va marcando el guion, y el reloj de mas abajo (`empezar`).
+    // EL PARTIDO, que en f38 vivia en `remember` y moria al rotar, vive ahora aqui: el guion
+    // elegido y el marcador que va marcando (`golesEnVivo`). Al elegir otro partido se
+    // cambia el guion y el marcador vuelve a 0-0.
+    private val guion = MutableStateFlow(guionDe(partidoId.value))
     private val golesEnVivo = MutableStateFlow(Marcador(0, 0))
+
+    val partido: StateFlow<Partido> = guion.asStateFlow()
 
     // Estado PRIVADO y mutable, expuesto como solo lectura: solo el ViewModel escribe.
     private val minutoActual = MutableStateFlow(0)
@@ -63,12 +82,28 @@ class PartidoViewModel : ViewModel() {
             Marcador(vivo.local + mano.local, vivo.visitante + mano.visitante)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Marcador(0, 0))
 
+    private var trabajos: List<Job> = emptyList()
+
     // Un evento de la pantalla: «han marcado los de aqui».
     fun golAMano(lado: Lado) = golesAMano.update {
         when (lado) {
             Lado.LOCAL -> it.copy(local = it.local + 1)
             Lado.VISITANTE -> it.copy(visitante = it.visitante + 1)
         }
+    }
+
+    // Elegir otro partido: para el directo, lo pone a cero y GUARDA el id en el handle.
+    fun seleccionar(id: Int) {
+        if (id == partidoId.value) return
+        trabajos.forEach { it.cancel() }
+        trabajos = emptyList()
+        minutoActual.value = 0
+        enMarcha.value = false
+        avisoActual.value = "ninguno"
+        golesAMano.value = Marcador(0, 0)
+        golesEnVivo.value = Marcador(0, 0)
+        guion.value = guionDe(id)
+        estadoGuardado[CLAVE_PARTIDO] = id
     }
 
     fun empezar() {
@@ -78,25 +113,31 @@ class PartidoViewModel : ViewModel() {
         // mismo bucle aplica los goles del guion y, si toca, calcula el aviso con ESE
         // marcador. (Otro reloj para los goles, en otro hilo, dejaba el aviso un gol por
         // detras; y `marcador.value` tampoco vale: el `stateIn` lo actualiza un poco despues.)
-        viewModelScope.launch {
-            while (minutoActual.value < MINUTOS_DEL_PARTIDO) {
-                delay(MS_POR_MINUTO)
-                val nuevo = minutoActual.value + 1
-                golesEnVivo.update { antes ->
-                    partido.eventos.filter { it.minuto == nuevo }.fold(antes) { m, evento -> m.despuesDe(evento, partido) }
+        val partidoActual = guion.value
+        trabajos = listOf(
+            viewModelScope.launch {
+                while (minutoActual.value < MINUTOS_DEL_PARTIDO) {
+                    delay(MS_POR_MINUTO)
+                    val nuevo = minutoActual.value + 1
+                    golesEnVivo.update { antes ->
+                        partidoActual.eventos.filter { it.minuto == nuevo }.fold(antes) { m, evento -> m.despuesDe(evento, partidoActual) }
+                    }
+                    minutoActual.value = nuevo
+                    if (nuevo % 15 == 0) {
+                        val vivo = golesEnVivo.value
+                        val mano = golesAMano.value
+                        avisoActual.value = "minuto $nuevo con ${Marcador(vivo.local + mano.local, vivo.visitante + mano.visitante)}"
+                    }
                 }
-                minutoActual.value = nuevo
-                if (nuevo % 15 == 0) {
-                    val vivo = golesEnVivo.value
-                    val mano = golesAMano.value
-                    avisoActual.value = "minuto $nuevo con ${Marcador(vivo.local + mano.local, vivo.visitante + mano.visitante)}"
-                }
-            }
-            enMarcha.value = false
-        }
+                enMarcha.value = false
+            },
+        )
     }
+
+    private fun guionDe(id: Int): Partido = DatosDeEjemplo.partidos.first { it.id == id }.partido
 
     companion object {
         const val MS_POR_MINUTO = 250L
+        const val CLAVE_PARTIDO = "partidoId"
     }
 }

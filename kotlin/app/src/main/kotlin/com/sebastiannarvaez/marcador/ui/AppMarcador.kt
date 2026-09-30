@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 // f35 · RAIZ DE LA APP: tres pestañas. No es navegacion de verdad (Navigation 3 llega
 // en F5): es un `Int` con rememberSaveable y un `when`. Vale para llegar a las listas.
@@ -29,6 +30,9 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
     var pestana by rememberSaveable { mutableIntStateOf(0) }
     val titulos = listOf("Marcador", "Partidos", "Tablas", "Recomp.")
     val torneo = DatosDeEjemplo.torneo
+    // El ViewModel se pide AQUI, en la raiz, y se pasa hacia abajo: la lista de partidos
+    // elige y la pantalla del marcador muestra, los dos con la MISMA instancia.
+    val viewModel: PartidoViewModel = viewModel()
 
     Scaffold(
         modifier = modifier,
@@ -47,12 +51,19 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
         },
     ) { paddingValues ->
         when (pestana) {
-            0 -> PantallaMarcador(onVerDemos, Modifier.padding(paddingValues))
+            0 -> PantallaMarcador(onVerDemos, Modifier.padding(paddingValues), viewModel)
             1 -> Scaffold(
                 Modifier.padding(paddingValues),
                 topBar = { CenterAlignedTopAppBar(title = { Text("Partidos") }) },
                 contentWindowInsets = WindowInsets(0),
-            ) { interior -> PantallaPartidos(DatosDeEjemplo.partidos, Modifier.padding(interior)) }
+            ) { interior -> PantallaPartidos(
+                DatosDeEjemplo.partidos,
+                onElegir = { id ->
+                    viewModel.seleccionar(id)
+                    pestana = 0
+                },
+                modifier = Modifier.padding(interior),
+            ) }
             3 -> Scaffold(
                 Modifier.padding(paddingValues),
                 topBar = { CenterAlignedTopAppBar(title = { Text("Recomposicion") }) },

@@ -56,13 +56,17 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 // @OptIn, o el compilador se niega (ver diario).
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
+fun PantallaMarcador(
+    onVerDemos: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: PartidoViewModel = viewModel(),
+) {
     // f39 · EL BUG DE f38 DESAPARECE. El partido ya no vive en `remember` sino en el
     // ViewModel: `viewModel()` pide la instancia al ViewModelStore de la Activity, que
     // sobrevive a la rotacion. La primera vez la crea; despues devuelve la misma.
     // La pantalla solo LEE estado y AVISA de eventos: no sabe que existe un PartidoEnVivo.
-    val viewModel: PartidoViewModel = viewModel()
-    val partido = viewModel.partido
+    val partido by viewModel.partido.collectAsStateWithLifecycle()
+    val partidoId by viewModel.partidoId.collectAsStateWithLifecycle()
 
     // collectAsStateWithLifecycle (f38) sobre los StateFlow del ViewModel.
     val marcador by viewModel.marcador.collectAsStateWithLifecycle()
@@ -95,6 +99,7 @@ fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
             modifier = Modifier.padding(paddingValues),
             // Un slot mas: lo que sobra de la pantalla (demos de f32 y f33) se inyecta desde fuera.
             extras = {
+                Text("Partido n.º $partidoId (elegido en la pestana Partidos)")
                 PanelDelCronometro(
                     minuto, corriendo, ultimoAviso, pausas,
                     onEmpezar = viewModel::empezar,

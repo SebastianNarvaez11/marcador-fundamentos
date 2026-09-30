@@ -1,5 +1,6 @@
 package com.sebastiannarvaez.marcador.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -52,7 +53,11 @@ import kotlinx.coroutines.launch
 // su composicion (util cuando la lista mezcla cabeceras y filas).
 
 @Composable
-fun PantallaPartidos(partidos: List<PartidoDeLista>, modifier: Modifier = Modifier) {
+fun PantallaPartidos(
+    partidos: List<PartidoDeLista>,
+    onElegir: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     // f37 · LazyListState es el estado del scroll. Se lee `firstVisibleItemIndex`, que
     // cambia con CADA pixel de desplazamiento; si el `if` dependiera de el directamente,
     // esta funcion se recompondria continuamente. derivedStateOf lo evita: calcula
@@ -73,7 +78,12 @@ fun PantallaPartidos(partidos: List<PartidoDeLista>, modifier: Modifier = Modifi
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(partidos, key = { it.id }) { item ->
-                FilaDePartido(item.partido.local.nombre, item.partido.visitante.nombre, item.partido.marcador().toString())
+                FilaDePartido(
+                    item.partido.local.nombre,
+                    item.partido.visitante.nombre,
+                    item.partido.marcador().toString(),
+                    Modifier.clickable { onElegir(item.id) },
+                )
             }
         }
         if (mostrarBotonSubir) {
