@@ -25,6 +25,8 @@ kotlin {
 }
 
 dependencies {
+    // El modulo de dominio: Partido, Torneo, PartidoEnVivo...
+    implementation(project(":torneo"))
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
