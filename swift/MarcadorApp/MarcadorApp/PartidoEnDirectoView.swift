@@ -1,130 +1,103 @@
 import SwiftUI
 import Torneo
 
-// f72 · @StateObject FRENTE A @ObservedObject FRENTE A @EnvironmentObject
+// f72 · @StateObject FRENTE A @ObservedObject FRENTE A @EnvironmentObject (el bug de `@ObservedObject`)
 // f73 · @State, @Bindable Y @Environment (con `@Observable`)
 // f74 · `.task`: el partido arranca solo y se cancela al salir
+// f75 · MVVM: la vista solo PINTA el `uiState` del ViewModel y le pasa los toques
 //
-// Los tres sirven para que una vista use un `ObservableObject`. Cambia QUIÉN ES EL DUEÑO:
+// (La historia del bug de f72 está en el diario: con `@ObservedObject var modelo = PartidoEnVivoModelo(…)`
+// creado en el `init`, cada redibujado del padre fabricaba un modelo nuevo y el partido volvía al minuto 0.)
 //
-//   @StateObject       la vista CREA el objeto y es su dueña. SwiftUI lo guarda fuera del struct
-//                      y lo conserva aunque la vista se vuelva a crear. Se crea UNA sola vez.
-//   @ObservedObject    la vista SOLO OBSERVA un objeto que le pasan (que otro mantiene vivo).
-//                      Si lo crea ella misma, cada vez que su struct se recrea, nace otro objeto.
-//   @EnvironmentObject el objeto lo puso un ANCESTRO con `.environmentObject(…)`; la vista lo
-//                      recoge sin que se lo pasen por el constructor. Si nadie lo puso, la app se detiene.
-//
-// EL BUG QUE ESTE FICHERO CORRIGE (mira el diario, f72):
-//
-//     struct PartidoEnDirectoView: View {
-//         @ObservedObject private var modelo: PartidoEnVivoModelo      // ← ASÍ NO VALE
-//         init(partido: Partido) { modelo = PartidoEnVivoModelo(partido: partido) }
-//
-// Una vista es un struct barato y SwiftUI lo recrea cada vez que el padre recalcula su `body`.
-// Con `@ObservedObject`, cada recreación ejecuta `init` y fabrica un modelo NUEVO: el minuto
-// vuelve a 0, el marcador a 0-0 y el partido se «reinicia» sin que nadie lo pida. (El modelo
-// viejo se queda huérfano; su bucle sigue corriendo y nadie lo ve.)
-//
-// CON @Observable (f73) DESAPARECE LA TRIPLETA:
-//
-//     antes (ObservableObject)     ahora (@Observable)
-//     @StateObject var m           @State var m              la vista es dueña (crea y conserva)
-//     @ObservedObject var m        var m                     la vista solo mira (a secas)
-//     @EnvironmentObject var m     @Environment(M.self) var m
-//     $m.propiedad                 @Bindable var m → $m.propiedad
-//
-// Sin `@ObservedObject`, el bug de f72 ya no tiene dónde esconderse: una propiedad a secas que
-// se crea en el `init` sigue recreándose. `@State` es lo que conserva el objeto.
-//
-// MATIZ: `State(wrappedValue:)` NO es un autoclosure (el `StateObject` de f72 sí lo era). Cada
-// recreación de la vista ejecuta `PartidoEnVivoModelo(…)` y SwiftUI tira el resultado; solo se
-// queda el de la primera vez. Se ve en el registro: «CREADO» sale una vez por cada redibujado del
-// padre. Como el modelo es barato, no importa; si no lo fuera, se crearía dentro del `.task` (f74).
+// MATIZ de `@State` con un objeto: `State(wrappedValue:)` NO es un autoclosure. Cada recreación de la
+// vista ejecuta `PartidoViewModel(…)` y SwiftUI tira el resultado; solo se queda el de la primera vez.
+// Como el ViewModel no hace nada en el `init` salvo leer el partido, no importa.
 struct PartidoEnDirectoView: View {
-    // Dueña del modelo: `@State`. Como el valor inicial depende de un parámetro, se crea en el
-    // `init` con `State(wrappedValue:)`. SwiftUI se queda con el de la PRIMERA vez y conserva ese
-    // aunque la vista se recree.
-    @State private var modelo: PartidoEnVivoModelo
+    @State private var viewModel: PartidoViewModel
 
-    // Este NO lo crea esta vista: lo puso la raíz de la app con `.environment(ajustes)`.
-    // Se recoge por TIPO: `AjustesModelo.self`. Si nadie lo puso, la app se detiene, igual que antes.
+    // Lo puso la raíz de la app con `.environment(ajustes)`; se recoge por TIPO.
     @Environment(AjustesModelo.self) private var ajustes
+    @Environment(\.dismiss) private var cerrar
 
     // Estado propio de la pantalla: cuántas veces pasó a segundo plano (`pausas` en Kotlin).
     @State private var pausas = 0
     @Environment(\.scenePhase) private var fase
 
-    init(partido: Partido) {
-        _modelo = State(wrappedValue: PartidoEnVivoModelo(partido: partido))
+    init(partidoId: Int, repositorio: any PartidosRepositorio) {
+        _viewModel = State(wrappedValue: PartidoViewModel(partidoId: partidoId, repositorio: repositorio))
     }
 
     var body: some View {
-        // `@Bindable` da `$ajustes.duracion` (un Binding) a un objeto `@Observable` que NO es un
-        // @State ni viene con `$`. Se declara aquí, dentro del body, cuando hace falta el binding.
-        @Bindable var ajustes = ajustes
-        ScrollView {
-            VStack(spacing: 24) {
-                TarjetaDePartido(partido: modelo.partido, marcador: modelo.marcador)
-
-                BotonesDeGolConAccion(partido: modelo.partido) { lado in
-                    modelo.golAMano(lado)
+        // `switch` exhaustivo sobre el enum: si mañana hay una variante más, no compila.
+        Group {
+            switch viewModel.uiState {
+            case .cargando:
+                ProgressView()
+            case let .error(mensaje):
+                VStack(spacing: 16) {
+                    Text(mensaje).foregroundStyle(.red)
+                    Button("Volver") { cerrar() }
                 }
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Minuto \(modelo.minuto)'")
-                        .font(.title)
-                        .monospacedDigit()
-                        .accessibilityIdentifier("minuto")
-                    Text(estado)
-                        .foregroundStyle(.secondary)
-                        .accessibilityIdentifier("estado")
-                    Text("Último aviso (cada 15'): \(modelo.ultimoAviso)")
-                    Text("Veces que la pantalla pasó a segundo plano: \(pausas)")
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                // El @Environment en acción: la duración viene de los ajustes de la raíz.
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Duración del partido")
-                    // `$ajustes.duracion`: el `$` de un `@Bindable` da un Binding a su propiedad.
-                    Picker("Duración", selection: $ajustes.duracion) {
-                        ForEach(AjustesModelo.duraciones, id: \.self) { minutos in
-                            Text("\(minutos) min").tag(minutos)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    // Cambiarla reinicia el partido: ver `.task(id:)` abajo.
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+            case let .exito(datos):
+                contenido(datos)
             }
-            .padding(16)
         }
-        // f74 · `.task`: el trabajo asíncrono ATADO A LA VIDA DE LA VISTA.
-        //   - arranca cuando la vista aparece (como `.onAppear`, pero permite `await`);
-        //   - SwiftUI CANCELA la tarea cuando la vista desaparece, sin que hagas nada;
-        //   - con `id:`, si el valor cambia se cancela la tarea vieja y se lanza otra nueva.
-        // Es el `LaunchedEffect(key)` de Compose (f37): el mismo contrato de «arrancar, cancelar al
-        // irse, reiniciar si cambia la clave».
-        //
-        // ASÍ NO VALE: `.onAppear { Task { await modelo.jugar(…) } }`. Esa `Task` es SUELTA: no está
-        // atada a la vista y sigue jugando (y gastando batería) cuando la pantalla ya no existe.
+        // `.task(id:)`: arranca al aparecer, se CANCELA al irse la vista y se relanza si cambia la duración.
         .task(id: ajustes.duracion) {
-            await modelo.jugar(duracion: ajustes.duracion)
+            await viewModel.jugar(duracion: ajustes.duracion)
         }
         .onChange(of: fase) { _, nueva in
             if nueva == .background { pausas += 1 }
         }
     }
 
-    private var estado: String {
-        if modelo.minuto >= ajustes.duracion { "Partido terminado" }
-        else if modelo.corriendo { "En juego" }
+    private func contenido(_ datos: MarcadorUiState.Exito) -> some View {
+        // `@Bindable` da `$ajustes.duracion` (un Binding) a un objeto `@Observable`.
+        @Bindable var ajustes = ajustes
+        return ScrollView {
+            VStack(spacing: 24) {
+                TarjetaDePartido(partido: datos.partido, marcador: datos.marcador)
+
+                // HOISTING de Compose: la vista avisa de QUÉ pasó (`alGol`), el ViewModel decide.
+                BotonesDeGolConAccion(partido: datos.partido, alGol: viewModel.alGol)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Minuto \(datos.minuto)'")
+                        .font(.title)
+                        .monospacedDigit()
+                        .accessibilityIdentifier("minuto")
+                    Text(estado(datos))
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("estado")
+                    Text("Último aviso (cada 15'): \(datos.ultimoAviso)")
+                    Text("Veces que la pantalla pasó a segundo plano: \(pausas)")
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Duración del partido")
+                    Picker("Duración", selection: $ajustes.duracion) {
+                        ForEach(AjustesModelo.duraciones, id: \.self) { minutos in
+                            Text("\(minutos) min").tag(minutos)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(16)
+        }
+    }
+
+    private func estado(_ datos: MarcadorUiState.Exito) -> String {
+        if datos.minuto >= datos.duracion { "Partido terminado" }
+        else if datos.corriendo { "En juego" }
         else { "Sin empezar" }
     }
 }
 
-// Los botones de gol, ahora con el HOISTING de Compose: reciben una closure y avisan de QUÉ ha
-// pasado (`alGol(lado)`), en vez de escribir en un @Binding (f70). Quien los usa decide qué hacer.
+// Los botones de gol con el HOISTING de Compose: reciben una closure y avisan de QUÉ ha pasado
+// (`alGol(lado)`), en vez de escribir en un @Binding (f70).
 struct BotonesDeGolConAccion: View {
     let partido: Partido
     let alGol: (Lado) -> Void
@@ -138,11 +111,11 @@ struct BotonesDeGolConAccion: View {
     }
 }
 
-// El PADRE que provoca el bug: tiene su propio estado y, al cambiarlo, recalcula su `body`, con
-// lo que RECREA el struct de `PartidoEnDirectoView` (no la pantalla: el struct, que es barato).
-// El botón «Redibujar el padre» hace exactamente eso a propósito, para reproducirlo sin esperar.
+// El PADRE que provocaba el bug de f72: tiene su propio estado y, al cambiarlo, recalcula su `body`,
+// con lo que RECREA el struct de `PartidoEnDirectoView`. El botón «Redibujar el padre» lo hace a propósito.
 struct PartidoContenedor: View {
     let item: PartidoDeLista
+    @Environment(RepositorioEnMemoria.self) private var repositorio
     @State private var redibujados = 0
 
     var body: some View {
@@ -155,7 +128,7 @@ struct PartidoContenedor: View {
             }
             .padding([.horizontal, .top], 16)
 
-            PartidoEnDirectoView(partido: item.partido)
+            PartidoEnDirectoView(partidoId: item.id, repositorio: repositorio)
         }
     }
 }

@@ -17,12 +17,15 @@ struct MarcadorApp: App {
     // mientras viva la app) y los reparte con `.environmentObject`.
     // f73: con `@Observable` es `@State` y se reparte con `.environment(ajustes)`.
     @State private var ajustes = AjustesModelo()
+    // f75: el repositorio, creado una vez y repartido a las pantallas por el entorno.
+    @State private var repositorio = RepositorioEnMemoria()
 
     var body: some Scene {
         // `WindowGroup` es la escena normal de una app de iOS: una ventana con esta vista raíz.
         WindowGroup {
             ContentView()
                 .environment(ajustes)
+                .environment(repositorio)
         }
         // `onChange(of:)` con dos parámetros (antiguo, nuevo) es la forma de iOS 17+.
         .onChange(of: fase) { antigua, nueva in

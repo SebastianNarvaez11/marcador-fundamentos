@@ -78,6 +78,25 @@ final class MarcadorAppUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 4)
     }
 
+    // f75: abre un partido y lo cierra; con `TEST_RUNNER_ESPERA` la app se queda viva para medir con `leaks`.
+    // `TEST_RUNNER_CICLO=YES` reintroduce el ciclo del cronómetro (solo para la lección).
+    @MainActor
+    func testAbreYCierraUnPartidoParaMedirLaMemoria() throws {
+        let app = XCUIApplication()
+        let entorno = ProcessInfo.processInfo.environment
+        app.launchArguments = ["-msPorMinuto", "100", "-cicloDelCronometro", entorno["CICLO"] ?? "NO"]
+        app.launch()
+        app.buttons["partido-1"].tap()
+        XCTAssertTrue(app.staticTexts["minuto"].waitForExistence(timeout: 10))
+        Thread.sleep(forTimeInterval: 2)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15))
+            .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)))
+        XCTAssertTrue(app.buttons["partido-1"].waitForExistence(timeout: 5))
+        if let segundos = entorno["ESPERA"].flatMap(Double.init) {
+            Thread.sleep(forTimeInterval: segundos)
+        }
+    }
+
     // f71: la lista de partidos muestra las filas con su marcador.
     @MainActor
     func testLaListaMuestraLosPartidos() throws {

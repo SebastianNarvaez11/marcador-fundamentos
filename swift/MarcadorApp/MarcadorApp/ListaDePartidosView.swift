@@ -15,7 +15,8 @@ import Torneo
 //     primero, la segunda…). Sirve para vistas fijas (`VStack { A; B }`) y falla en listas que
 //     cambian: el estado se queda pegado a la posición. Es lo que pasa en Compose sin `key`.
 struct ListaDePartidosView: View {
-    let partidos: [PartidoDeLista]
+    // f75: la lista LEE los partidos del repositorio (`@Observable`): al registrar un gol, la fila cambia sola.
+    @Environment(RepositorioEnMemoria.self) private var repositorio
 
     // f72: el partido tocado se abre en una hoja modal (la navegación de verdad llega en f76).
     // `sheet(item:)` se abre cuando el valor deja de ser nil, y necesita `Identifiable`.
@@ -24,7 +25,7 @@ struct ListaDePartidosView: View {
     var body: some View {
         // `PartidoDeLista` es `Identifiable`, así que basta pasarle la colección.
         // Equivale a `List(partidos, id: \.id)`.
-        List(partidos) { item in
+        List(repositorio.partidos) { item in
             Button {
                 elegido = item
             } label: {
@@ -62,5 +63,7 @@ struct FilaDePartido: View {
 }
 
 #Preview {
-    ListaDePartidosView(partidos: DatosDeEjemplo.partidos)
+    ListaDePartidosView()
+        .environment(RepositorioEnMemoria())
+        .environment(AjustesModelo())
 }
