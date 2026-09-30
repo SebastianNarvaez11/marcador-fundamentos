@@ -86,4 +86,16 @@ fun main() {
 
     // Inmutabilidad: lo que devuelve el torneo es una copia.
     println("Partidos en el torneo: ${torneo.partidos.size}")
+
+    // Interfaces y objetos: el reglamento se puede cambiar por otro.
+    println(ReglamentoLiga)
+    // Objeto anónimo: implementa la interfaz al vuelo, sin declarar una clase.
+    val reglamentoAntiguo = object : Reglamento {
+        override val puntosPorVictoria = 2
+        override val puntosPorEmpate = 1
+    }
+    val torneoAntiguo = Torneo("Copa Antigua", listOf(rayo, toros), reglamentoAntiguo)
+    torneoAntiguo.agregar(alFinal)
+    println("Rayo con reglas antiguas: ${torneoAntiguo.tablaDePosiciones().first().puntos} puntos")
+    println("Mínimo de equipos: ${Torneo.MINIMO_DE_EQUIPOS}")
 }

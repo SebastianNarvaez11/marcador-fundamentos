@@ -2,7 +2,13 @@ package com.sebastiannarvaez.marcador.torneo
 
 // El torneo es lo único mutable del dominio: va acumulando partidos.
 // Por eso cuida qué enseña hacia fuera.
-class Torneo(val nombre: String, equipos: List<Equipo>) {
+// Por composición: el torneo TIENE un reglamento (se lo dan de fuera) en vez de
+// ser un tipo de reglamento. Cambiar de reglas no obliga a cambiar de clase.
+class Torneo(
+    val nombre: String,
+    equipos: List<Equipo>,
+    val reglamento: Reglamento = ReglamentoLiga,
+) {
 
     // Copia defensiva de lo que entra.
     val equipos: List<Equipo> = equipos.toList()
@@ -24,7 +30,21 @@ class Torneo(val nombre: String, equipos: List<Equipo>) {
         partidosJugados.add(partido)
     }
 
-    fun tablaDePosiciones(): List<FilaDePosicion> = tablaDePosiciones(partidosJugados, equipos)
+    fun tablaDePosiciones(): List<FilaDePosicion> = tablaDePosiciones(partidosJugados, equipos, reglamento)
 
     fun goleadores(): List<Pair<Jugador, Int>> = tablaDeGoleadores(partidosJugados)
+
+    // `companion object`: lo que en otros lenguajes es «estático». Se usa con el
+    // nombre de la clase: Torneo.conEquipos(...), Torneo.MINIMO_DE_EQUIPOS.
+    companion object {
+        // `const val`: constante conocida al compilar (solo tipos básicos).
+        const val MINIMO_DE_EQUIPOS = 2
+
+        fun conEquipos(nombre: String, vararg equipos: Equipo): Torneo {
+            require(equipos.size >= MINIMO_DE_EQUIPOS) {
+                "Un torneo necesita al menos $MINIMO_DE_EQUIPOS equipos"
+            }
+            return Torneo(nombre, equipos.toList())
+        }
+    }
 }

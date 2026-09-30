@@ -16,7 +16,11 @@ data class FilaDePosicion(
 
 // Tabla de posiciones a partir de los partidos jugados.
 // `equipos` permite que salgan también los que aún no han jugado.
-fun tablaDePosiciones(partidos: List<Partido>, equipos: List<Equipo> = emptyList()): List<FilaDePosicion> {
+fun tablaDePosiciones(
+    partidos: List<Partido>,
+    equipos: List<Equipo> = emptyList(),
+    reglamento: Reglamento = ReglamentoLiga,
+): List<FilaDePosicion> {
     // Cada partido cuenta dos veces: una desde el lado local y otra desde el visitante.
     // Cada elemento es (equipo, goles a favor, goles en contra).
     val apariciones = partidos.flatMap { partido ->
@@ -44,7 +48,7 @@ fun tablaDePosiciones(partidos: List<Partido>, equipos: List<Equipo> = emptyList
                 perdidos = marcadores.count { (aFavor, enContra) -> aFavor < enContra },
                 golesAFavor = marcadores.sumOf { it.first },
                 golesEnContra = marcadores.sumOf { it.second },
-                puntos = marcadores.sumOf { (aFavor, enContra) -> puntosPor(aFavor, enContra) },
+                puntos = marcadores.sumOf { (aFavor, enContra) -> reglamento.puntosPor(aFavor, enContra) },
             )
         }
         .sortedWith(
