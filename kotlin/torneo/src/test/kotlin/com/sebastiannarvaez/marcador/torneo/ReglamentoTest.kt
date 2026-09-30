@@ -47,7 +47,7 @@ class ReglamentoTest {
             override val puntosPorEmpate = 1
         }
         val torneo = Torneo("Antigua", listOf(rayo, toros), reglamento)
-        torneo.agregar(Partido(rayo, toros).registrar(Gol(1, ana, rayo)))
+        torneo.registrar(Partido(rayo, toros).registrar(Gol(1, ana, rayo))).getOrThrow()
         assertEquals(2, torneo.tablaDePosiciones().first().puntos)
     }
 

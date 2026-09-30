@@ -2,7 +2,7 @@ package com.sebastiannarvaez.marcador.torneo
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 // Torneo con el error clásico: `val` con una lista mutable que se expone tal cual.
 private class TorneoConFuga {
@@ -41,9 +41,9 @@ class InmutabilidadTest {
     @Test
     fun torneoDevuelveUnaFotoQueNoCambiaDespues() {
         val torneo = Torneo("Copa", listOf(rayo, toros))
-        torneo.agregar(Partido(rayo, toros))
+        torneo.registrar(Partido(rayo, toros)).getOrThrow()
         val foto = torneo.partidos
-        torneo.agregar(Partido(toros, rayo))
+        torneo.registrar(Partido(toros, rayo)).getOrThrow()
         assertEquals(1, foto.size)              // la copia no ve lo que llega después
         assertEquals(2, torneo.partidos.size)
     }
@@ -67,13 +67,15 @@ class InmutabilidadTest {
     @Test
     fun soloSePuedenAgregarPartidosDeEquiposInscritos() {
         val torneo = Torneo("Copa", listOf(rayo))
-        assertFailsWith<IllegalArgumentException> { torneo.agregar(Partido(rayo, toros)) }
+        val resultado = torneo.registrar(Partido(rayo, toros))
+        assertTrue(resultado.isFailure)
+        assertEquals(0, torneo.partidos.size)
     }
 
     @Test
     fun laTablaYLosGoleadoresSalenDeLosPartidos() {
         val torneo = Torneo("Copa", listOf(rayo, toros))
-        torneo.agregar(Partido(rayo, toros).registrar(Gol(3, ana, rayo)))
+        torneo.registrar(Partido(rayo, toros).registrar(Gol(3, ana, rayo))).getOrThrow()
         assertEquals("Rayo", torneo.tablaDePosiciones().first().equipo.nombre)
         assertEquals(listOf(ana), torneo.goleadores().ordenados)
     }

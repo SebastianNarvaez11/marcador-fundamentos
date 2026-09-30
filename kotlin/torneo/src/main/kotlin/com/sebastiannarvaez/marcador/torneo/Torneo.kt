@@ -23,11 +23,45 @@ class Torneo(
     val partidos: List<Partido>
         get() = partidosJugados.toList()
 
-    fun agregar(partido: Partido) {
+    // Registrar puede fallar (equipo no inscrito, gol de alguien ajeno…), y eso
+    // no es una situación excepcional sino esperable. Por eso devuelve un
+    // `Result<Partido>`: o el partido registrado, o el error que lo impidió.
+    // `runCatching` ejecuta el bloque y convierte lo que lance en un Result.failure.
+    fun registrar(partido: Partido): Result<Partido> = runCatching {
+        require(partido.local !== partido.visitante) { "Un equipo no puede jugar contra sí mismo" }
         require(partido.local in equipos && partido.visitante in equipos) {
             "Los dos equipos deben estar inscritos en $nombre"
         }
-        partidosJugados.add(partido)
+        partido.eventos.forEach { validar(it, partido) }
+        partido.also { partidosJugados.add(it) }
+    }
+
+    fun registrar(
+        local: Equipo,
+        visitante: Equipo,
+        eventos: List<EventoDePartido> = emptyList(),
+    ): Result<Partido> = registrar(Partido(local, visitante, eventos))
+
+    private fun validar(evento: EventoDePartido, partido: Partido) {
+        require(evento.minuto in 0..120) { "Minuto fuera del partido: ${evento.minuto}" }
+        val jugadoresDelPartido = partido.local.plantilla + partido.visitante.plantilla
+        // `when` como sentencia sobre un tipo sellado: también debe ser exhaustivo.
+        when (evento) {
+            is Gol -> {
+                require(evento.equipo == partido.local || evento.equipo == partido.visitante) {
+                    "El gol es de un equipo que no juega: ${evento.equipo.nombre}"
+                }
+                require(evento.jugador in evento.equipo.plantilla) {
+                    "${evento.jugador.nombre} no juega en ${evento.equipo.nombre}"
+                }
+            }
+            is Tarjeta -> require(evento.jugador in jugadoresDelPartido) {
+                "${evento.jugador.nombre} no juega este partido"
+            }
+            is Cambio -> require(evento.sale in jugadoresDelPartido && evento.entra in jugadoresDelPartido) {
+                "El cambio implica a alguien que no juega este partido"
+            }
+        }
     }
 
     fun tablaDePosiciones(): List<FilaDePosicion> = partidosJugados.tablaDePosiciones(equipos, reglamento)

@@ -1,5 +1,7 @@
 package com.sebastiannarvaez.marcador.torneo
 
+import java.io.File
+
 // Punto de entrada de consola: ./gradlew :torneo:run
 fun main() {
     val nombreDelTorneo = "Copa Barrio"
@@ -71,9 +73,9 @@ fun main() {
     val lobos = Equipo("Lobos", listOf(Jugador("Pedro", 4)))
     // `apply`: configura el objeto recién creado y lo devuelve.
     val torneo = Torneo(nombreDelTorneo, listOf(rayo, toros, lobos)).apply {
-        agregar(alFinal)
-        agregar(Partido(toros, lobos).registrar(Gol(20, ivan, toros)))
-        agregar(Partido(lobos, rayo).registrar(Gol(40, ana, rayo)))
+        registrar(alFinal).getOrThrow()
+        registrar(Partido(toros, lobos).registrar(Gol(20, ivan, toros))).getOrThrow()
+        registrar(Partido(lobos, rayo).registrar(Gol(40, ana, rayo))).getOrThrow()
     }
     println(torneo.tablaComoTexto())
     val goleadores = torneo.goleadores()
@@ -94,7 +96,32 @@ fun main() {
         override val puntosPorEmpate = 1
     }
     val torneoAntiguo = Torneo("Copa Antigua", listOf(rayo, toros), reglamentoAntiguo)
-    torneoAntiguo.agregar(alFinal)
+    torneoAntiguo.registrar(alFinal)
     println("Rayo con reglas antiguas: ${torneoAntiguo.tablaDePosiciones().first().puntos} puntos")
     println("Mínimo de equipos: ${Torneo.MINIMO_DE_EQUIPOS}")
+
+    // Errores como valores: un registro inválido no tumba el programa.
+    val intruso = Jugador("Intruso", 99)
+    val golInvalido = torneo.registrar(lobos, toros, listOf(Gol(10, intruso, lobos)))
+    golInvalido
+        .onSuccess { println("Registrado: $it") }
+        .onFailure { println("No se registró: ${it.message}") }
+    val golValido = torneo.registrar(lobos, toros, listOf(Gol(10, lobos.plantilla.first(), lobos)))
+    println("Marcador: " + golValido.fold(
+        onSuccess = { "${it.golesLocal}-${it.golesVisitante}" },
+        onFailure = { "error" },
+    ))
+    println("Partidos: " + torneo.registrar(lobos, lobos).map { it.eventos.size }.getOrElse { -1 })
+
+    // `try` es una expresión: devuelve un valor.
+    for (texto in listOf("10", " 7 ", "diez", "")) {
+        println("«$texto» -> ${dorsalDesdeTexto(texto) ?: "no es un dorsal"}")
+    }
+
+    // `use` cierra el fichero aunque falle la escritura.
+    val destino = File.createTempFile("tabla", ".txt")
+    torneo.exportarTabla(destino)
+        .onSuccess { println("Tabla escrita en ${destino.name} (${destino.length()} bytes)") }
+        .onFailure { println("No se pudo exportar: ${it.message}") }
+    destino.delete()
 }

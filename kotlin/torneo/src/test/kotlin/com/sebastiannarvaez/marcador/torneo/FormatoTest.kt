@@ -33,7 +33,7 @@ class FormatoTest {
     @Test
     fun tablaComoTextoTieneEncabezadoYUnaFilaPorEquipo() {
         val torneo = Torneo("Copa", listOf(rayo, toros)).apply {
-            agregar(Partido(rayo, toros).registrar(Gol(1, ana, rayo)))
+            registrar(Partido(rayo, toros).registrar(Gol(1, ana, rayo))).getOrThrow()
         }
         val lineas = torneo.tablaComoTexto().lines()
         assertEquals(3, lineas.size)

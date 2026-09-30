@@ -31,3 +31,12 @@ fun presentar(jugador: Jugador?): String {
     if (jugador == null) return "Sin jugador"
     return "${jugador.nombre} (${jugador.dorsalOGuion()})"
 }
+
+// `try` como expresión: su valor es el del bloque que se ejecute.
+// Aquí, un texto que no es un número produce null en vez de tumbar el programa.
+fun dorsalDesdeTexto(texto: String): Int? =
+    try {
+        texto.trim().toInt()
+    } catch (error: NumberFormatException) {
+        null
+    }
