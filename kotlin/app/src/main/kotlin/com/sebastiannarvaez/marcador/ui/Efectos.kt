@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -122,21 +121,21 @@ fun TituloDeLaActividad(marcador: Marcador) {
 }
 
 // La parte visible del cronometro (sin estado: recibe todo y avisa con lambdas).
+// En f38 desaparecen Pausa y Reiniciar: el partido en vivo solo corre hacia delante
+// (no se pausa ni se reinicia) y el boton se deshabilita al empezar.
 @Composable
 fun PanelDelCronometro(
     minuto: Int,
     corriendo: Boolean,
     ultimoAviso: String,
     pausas: Int,
-    onAlternar: () -> Unit,
-    onReiniciar: () -> Unit,
+    onEmpezar: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Minuto $minuto'", style = MaterialTheme.typography.headlineMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Button(onClick = onAlternar) { Text(if (corriendo) "Pausa" else if (minuto == 0) "Empezar" else "Reanudar") }
-            Button(onClick = onReiniciar) { Text("Reiniciar") }
+        Button(onClick = onEmpezar, enabled = !corriendo && minuto == 0) {
+            Text(if (minuto >= MINUTOS_DEL_PARTIDO) "Partido terminado" else if (corriendo) "En juego" else "Empezar partido")
         }
         Text("Ultimo aviso (cada 15'): $ultimoAviso")
         Text("Veces que la pantalla paso a segundo plano: $pausas")
