@@ -61,10 +61,8 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 // Recoge UN StateFlow y pasa el estado hacia abajo y los eventos hacia arriba.
 @Composable
 fun PantallaMarcador(
-    onVerDemos: () -> Unit,
     onVerGoleadores: () -> Unit,
     onVolver: () -> Unit,
-    onProvocarError: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PartidoViewModel,
 ) {
@@ -75,7 +73,7 @@ fun PantallaMarcador(
     var pausas by rememberSaveable { mutableIntStateOf(0) }
     ObservadorDelCiclo(alPararse = { pausas++ })
 
-    PantallaMarcadorContenido(estado, pausas, viewModel::alEvento, onVerDemos, onVerGoleadores, onVolver, onProvocarError, modifier)
+    PantallaMarcadorContenido(estado, pausas, viewModel::alEvento, onVerGoleadores, onVolver, modifier)
 }
 
 // SIN ESTADO: recibe el UiState y una lambda de eventos. Se puede previsualizar con
@@ -86,22 +84,14 @@ fun PantallaMarcadorContenido(
     estado: MarcadorUiState,
     pausas: Int,
     onEvento: (MarcadorEvento) -> Unit,
-    onVerDemos: () -> Unit,
     onVerGoleadores: () -> Unit,
     onVolver: () -> Unit,
-    onProvocarError: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets(0),
         topBar = { CenterAlignedTopAppBar(title = { Text("Marcador") }) },
-        bottomBar = {
-            // Otro slot: una barra inferior con un boton para ir a las demos de F3.
-            Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.Center) {
-                Button(onClick = onVerDemos) { Text("Demos de F3") }
-            }
-        },
     ) { paddingValues ->
         // `when` exhaustivo sobre el sealed: si manana hay una variante mas, no compila
         // hasta que la pantalla diga que hacer con ella.
@@ -126,7 +116,7 @@ fun PantallaMarcadorContenido(
                     estado = EstadoMarcador(estado.partido, estado.marcador),
                     onGol = { lado -> onEvento(MarcadorEvento.Gol(lado)) },
                     modifier = Modifier.padding(paddingValues),
-                    // Un slot mas: lo que sobra de la pantalla (demos de f32 y f33) se inyecta desde fuera.
+                    // Un slot: lo que sobra de la pantalla se inyecta desde fuera.
                     extras = {
                         Text("Partido n.º ${estado.partidoId} (elegido en la lista de partidos)")
                         // f47: empuja otra clave en la pila de Navigation 3.
@@ -147,11 +137,8 @@ fun PantallaMarcadorContenido(
                                 )
                             }
                         }
-                        // Para VER la variante Error: navega a un partido que no existe.
-                        Button(onClick = onProvocarError) { Text("Provocar error (partido 99)") }
-                        ComparacionDeEstado()
-                        OrdenDeLosModifiers()
-                        InsigniaSobreEscudo()
+                        // f48: aqui ya no van las demos de F3 y F4 ni el «provocar error» de f41:
+                        // esta pantalla es la del partido. El Error se prueba en los tests.
                     },
                 )
             }
@@ -247,8 +234,7 @@ private fun PantallaMarcadorPreview() {
     MaterialTheme {
         PantallaMarcadorContenido(
             MarcadorUiState.Exito(1, Ejemplo.rayoContraToros, Marcador(2, 1), 45, true, "minuto 30 con 1-1"),
-            pausas = 0, onEvento = {}, onVerDemos = {}, onVerGoleadores = {},
-            onVolver = {}, onProvocarError = {},
+            pausas = 0, onEvento = {}, onVerGoleadores = {}, onVolver = {},
         )
     }
 }

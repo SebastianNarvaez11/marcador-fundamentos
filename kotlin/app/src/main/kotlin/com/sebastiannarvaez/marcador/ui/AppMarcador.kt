@@ -11,6 +11,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -104,7 +105,14 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                     val vm: ListaViewModel = viewModel(factory = Fabricas.lista)
                     val partidos by vm.partidos.collectAsStateWithLifecycle()
                     Scaffold(
-                        topBar = { CenterAlignedTopAppBar(title = { Text("Partidos") }) },
+                        // Las demos de F3 (ciclo de vida, intents, permisos...) ya no cuelgan de la
+                        // pantalla del partido: se abren desde la lista.
+                        topBar = {
+                            CenterAlignedTopAppBar(
+                                title = { Text("Partidos") },
+                                actions = { TextButton(onClick = onVerDemos) { Text("Demos F3") } },
+                            )
+                        },
                         contentWindowInsets = WindowInsets(0),
                     ) { interior ->
                         PantallaPartidos(partidos, onElegir = { id -> pila.add(PartidoKey(id)) }, modifier = Modifier.padding(interior))
@@ -134,11 +142,8 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                     // arriba), asi que hay un ViewModel por partido abierto sin mas.
                     val vm: PartidoViewModel = viewModel(factory = Fabricas.partido(clave.partidoId))
                     PantallaMarcador(
-                        onVerDemos = onVerDemos,
                         onVerGoleadores = { pila.add(GoleadoresKey) },
                         onVolver = { pila.removeAt(pila.lastIndex) },
-                        // Un partido que no existe: su propia entrada mostrara el Error.
-                        onProvocarError = { pila.add(PartidoKey(99)) },
                         viewModel = vm,
                     )
                 }

@@ -15,6 +15,7 @@ work = "2.12.0"
 coroutines = "1.11.0"
 serialization = "1.11.0"
 turbine = "1.2.1"
+junit = "4.13.2"
 room = "3.0.3"
 navigation3 = "1.1.7"
 datastore = "1.2.1"
@@ -43,6 +44,8 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycle" }
+kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+junit = { module = "junit:junit", version.ref = "junit" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 # Un bundle agrupa librerias que siempre van juntas: en build.gradle.kts basta

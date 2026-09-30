@@ -116,4 +116,16 @@ dependencies {
     debugImplementation(libs.leakcanary.android)
     // Las @Preview y el Layout Inspector necesitan ui-tooling, solo en debug.
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // f48: pruebas unitarias del ViewModel (corren en la JVM, sin emulador).
+    // kotlin-test (assertEquals, @Test...). En :torneo basta `kotlin("test")` porque el plugin de
+    // Kotlin elige la variante JUnit; con el Kotlin integrado de AGP no, y hay que pedir
+    // `kotlin-test-junit` a mano (sin el, `AfterTest` da «Unresolved reference 'AfterTest'»).
+    // AGP ejecuta las pruebas unitarias con JUnit 4.
+    testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.junit)
+    // runTest, TestDispatcher, Dispatchers.setMain y el reloj virtual.
+    testImplementation(libs.kotlinx.coroutines.test)
+    // Turbine: probar Flow con `test { awaitItem() }`.
+    testImplementation(libs.turbine)
 }
