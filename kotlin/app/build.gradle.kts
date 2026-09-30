@@ -86,4 +86,6 @@ dependencies {
     // `debugImplementation` = solo en la variante debug: no viaja en la app de
     // produccion. No hace falta escribir codigo: se instala solo al arrancar.
     debugImplementation(libs.leakcanary.android)
+    // Las @Preview y el Layout Inspector necesitan ui-tooling, solo en debug.
+    debugImplementation(libs.androidx.compose.ui.tooling)
 }

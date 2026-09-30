@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +28,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.sebastiannarvaez.marcador.torneo.Ejemplo
+import com.sebastiannarvaez.marcador.torneo.FilaDePosicion
+import com.sebastiannarvaez.marcador.ui.PantallaMarcador
 import com.sebastiannarvaez.marcador.torneo.PartidoEnVivo
 import com.sebastiannarvaez.marcador.torneo.probabilidadDeVictoria
 import kotlinx.coroutines.Dispatchers
@@ -170,7 +173,19 @@ class MainActivity : ComponentActivity() {
         val tabla = Ejemplo.torneoConPartidos().tablaDePosiciones()
         setContent {
             MaterialTheme {
+                // f32: la pantalla de verdad es PantallaMarcador (ui/). Los botones de
+                // demostracion de F3 siguen ahi, detras de un boton, para no perderlos.
+                if (verDemosDeF3) DemosDeF3(tabla) else PantallaMarcador(onVerDemos = { verDemosDeF3 = true })
+            }
+        }
+    }
+
+    private var verDemosDeF3 by mutableStateOf(false)
+
+    @Composable
+    private fun DemosDeF3(tabla: List<FilaDePosicion>) {
                 Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
+                    Button(onClick = { verDemosDeF3 = false }) { Text("Volver a la pantalla del marcador") }
                     Text("Marcador")
                     // f31: datos que solo conoce la compilacion (BuildConfig se genera).
                     Text("Modo: ${BuildConfig.MODO} · plan ${BuildConfig.PLAN} · ${BuildConfig.APPLICATION_ID}")
@@ -227,8 +242,6 @@ class MainActivity : ComponentActivity() {
                         Text("${fila.equipo.nombre}: ${fila.puntos} pts")
                     }
                 }
-            }
-        }
     }
 
     override fun onStart() {

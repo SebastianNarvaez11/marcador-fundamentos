@@ -26,6 +26,9 @@ androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = 
 androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
+androidx-compose-foundation = { module = "androidx.compose.foundation:foundation" }
+androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
@@ -36,7 +39,7 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 # Un bundle agrupa librerias que siempre van juntas: en build.gradle.kts basta
 # `implementation(libs.bundles.compose)`.
 [bundles]
-compose = ["androidx-compose-ui", "androidx-compose-material3"]
+compose = ["androidx-compose-ui", "androidx-compose-foundation", "androidx-compose-material3", "androidx-compose-ui-tooling-preview"]
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
