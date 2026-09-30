@@ -59,7 +59,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
             ) { interior -> PantallaPartidos(
                 DatosDeEjemplo.partidos,
                 onElegir = { id ->
-                    viewModel.seleccionar(id)
+                    viewModel.alEvento(MarcadorEvento.Elegir(id))
                     pestana = 0
                 },
                 modifier = Modifier.padding(interior),

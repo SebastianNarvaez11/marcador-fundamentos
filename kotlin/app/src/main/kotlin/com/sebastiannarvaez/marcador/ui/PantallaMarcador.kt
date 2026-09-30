@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Marcador
 import com.sebastiannarvaez.marcador.torneo.Partido
 
@@ -54,33 +56,35 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 //
 // CenterAlignedTopAppBar es «experimental» en Material 3: hay que aceptarlo con
 // @OptIn, o el compilador se niega (ver diario).
-@OptIn(ExperimentalMaterial3Api::class)
+// f41 · LA PANTALLA CON ESTADO («stateful»): la fina capa que conecta con el ViewModel.
+// Recoge UN StateFlow y pasa el estado hacia abajo y los eventos hacia arriba.
 @Composable
 fun PantallaMarcador(
     onVerDemos: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PartidoViewModel = viewModel(),
 ) {
-    // f39 · EL BUG DE f38 DESAPARECE. El partido ya no vive en `remember` sino en el
-    // ViewModel: `viewModel()` pide la instancia al ViewModelStore de la Activity, que
-    // sobrevive a la rotacion. La primera vez la crea; despues devuelve la misma.
-    // La pantalla solo LEE estado y AVISA de eventos: no sabe que existe un PartidoEnVivo.
-    val partido by viewModel.partido.collectAsStateWithLifecycle()
-    val partidoId by viewModel.partidoId.collectAsStateWithLifecycle()
-
-    // collectAsStateWithLifecycle (f38) sobre los StateFlow del ViewModel.
-    val marcador by viewModel.marcador.collectAsStateWithLifecycle()
-    val minuto by viewModel.minuto.collectAsStateWithLifecycle()
-    val corriendo by viewModel.corriendo.collectAsStateWithLifecycle()
-    val ultimoAviso by viewModel.ultimoAviso.collectAsStateWithLifecycle()
-    val estado = EstadoMarcador(partido, marcador)
+    val estado by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Esto SI es estado de la pantalla (cuantas veces paso a segundo plano), y
     // rememberSaveable basta: es un Int.
     var pausas by rememberSaveable { mutableIntStateOf(0) }
     ObservadorDelCiclo(alPararse = { pausas++ })
-    TituloDeLaActividad(estado.marcador)
 
+    PantallaMarcadorContenido(estado, pausas, viewModel::alEvento, onVerDemos, modifier)
+}
+
+// SIN ESTADO: recibe el UiState y una lambda de eventos. Se puede previsualizar con
+// cualquiera de las tres variantes sin ViewModel (ver las @Preview de abajo).
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PantallaMarcadorContenido(
+    estado: MarcadorUiState,
+    pausas: Int,
+    onEvento: (MarcadorEvento) -> Unit,
+    onVerDemos: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets(0),
@@ -92,23 +96,43 @@ fun PantallaMarcador(
             }
         },
     ) { paddingValues ->
-        // SIEMPRE se usa paddingValues (si no, el contenido queda tapado por las barras).
-        MarcadorContent(
-            estado = estado,
-            onGol = viewModel::golAMano,
-            modifier = Modifier.padding(paddingValues),
-            // Un slot mas: lo que sobra de la pantalla (demos de f32 y f33) se inyecta desde fuera.
-            extras = {
-                Text("Partido n.º $partidoId (elegido en la pestana Partidos)")
-                PanelDelCronometro(
-                    minuto, corriendo, ultimoAviso, pausas,
-                    onEmpezar = viewModel::empezar,
+        // `when` exhaustivo sobre el sealed: si manana hay una variante mas, no compila
+        // hasta que la pantalla diga que hacer con ella.
+        when (estado) {
+            MarcadorUiState.Cargando -> Box(Modifier.padding(paddingValues).fillMaxSize(), Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            is MarcadorUiState.Error -> Column(
+                Modifier.padding(paddingValues).fillMaxSize().padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(estado.mensaje, color = MaterialTheme.colorScheme.error)
+                Button(onClick = { onEvento(MarcadorEvento.Elegir(1)) }) { Text("Volver al partido 1") }
+            }
+            is MarcadorUiState.Exito -> {
+                TituloDeLaActividad(estado.marcador)
+                // SIEMPRE se usa paddingValues (si no, el contenido queda tapado por las barras).
+                MarcadorContent(
+                    estado = EstadoMarcador(estado.partido, estado.marcador),
+                    onGol = { lado -> onEvento(MarcadorEvento.Gol(lado)) },
+                    modifier = Modifier.padding(paddingValues),
+                    // Un slot mas: lo que sobra de la pantalla (demos de f32 y f33) se inyecta desde fuera.
+                    extras = {
+                        Text("Partido n.º ${estado.partidoId} (elegido en la pestana Partidos)")
+                        PanelDelCronometro(
+                            estado.minuto, estado.corriendo, estado.ultimoAviso, pausas,
+                            onEmpezar = { onEvento(MarcadorEvento.Empezar) },
+                        )
+                        // Para VER la variante Error: pide un partido que no existe.
+                        Button(onClick = { onEvento(MarcadorEvento.Elegir(99)) }) { Text("Provocar error (partido 99)") }
+                        ComparacionDeEstado()
+                        OrdenDeLosModifiers()
+                        InsigniaSobreEscudo()
+                    },
                 )
-                ComparacionDeEstado()
-                OrdenDeLosModifiers()
-                InsigniaSobreEscudo()
-            },
-        )
+            }
+        }
     }
 }
 
@@ -197,5 +221,10 @@ fun InsigniaSobreEscudo(modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 private fun PantallaMarcadorPreview() {
-    MaterialTheme { PantallaMarcador(onVerDemos = {}) }
+    MaterialTheme {
+        PantallaMarcadorContenido(
+            MarcadorUiState.Exito(1, Ejemplo.rayoContraToros, Marcador(2, 1), 45, true, "minuto 30 con 1-1"),
+            pausas = 0, onEvento = {}, onVerDemos = {},
+        )
+    }
 }
