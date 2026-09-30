@@ -10,6 +10,10 @@ import android.util.Log
 // pantalla: por eso es seguro guardarlo en un singleton. Una Activity tambien es
 // un Context, pero muere al rotar; guardarla es una FUGA DE MEMORIA.
 class MarcadorApplication : Application() {
+    // f44: el contenedor de dependencias. Las Activities y los ViewModels lo alcanzan
+    // desde la Application; nadie mas construye repositorios.
+    val contenedor = AppContainer()
+
     override fun onCreate() {
         super.onCreate()
         crearCanalDeGoles(this)

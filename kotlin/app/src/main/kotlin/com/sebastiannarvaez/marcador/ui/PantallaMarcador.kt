@@ -62,7 +62,7 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 fun PantallaMarcador(
     onVerDemos: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: PartidoViewModel = viewModel(),
+    viewModel: PartidoViewModel = viewModel(factory = Fabricas.partido),
 ) {
     val estado by viewModel.uiState.collectAsStateWithLifecycle()
 

@@ -32,8 +32,8 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
     val titulos = listOf("Marcador", "Partidos", "Tablas", "Recomp.")
     // El ViewModel se pide AQUI, en la raiz, y se pasa hacia abajo: la lista de partidos
     // elige y la pantalla del marcador muestra, los dos con la MISMA instancia.
-    val viewModel: PartidoViewModel = viewModel()
-    val listaViewModel: ListaViewModel = viewModel()
+    val viewModel: PartidoViewModel = viewModel(factory = Fabricas.partido)
+    val listaViewModel: ListaViewModel = viewModel(factory = Fabricas.lista)
     val partidos by listaViewModel.partidos.collectAsStateWithLifecycle()
     val torneo by listaViewModel.torneo.collectAsStateWithLifecycle()
 

@@ -30,10 +30,3 @@ class PartidosRepositoryEnMemoria(
         }
     }
 }
-
-// PROVISIONAL, y a proposito feo: un singleton global que cualquiera alcanza. Funciona,
-// pero los ViewModels quedan atados a esta instancia y no se pueden probar con otra
-// (f48). f44 lo quita con un contenedor de dependencias.
-object Repositorios {
-    val partidos: PartidosRepositoryEnMemoria = PartidosRepositoryEnMemoria()
-}
