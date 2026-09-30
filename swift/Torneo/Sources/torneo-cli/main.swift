@@ -52,12 +52,16 @@ print("Toros con dorsales repetidos: \(Equipo(nombre: "Toros", plantilla: [Jugad
 
 let toros = Equipo(nombre: "Toros", plantilla: [ivan])!
 let inicio = Partido(local: rayo, visitante: toros)
-var alFinal = inicio            // COPIA: struct
-alFinal.registrarGolLocal()
-alFinal.registrarGolLocal()
-alFinal.registrarGolVisitante()
-print("Antes: \(inicio.golesLocal)-\(inicio.golesVisitante), después: \(alFinal.golesLocal)-\(alFinal.golesVisitante)")
-print("¿Mismo equipo local en las dos copias? \(inicio.local === alFinal.local)")
+let alFinal = inicio
+    .registrando(.gol(minuto: 12, jugador: ana, equipo: rayo))
+    .registrando(.tarjeta(minuto: 30, jugador: ivan, color: .amarilla))
+    .registrando(.gol(minuto: 55, jugador: ivan, equipo: toros))
+    .registrando(.gol(minuto: 80, jugador: ana, equipo: rayo))
+    .registrando(.cambio(minuto: 85, sale: ana, entra: jugadores[1]))
+print("Antes: \(inicio.eventos.count) eventos, después: \(alFinal.eventos.count)")
+for evento in alFinal.eventos { print(describir(evento)) }
+print("Marcador: \(alFinal.golesLocal)-\(alFinal.golesVisitante) -> \(alFinal.resultado().titular)")
+print("Colores de tarjeta: \(ColorDeTarjeta.allCases.map(\.rawValue))")
 
 let torneo = Torneo(nombre: nombreDelTorneo, equipos: [rayo, toros])
 let mismoTorneo = torneo        // MISMA referencia: class

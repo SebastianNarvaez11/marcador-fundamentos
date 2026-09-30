@@ -55,7 +55,7 @@ struct StructYClassTests {
         let (rayo, toros) = equipos()
         let inicio = Partido(local: rayo, visitante: toros)
         var copia = inicio
-        copia.registrarGolLocal()
+        copia.registrar(.gol(minuto: 1, jugador: ana, equipo: rayo))
         #expect(inicio.golesLocal == 0)   // el original no cambia
         #expect(copia.golesLocal == 1)
     }
@@ -67,11 +67,14 @@ struct StructYClassTests {
         #expect(copia.local === inicio.local)
     }
 
-    @Test func conGolDevuelveOtroPartido() {
+    @Test func registrandoDevuelveOtroPartido() {
         let (rayo, toros) = equipos()
         let inicio = Partido(local: rayo, visitante: toros)
-        let despues = inicio.conGolLocal().conGolVisitante().conGolLocal()
-        #expect(inicio.golesLocal == 0)
+        let despues = inicio
+            .registrando(.gol(minuto: 1, jugador: ana, equipo: rayo))
+            .registrando(.gol(minuto: 2, jugador: ivan, equipo: toros))
+            .registrando(.gol(minuto: 3, jugador: ana, equipo: rayo))
+        #expect(inicio.eventos.isEmpty)
         #expect(despues.golesLocal == 2)
         #expect(despues.golesVisitante == 1)
     }
