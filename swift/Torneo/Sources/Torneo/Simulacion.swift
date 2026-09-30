@@ -46,3 +46,116 @@ public func probabilidadDeVictoria(_ partido: Partido, simulaciones: Int = 5_000
     }
     return Double(victoriasLocales) / Double(simulaciones)
 }
+
+// ---- f62: varias cosas a la vez ----
+
+// `async let` lanza una tarea HIJA que corre a la vez que el resto de la función.
+// Las dos líneas `async let` arrancan antes del primer `await`, así que los dos
+// partidos se juegan a la vez; el `await` de la última línea espera a los dos.
+// El total dura lo que el más largo, no la suma. (El `async { }` + `await()` de
+// Kotlin f16.)
+//
+// «A la vez» aquí es CONCURRENCIA, no necesariamente paralelismo: en Swift las
+// tareas se reparten entre los hilos del sistema, así que además pueden correr
+// en paralelo de verdad.
+public func jugarJornada(
+    _ primero: Partido,
+    _ segundo: Partido,
+    msPorMinuto: Int = 10
+) async throws -> (Partido, Partido) {
+    async let a = jugarPartido(primero, msPorMinuto: msPorMinuto)
+    async let b = jugarPartido(segundo, msPorMinuto: msPorMinuto)
+    return try await (a, b)
+}
+
+public struct Estadisticas: Equatable {
+    public let goles: Int
+    public let tarjetas: Int
+    public let cambios: Int
+}
+
+// Tres consultas independientes (aquí simuladas con una espera de `msPorConsulta`,
+// como si fueran a una base de datos). Con `async let` corren a la vez y el total
+// es ~1 consulta; una detrás de otra serían ~3.
+public func estadisticasDe(_ partido: Partido, msPorConsulta: Int = 50) async throws -> Estadisticas {
+    async let goles: Int = {
+        try await Task.sleep(for: .milliseconds(msPorConsulta))
+        return partido.eventos.count { if case .gol = $0 { true } else { false } }
+    }()
+    async let tarjetas: Int = {
+        try await Task.sleep(for: .milliseconds(msPorConsulta))
+        return partido.eventos.count { if case .tarjeta = $0 { true } else { false } }
+    }()
+    async let cambios: Int = {
+        try await Task.sleep(for: .milliseconds(msPorConsulta))
+        return partido.eventos.count { if case .cambio = $0 { true } else { false } }
+    }()
+    return try await Estadisticas(goles: goles, tarjetas: tarjetas, cambios: cambios)
+}
+
+// `async let` sirve cuando sabes CUÁNTAS tareas hay al escribir el código. Con una
+// lista de tamaño variable se usa un TaskGroup: `addTask` añade una tarea hija por
+// partido y el `for try await` recoge los resultados A MEDIDA QUE TERMINAN (no
+// en el orden en que se lanzaron). Por eso cada tarea devuelve también su
+// posición, y al final se coloca cada partido donde estaba.
+public func jugarJornada(_ partidos: [Partido], msPorMinuto: Int = 10) async throws -> [Partido] {
+    try await withThrowingTaskGroup(of: (Int, Partido).self) { grupo in
+        for (posicion, guion) in partidos.enumerated() {
+            grupo.addTask {
+                (posicion, try await jugarPartido(guion, msPorMinuto: msPorMinuto))
+            }
+        }
+        var resultado = [Partido?](repeating: nil, count: partidos.count)
+        for try await (posicion, jugado) in grupo {
+            resultado[posicion] = jugado
+        }
+        return resultado.compactMap { $0 }
+    }
+}
+
+// ---- Errores en tareas hijas (f19 de Kotlin) ----
+
+// Algo que sale mal en mitad de un partido: se va la luz del campo.
+public struct SuspendidoPorApagon: Error, Equatable {
+    public let minuto: Int
+}
+
+// Un partido que se juega hasta el minuto del apagón y ahí falla.
+public func jugarConApagon(_ partido: Partido, msPorMinuto: Int = 10, minutoDelApagon: Int) async throws -> Partido {
+    try await Task.sleep(for: .milliseconds(msPorMinuto * minutoDelApagon))
+    throw SuspendidoPorApagon(minuto: minutoDelApagon)
+}
+
+// En un `withThrowingTaskGroup` normal, si UNA tarea hija lanza un error, el grupo
+// cancela a las demás hermanas y relanza el error: un partido roto tumba la
+// jornada (el `coroutineScope` de Kotlin). Para que cada hija falle POR SU
+// CUENTA, la hija atrapa su error y lo devuelve como VALOR (un `Result`): al
+// grupo solo le llegan resultados, nunca errores (el `supervisorScope` de Kotlin).
+//
+// La cancelación NO se traga (igual que `intentar` en Kotlin f17): un `catch`
+// genérico atraparía también la `CancellationError`, y una tarea cancelada
+// seguiría como si nada. Se atrapa aparte y se vuelve a lanzar; solo los demás
+// errores se guardan como resultado.
+public func jugarJornadaSupervisada(
+    _ partidos: [Partido],
+    jugar: @escaping @Sendable (Partido) async throws -> Partido = { try await jugarPartido($0) }
+) async throws -> [Result<Partido, any Error>] {
+    try await withThrowingTaskGroup(of: (Int, Result<Partido, any Error>).self) { grupo in
+        for (posicion, guion) in partidos.enumerated() {
+            grupo.addTask {
+                do {
+                    return (posicion, .success(try await jugar(guion)))
+                } catch let cancelacion as CancellationError {
+                    throw cancelacion
+                } catch {
+                    return (posicion, .failure(error))
+                }
+            }
+        }
+        var resultado = [Result<Partido, any Error>?](repeating: nil, count: partidos.count)
+        for try await (posicion, valor) in grupo {
+            resultado[posicion] = valor
+        }
+        return resultado.compactMap { $0 }
+    }
+}

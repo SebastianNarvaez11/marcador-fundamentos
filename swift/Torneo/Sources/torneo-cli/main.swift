@@ -198,3 +198,40 @@ switch await tarea.result {
 case .success: print("Terminó (no debía)")
 case let .failure(error): print("Cancelado: \(error is CancellationError ? "CancellationError" : "\(error)")")
 }
+
+print("== f62: dos partidos a la vez con async let ==")
+let inicioJornada = reloj.now
+do {
+    let (uno, otro) = try await jugarJornada(Ejemplo.rayoContraToros, Ejemplo.lobosContraAguilas)
+    print("Pitido final: \(uno.local.nombre) \(uno.golesLocal)-\(uno.golesVisitante) \(uno.visitante.nombre)")
+    print("Pitido final: \(otro.local.nombre) \(otro.golesLocal)-\(otro.golesVisitante) \(otro.visitante.nombre)")
+    print("Los dos partidos duraron \(milisegundos(inicioJornada.duration(to: reloj.now))) ms (uno solo dura unos 1100 ms)")
+    let inicioEstadisticas = reloj.now
+    print(try await estadisticasDe(uno))
+    print("Estadísticas en \(milisegundos(inicioEstadisticas.duration(to: reloj.now))) ms (tres consultas de 50 ms a la vez)")
+} catch {
+    print("Falló la jornada: \(error)")
+}
+
+print("== f62: una jornada con TaskGroup ==")
+do {
+    let jugados = try await jugarJornada([Ejemplo.rayoContraToros, Ejemplo.lobosContraAguilas], msPorMinuto: 2)
+    print(jugados.map { "\($0.golesLocal)-\($0.golesVisitante)" })
+} catch {
+    print("Falló la jornada: \(error)")
+}
+
+print("== f62: un partido que falla no tumba al otro ==")
+let supervisados = try await jugarJornadaSupervisada([Ejemplo.rayoContraToros, Ejemplo.lobosContraAguilas]) { partido in
+    if partido.local == Ejemplo.lobos {
+        try await jugarConApagon(partido, minutoDelApagon: 30)
+    } else {
+        try await jugarPartido(partido, msPorMinuto: 2)
+    }
+}
+for resultado in supervisados {
+    switch resultado {
+    case let .success(partido): print("Terminó \(partido.local.nombre)-\(partido.visitante.nombre): \(partido.golesLocal)-\(partido.golesVisitante)")
+    case let .failure(error): print("Falló: \((error as? SuspendidoPorApagon).map { "se fue la luz en el minuto \($0.minuto)" } ?? "\(error)")")
+    }
+}
