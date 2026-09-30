@@ -28,4 +28,9 @@ fun main() {
     var minuto = 0
     while (minuto < 90) minuto += 45
     println("El partido acaba en el minuto $minuto")
+
+    // Nulabilidad: jugadores con y sin dorsal.
+    val jugadores = listOf(Jugador("Ana", 9), Jugador("Luis", null), Jugador("Marta", 1))
+    for (jugador in jugadores) println(presentar(jugador))
+    println(presentar(null))
 }
