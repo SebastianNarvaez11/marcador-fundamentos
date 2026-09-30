@@ -9,6 +9,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.system.measureTimeMillis
@@ -69,7 +70,25 @@ fun main(args: Array<String>) {
 
         println("== f20: un Flow frío, la narración del partido ==")
         demoFlowFrio()
+
+        println("== f21: la jornada, dos marcadores combinados ==")
+        demoJornada()
     }
+}
+
+suspend fun demoJornada() {
+    val uno = PartidoEnVivo(Ejemplo.rayoContraToros)
+    val otro = PartidoEnVivo(Ejemplo.lobosContraAguilas)
+    marcadoresDeLaJornada(uno, otro).collect { jornada ->
+        println("  ${Ejemplo.rayo.nombre} ${jornada.primero} ${Ejemplo.toros.nombre} | ${Ejemplo.lobos.nombre} ${jornada.segundo} ${Ejemplo.aguilas.nombre}")
+    }
+
+    // flatMapLatest: cambiar de partido a los 300 ms cancela el seguimiento del primero.
+    val elegidos = flow {
+        emit(uno); delay(300); emit(otro)
+    }
+    println("Siguiendo un partido y cambiando a los 300 ms:")
+    seguirPartido(elegidos).collect { println("  marcador visto: $it") }
 }
 
 suspend fun demoFlowFrio() {
