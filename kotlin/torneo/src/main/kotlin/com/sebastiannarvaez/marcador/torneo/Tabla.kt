@@ -14,16 +14,17 @@ data class FilaDePosicion(
     val diferencia: Int get() = golesAFavor - golesEnContra
 }
 
-// Tabla de posiciones a partir de los partidos jugados.
+// Función de extensión: añade un método a `List<Partido>` sin tocar la clase List.
+// Dentro, `this` es la lista de partidos. Se llama como si fuera de la lista:
+//     partidos.tablaDePosiciones()
 // `equipos` permite que salgan también los que aún no han jugado.
-fun tablaDePosiciones(
-    partidos: List<Partido>,
+fun List<Partido>.tablaDePosiciones(
     equipos: List<Equipo> = emptyList(),
     reglamento: Reglamento = ReglamentoLiga,
 ): List<FilaDePosicion> {
     // Cada partido cuenta dos veces: una desde el lado local y otra desde el visitante.
     // Cada elemento es (equipo, goles a favor, goles en contra).
-    val apariciones = partidos.flatMap { partido ->
+    val apariciones = flatMap { partido ->
         listOf(
             Triple(partido.local, partido.golesLocal, partido.golesVisitante),
             Triple(partido.visitante, partido.golesVisitante, partido.golesLocal),
@@ -62,8 +63,8 @@ fun tablaDePosiciones(
 // Tabla de goleadores: cada jugador con sus goles, de más a menos.
 // Usa una Sequence: las operaciones se encadenan y se ejecutan elemento a
 // elemento, sin crear una lista intermedia entre paso y paso.
-fun tablaDeGoleadores(partidos: List<Partido>): List<Pair<Jugador, Int>> =
-    partidos.asSequence()
+fun List<Partido>.goleadores(): List<Pair<Jugador, Int>> =
+    asSequence()
         .flatMap { it.eventos.asSequence() }
         .filterIsInstance<Gol>()
         .groupingBy { it.jugador }

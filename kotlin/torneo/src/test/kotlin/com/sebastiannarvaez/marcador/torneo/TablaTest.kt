@@ -31,7 +31,7 @@ class TablaTest {
 
     @Test
     fun ordenaPorPuntosYCalculaCadaColumna() {
-        val tabla = tablaDePosiciones(partidos)
+        val tabla = partidos.tablaDePosiciones()
         assertEquals(listOf("Rayo", "Toros", "Lobos"), tabla.map { it.equipo.nombre })
         val filaRayo = tabla.first()
         assertEquals(2, filaRayo.jugados)
@@ -45,7 +45,7 @@ class TablaTest {
     @Test
     fun desempataPorDiferenciaDeGoles() {
         // Toros: 1 punto, diferencia -1. Lobos: 1 punto, diferencia -3.
-        val tabla = tablaDePosiciones(partidos)
+        val tabla = partidos.tablaDePosiciones()
         assertEquals(1, tabla[1].puntos)
         assertEquals(1, tabla[2].puntos)
         assertEquals("Toros", tabla[1].equipo.nombre)
@@ -54,7 +54,7 @@ class TablaTest {
     @Test
     fun incluyeEquiposQueNoHanJugado() {
         val descansa = Equipo("Descansa", emptyList())
-        val tabla = tablaDePosiciones(partidos, equipos = listOf(descansa, rayo))
+        val tabla = partidos.tablaDePosiciones(equipos = listOf(descansa, rayo))
         assertEquals(4, tabla.size)
         assertEquals(0, tabla.last().puntos)
         assertEquals(0, tabla.last().jugados)
@@ -62,12 +62,12 @@ class TablaTest {
 
     @Test
     fun tablaVaciaSinPartidos() {
-        assertEquals(emptyList(), tablaDePosiciones(emptyList()))
+        assertEquals(emptyList(), emptyList<Partido>().tablaDePosiciones())
     }
 
     @Test
     fun goleadoresOrdenadosDeMasAMenos() {
-        val tabla = tablaDeGoleadores(partidos)
+        val tabla = partidos.goleadores()
         assertEquals(
             listOf(ana to 3, marta to 2, luis to 1, Jugador("Pedro", 4) to 1),
             tabla,
