@@ -33,4 +33,11 @@ fun main() {
     val jugadores = listOf(Jugador("Ana", 9), Jugador("Luis", null), Jugador("Marta", 1))
     for (jugador in jugadores) println(presentar(jugador))
     println(presentar(null))
+
+    // Clases: un equipo valida su plantilla al construirse.
+    val rayo = Equipo("Rayo FC", jugadores)
+    rayo.nombrarCapitan(jugadores.first())
+    println("$rayo, capitán: ${rayo.capitan?.nombre}")
+    val error = runCatching { Equipo("Toros", listOf(Jugador("A", 7), Jugador("B", 7))) }
+    println("Toros: ${error.exceptionOrNull()?.message}")
 }
