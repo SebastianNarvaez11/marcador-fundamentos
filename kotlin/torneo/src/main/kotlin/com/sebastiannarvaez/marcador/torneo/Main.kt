@@ -43,11 +43,20 @@ fun main() {
 
     // data class: copy, == frente a ===, desestructuración.
     val toros = Equipo("Toros", listOf(Jugador("Iván", 7)))
-    val inicio = Partido(rayo, toros)
-    val alFinal = inicio.conGolLocal().conGolLocal().conGolVisitante()
-    val (_, _, golesLocal, golesVisitante) = alFinal
-    println("Antes: ${inicio.golesLocal}-${inicio.golesVisitante}, después: $golesLocal-$golesVisitante")
     val ana = jugadores.first()
+    val ivan = toros.plantilla.first()
     println("¿Misma ficha? ${ana == Jugador("Ana", 9)} (==), ${ana === Jugador("Ana", 9)} (===)")
     println("Con otro dorsal: ${ana.copy(dorsal = 10)}")
+
+    // sealed interface y when exhaustivo: los eventos de un partido.
+    val inicio = Partido(rayo, toros)
+    val alFinal = inicio
+        .registrar(Gol(12, ana, rayo))
+        .registrar(Tarjeta(30, ivan, ColorDeTarjeta.AMARILLA))
+        .registrar(Gol(55, ivan, toros))
+        .registrar(Gol(80, ana, rayo))
+        .registrar(Cambio(85, sale = ana, entra = jugadores[1]))
+    println("Antes: ${inicio.eventos.size} eventos, después: ${alFinal.eventos.size}")
+    alFinal.eventos.forEach { println(describir(it)) }
+    println("Marcador: ${alFinal.golesLocal}-${alFinal.golesVisitante} -> ${alFinal.resultado().titular()}")
 }

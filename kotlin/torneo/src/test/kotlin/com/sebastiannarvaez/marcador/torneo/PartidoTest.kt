@@ -8,25 +8,37 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class PartidoTest {
-    private val rayo = Equipo("Rayo", listOf(Jugador("Ana", 9)))
-    private val toros = Equipo("Toros", listOf(Jugador("Luis", 7)))
+    private val ana = Jugador("Ana", 9)
+    private val luis = Jugador("Luis", 7)
+    private val rayo = Equipo("Rayo", listOf(ana))
+    private val toros = Equipo("Toros", listOf(luis))
 
     @Test
-    fun registrarUnGolDevuelveUnaCopia() {
+    fun registrarUnEventoDevuelveUnaCopia() {
         val inicio = Partido(rayo, toros)
-        val despues = inicio.conGolLocal()
-        assertEquals(0, inicio.golesLocal)
-        assertEquals(1, despues.golesLocal)
+        val despues = inicio.registrar(Gol(10, ana, rayo))
+        assertEquals(0, inicio.eventos.size)
+        assertEquals(1, despues.eventos.size)
         assertNotSame(inicio, despues)
     }
 
     @Test
+    fun elMarcadorSeDeduceDeLosGoles() {
+        val partido = Partido(rayo, toros)
+            .registrar(Gol(10, ana, rayo))
+            .registrar(Tarjeta(20, luis, ColorDeTarjeta.ROJA))
+            .registrar(Gol(30, luis, toros))
+            .registrar(Gol(40, ana, rayo))
+        assertEquals(2, partido.golesLocal)
+        assertEquals(1, partido.golesVisitante)
+    }
+
+    @Test
     fun copyCambiaSoloLoIndicado() {
-        val partido = Partido(rayo, toros, golesLocal = 2, golesVisitante = 1)
-        val otro = partido.copy(golesVisitante = 3)
+        val partido = Partido(rayo, toros)
+        val otro = partido.copy(eventos = listOf(Gol(1, ana, rayo)))
         assertSame(rayo, otro.local)
-        assertEquals(2, otro.golesLocal)
-        assertEquals(3, otro.golesVisitante)
+        assertEquals(1, otro.golesLocal)
     }
 
     @Test
@@ -39,7 +51,6 @@ class PartidoTest {
 
     @Test
     fun copyDeJugadorCambiaElDorsal() {
-        val ana = Jugador("Ana", 9)
         assertEquals(Jugador("Ana", 10), ana.copy(dorsal = 10))
     }
 
@@ -48,11 +59,10 @@ class PartidoTest {
         val (nombre, dorsal) = Jugador("Ana", 9)
         assertEquals("Ana", nombre)
         assertEquals(9, dorsal)
-        val (local, visitante, golesLocal, golesVisitante) = Partido(rayo, toros, 2, 1)
+        val (local, visitante, eventos) = Partido(rayo, toros)
         assertSame(rayo, local)
         assertSame(toros, visitante)
-        assertEquals(2, golesLocal)
-        assertEquals(1, golesVisitante)
+        assertTrue(eventos.isEmpty())
     }
 
     @Test
