@@ -23,6 +23,9 @@ dependencies {
     // La LIBRERIA: trae Json, encodeToString, decodeFromString y las anotaciones.
     // El plugin de arriba y esta libreria son dos piezas distintas y hacen falta las dos.
     implementation(libs.kotlinx.serialization.json)
+    // Corrutinas: launch, async, delay, Flow... Es una LIBRERIA de Kotlin, no del
+    // lenguaje: solo `suspend` es del lenguaje; todo lo demas vive aqui.
+    implementation(libs.kotlinx.coroutines.core)
     testImplementation(kotlin("test"))
 }
 
