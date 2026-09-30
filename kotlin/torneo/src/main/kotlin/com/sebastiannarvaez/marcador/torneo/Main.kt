@@ -66,4 +66,22 @@ fun main() {
     println("Goleadores: ${alFinal.goleadores().map { it.nombre }}")
     println("Minutos de gol de Ana: ${alFinal.minutosDeGolDe(ana)}")
     repetir(2) { vuelta -> println("Vuelta $vuelta") }
+
+    // Colecciones: una jornada completa, la tabla y los goleadores.
+    val lobos = Equipo("Lobos", listOf(Jugador("Pedro", 4)))
+    val jornada = listOf(
+        alFinal,
+        Partido(toros, lobos).registrar(Gol(20, ivan, toros)),
+        Partido(lobos, rayo).registrar(Gol(40, ana, rayo)),
+    )
+    println("Pos Equipo  PJ  G  E  P  GF GC  DG Pts")
+    tablaDePosiciones(jornada).forEachIndexed { indice, fila ->
+        println(
+            "%2d  %-7s %2d %2d %2d %2d %3d %2d %3d %3d".format(
+                indice + 1, fila.equipo.nombre, fila.jugados, fila.ganados, fila.empatados,
+                fila.perdidos, fila.golesAFavor, fila.golesEnContra, fila.diferencia, fila.puntos,
+            ),
+        )
+    }
+    tablaDeGoleadores(jornada).forEach { (jugador, goles) -> println("${jugador.nombre}: $goles") }
 }
