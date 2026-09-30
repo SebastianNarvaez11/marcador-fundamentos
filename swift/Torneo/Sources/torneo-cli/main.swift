@@ -166,3 +166,14 @@ do {
 } catch {
     print("No se pudo guardar o cargar: \(error)")
 }
+
+// ARC: el partido se libera cuando nadie lo mira.
+do {
+    let enVivo = PartidoEnVivo(guion: Ejemplo.rayoContraToros, alLiberarse: { print("PartidoEnVivo liberado (deinit)") })
+    let narrador = Narrador(nombre: "Pepe")
+    enVivo.narrador = narrador
+    narrador.partido = enVivo
+    print(narrador.frase())
+    print("Al salir del bloque, ARC libera el partido...")
+}
+print("...y ya no hay nada que narrar.")
