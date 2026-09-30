@@ -9,6 +9,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import java.io.File
 import kotlin.system.measureTimeMillis
 
 // Punto de entrada de consola: ./gradlew :torneo:run
@@ -58,7 +60,24 @@ fun main(args: Array<String>) {
         demoTransmisorPropio()
         println("== f17: por qué no GlobalScope ==")
         demoGlobalScope()
+
+        println("== f18: guardar en IO y calcular la tabla en Default ==")
+        demoDispatchers()
     }
+}
+
+suspend fun demoDispatchers() {
+    val torneo = Ejemplo.torneoConPartidos()
+    val fichero = File("torneo.json")
+    println("Empiezo en: ${Thread.currentThread().name}")
+    withContext(Dispatchers.IO) { println("Guardar corre en: ${Thread.currentThread().name}") }
+    withContext(Dispatchers.Default) { println("Calcular corre en: ${Thread.currentThread().name}") }
+    val tabla = torneo.cerrarJornada(fichero)
+    println("Guardado en ${fichero.absolutePath}; líder: ${tabla.first().equipo.nombre} con ${tabla.first().puntos} puntos")
+    println("Vuelvo a: ${Thread.currentThread().name}")
+    // Dispatchers.Main en consola: no existe.
+    val main = runCatching { withContext(Dispatchers.Main) { } }
+    println("Dispatchers.Main: ${main.exceptionOrNull()?.message}")
 }
 
 // El Transmisor tiene su propio alcance. Se transmiten dos partidos y, a mitad,

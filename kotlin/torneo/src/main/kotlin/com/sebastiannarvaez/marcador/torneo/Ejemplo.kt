@@ -39,4 +39,10 @@ object Ejemplo {
             Gol(70, nico, aguilas),
         ),
     )
+
+    // Un torneo nuevo cada vez (el Torneo es mutable) con los dos partidos ya jugados.
+    fun torneoConPartidos(): Torneo = Torneo("Copa Barrio", listOf(rayo, toros, lobos, aguilas)).apply {
+        registrar(rayoContraToros).getOrThrow()
+        registrar(lobosContraAguilas).getOrThrow()
+    }
 }
