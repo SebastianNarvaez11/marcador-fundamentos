@@ -3,6 +3,7 @@ import Torneo
 
 // f72 · @StateObject FRENTE A @ObservedObject FRENTE A @EnvironmentObject
 // f73 · @State, @Bindable Y @Environment (con `@Observable`)
+// f74 · `.task`: el partido arranca solo y se cancela al salir
 //
 // Los tres sirven para que una vista use un `ObservableObject`. Cambia QUIÉN ES EL DUEÑO:
 //
@@ -74,9 +75,9 @@ struct PartidoEnDirectoView: View {
                         .font(.title)
                         .monospacedDigit()
                         .accessibilityIdentifier("minuto")
-                    Button(textoDelBoton) { modelo.empezar(duracion: ajustes.duracion) }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(modelo.corriendo || modelo.minuto > 0)
+                    Text(estado)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("estado")
                     Text("Último aviso (cada 15'): \(modelo.ultimoAviso)")
                     Text("Veces que la pantalla pasó a segundo plano: \(pausas)")
                 }
@@ -92,22 +93,33 @@ struct PartidoEnDirectoView: View {
                         }
                     }
                     .pickerStyle(.segmented)
-                    // Cambiarla con el partido en marcha no afecta: se lee al pulsar «Empezar».
-                    .disabled(modelo.corriendo || modelo.minuto > 0)
+                    // Cambiarla reinicia el partido: ver `.task(id:)` abajo.
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(16)
+        }
+        // f74 · `.task`: el trabajo asíncrono ATADO A LA VIDA DE LA VISTA.
+        //   - arranca cuando la vista aparece (como `.onAppear`, pero permite `await`);
+        //   - SwiftUI CANCELA la tarea cuando la vista desaparece, sin que hagas nada;
+        //   - con `id:`, si el valor cambia se cancela la tarea vieja y se lanza otra nueva.
+        // Es el `LaunchedEffect(key)` de Compose (f37): el mismo contrato de «arrancar, cancelar al
+        // irse, reiniciar si cambia la clave».
+        //
+        // ASÍ NO VALE: `.onAppear { Task { await modelo.jugar(…) } }`. Esa `Task` es SUELTA: no está
+        // atada a la vista y sigue jugando (y gastando batería) cuando la pantalla ya no existe.
+        .task(id: ajustes.duracion) {
+            await modelo.jugar(duracion: ajustes.duracion)
         }
         .onChange(of: fase) { _, nueva in
             if nueva == .background { pausas += 1 }
         }
     }
 
-    private var textoDelBoton: String {
+    private var estado: String {
         if modelo.minuto >= ajustes.duracion { "Partido terminado" }
         else if modelo.corriendo { "En juego" }
-        else { "Empezar partido" }
+        else { "Sin empezar" }
     }
 }
 

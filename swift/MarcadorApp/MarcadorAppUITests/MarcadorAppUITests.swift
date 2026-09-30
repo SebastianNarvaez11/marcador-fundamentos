@@ -26,7 +26,6 @@ final class MarcadorAppUITests: XCTestCase {
         app.launchArguments = ["-msPorMinuto", "40"]
         app.launch()
         app.buttons["partido-1"].tap()
-        app.buttons["Empezar partido"].tap()
         let minuto = app.staticTexts["minuto"]
         // Espera a que el reloj pase del minuto 10.
         let pasaDel10 = NSPredicate { objeto, _ in
@@ -44,6 +43,39 @@ final class MarcadorAppUITests: XCTestCase {
         let numeroAntes = Int(antes.filter(\.isNumber)) ?? 0
         let numeroDespues = Int(despues.filter(\.isNumber)) ?? -1
         XCTAssertGreaterThanOrEqual(numeroDespues, numeroAntes, "El partido se reinició: antes «\(antes)», después «\(despues)»")
+    }
+
+    // f74: al cerrar la hoja se cancela el `.task` del partido (mira el registro: «partido CANCELADO»).
+    @MainActor
+    func testAlSalirDelPartidoSeCancelaElTask() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-msPorMinuto", "60"]
+        app.launch()
+        app.buttons["partido-2"].tap()
+        XCTAssertTrue(app.staticTexts["minuto"].waitForExistence(timeout: 5))
+        let enJuego = app.staticTexts["En juego"]
+        XCTAssertTrue(enJuego.waitForExistence(timeout: 5))
+        capturar(app, "f74-en-juego")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15))
+            .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)))
+        XCTAssertTrue(app.buttons["partido-2"].waitForExistence(timeout: 5))
+    }
+
+    // f74: `.task` frente a `.onAppear { Task }`: se abre y se cierra a los 2 s.
+    @MainActor
+    func testTaskFrenteAOnAppear() throws {
+        let app = XCUIApplication()
+        app.launch()
+        app.tabBars.buttons["Laboratorio"].tap()
+        app.buttons[".task frente a .onAppear"].tap()
+        XCTAssertTrue(app.staticTexts["contadorTask"].waitForExistence(timeout: 5))
+        Thread.sleep(forTimeInterval: 2)
+        capturar(app, "f74-contadores")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15))
+            .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)))
+        XCTAssertTrue(app.buttons["Ciclo de vida (UIKit)"].waitForExistence(timeout: 5))
+        // Se deja la app viva unos segundos para que el registro enseñe qué Task siguió contando.
+        Thread.sleep(forTimeInterval: 4)
     }
 
     // f71: la lista de partidos muestra las filas con su marcador.

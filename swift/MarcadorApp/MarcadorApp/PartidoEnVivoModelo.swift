@@ -4,6 +4,7 @@ import Torneo
 
 // f72 · EL MODELO DEL PARTIDO EN DIRECTO, como `ObservableObject`
 // f73 · migrado a `@Observable`
+// f74 · se juega con `async` desde `.task`, sin `Task` propia
 //
 // Es el `Directo` de Kotlin: cuenta los minutos, aplica los goles del guion y suma los goles
 // «a mano» de los botones. La pantalla no cuenta nada: lee esto y lo pinta.
@@ -30,9 +31,6 @@ final class PartidoEnVivoModelo {
     private(set) var golesEnVivo = Marcador(local: 0, visitante: 0)
     private(set) var golesAMano = Marcador(local: 0, visitante: 0)
 
-    // `@ObservationIgnored`: esta propiedad no la pinta nadie, así que no hace falta observarla.
-    @ObservationIgnored private var tarea: Task<Void, Never>?
-
     init(partido: Partido, msPorMinuto: Int = Configuracion.msPorMinuto) {
         self.partido = partido
         self.msPorMinuto = msPorMinuto
@@ -58,23 +56,31 @@ final class PartidoEnVivoModelo {
         }
     }
 
-    // Arranca el partido. Solo se puede iniciar una vez.
-    func empezar(duracion: Int) {
-        guard !corriendo, minuto == 0 else { return }
-        corriendo = true
-        // ASÍ NO VALE del todo (se arregla en f74 con `.task`): esta `Task` la lanzamos a mano y
-        // nadie la cancela si la pantalla se va; además retiene `self` (captura fuerte) hasta que termine.
-        tarea = Task {
-            await jugar(duracion: duracion)
-        }
-    }
-
+    // f74 · Juega el partido ENTERO. Es `async` y la vista la llama desde `.task`, así que:
+    //   - no crea ninguna `Task` propia (f73 tenía `tarea = Task { … }` que nadie cancelaba);
+    //   - si la pantalla se va, SwiftUI cancela la tarea del `.task`, `Task.sleep` lanza
+    //     `CancellationError` y el bucle termina (lo anota en el registro);
+    //   - vuelve a empezar de cero cada vez que se llama (`.task(id: duración)` la relanza).
+    //
     // UN SOLO BUCLE: en cada minuto aplica los goles del guion y, si toca, calcula el aviso con
     // el marcador que acaba de quedar (dos relojes distintos harían que el aviso fuese un gol por detrás).
-    private func jugar(duracion: Int) async {
+    func jugar(duracion: Int) async {
+        minuto = 0
+        golesEnVivo = Marcador(local: 0, visitante: 0)
+        golesAMano = Marcador(local: 0, visitante: 0)
+        ultimoAviso = "ninguno"
+        corriendo = true
         let eventos = partido.eventos.filter { $0.minuto <= duracion }
         for nuevo in 1...duracion {
-            try? await Task.sleep(for: .milliseconds(msPorMinuto))
+            do {
+                try await Task.sleep(for: .milliseconds(msPorMinuto))
+            } catch {
+                // `Task.sleep` lanza CancellationError si cancelan la tarea. NO se traga en
+                // silencio: se deja constancia y se sale.
+                Registro.anotar("partido CANCELADO en el minuto \(minuto) (\(identificador))")
+                corriendo = false
+                return
+            }
             for evento in eventos where evento.minuto == nuevo {
                 golesEnVivo = golesEnVivo.despuesDe(evento, en: partido)
             }
@@ -82,5 +88,6 @@ final class PartidoEnVivoModelo {
             if nuevo % 15 == 0 { ultimoAviso = "minuto \(nuevo) con \(marcador)" }
         }
         corriendo = false
+        Registro.anotar("partido TERMINADO en el minuto \(minuto) (\(identificador))")
     }
 }
