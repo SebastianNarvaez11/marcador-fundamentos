@@ -41,3 +41,10 @@ extension Torneo {
         return lineas.joined(separator: "\n")
     }
 }
+
+// Una `Duration` guarda segundos y attosegundos; para imprimir «1099 ms» basta con
+// juntarlos. (`formatted` dependería del idioma del sistema y saldría «1.099 ms».)
+public func milisegundos(_ duracion: Duration) -> Int {
+    let (segundos, attosegundos) = duracion.components
+    return Int(segundos) * 1_000 + Int(attosegundos / 1_000_000_000_000_000)
+}

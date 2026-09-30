@@ -6,6 +6,9 @@ import PackageDescription
 
 let package = Package(
     name: "Torneo",
+    // Sistemas mínimos. Sin esta línea, SwiftPM compila para macOS 10.13 y las
+    // APIs de concurrencia (`Task`, `Task.sleep(for:)`) «no existen» todavía.
+    platforms: [.macOS(.v15), .iOS(.v18)],
     // Un producto es lo que otros paquetes (o la app de iOS) pueden usar.
     products: [
         .library(name: "Torneo", targets: ["Torneo"]),

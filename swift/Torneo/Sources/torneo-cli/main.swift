@@ -177,3 +177,24 @@ do {
     print("Al salir del bloque, ARC libera el partido...")
 }
 print("...y ya no hay nada que narrar.")
+
+// async/await: un partido suspendido. `main.swift` permite `await` al nivel superior.
+print("== f61: un partido suspendido ==")
+let reloj = ContinuousClock()
+let inicioDelPartido = reloj.now
+do {
+    let final = try await jugarPartido(Ejemplo.rayoContraToros)
+    print("Final: \(final.golesLocal)-\(final.golesVisitante) con \(final.eventos.count) eventos")
+} catch {
+    print("El partido no terminó: \(error)")
+}
+print("Duró \(milisegundos(inicioDelPartido.duration(to: reloj.now))) ms")
+
+print("== f61: cancelar un partido ==")
+let tarea = Task { try await jugarPartido(Ejemplo.rayoContraToros) }
+try? await Task.sleep(for: .milliseconds(100))
+tarea.cancel()
+switch await tarea.result {
+case .success: print("Terminó (no debía)")
+case let .failure(error): print("Cancelado: \(error is CancellationError ? "CancellationError" : "\(error)")")
+}
