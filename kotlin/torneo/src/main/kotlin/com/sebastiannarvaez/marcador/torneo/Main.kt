@@ -124,4 +124,19 @@ fun main() {
         .onSuccess { println("Tabla escrita en ${destino.name} (${destino.length()} bytes)") }
         .onFailure { println("No se pudo exportar: ${it.message}") }
     destino.delete()
+
+    // by lazy: la tabla de una foto del torneo se calcula la primera vez que se lee.
+    val foto = torneo.instantanea()
+    println("Tabla calculada ${foto.calculosDeLaTabla} veces antes de leerla")
+    println("Líder: ${foto.tabla.first().equipo.nombre}")
+    println("Líder otra vez: ${foto.tabla.first().equipo.nombre} (calculada ${foto.calculosDeLaTabla} vez)")
+
+    // kotlinx.serialization: el torneo entero, a torneo.json y de vuelta.
+    val fichero = File("torneo.json")
+    torneo.guardar(fichero)
+        .onSuccess { println("Guardado en ${fichero.absolutePath}") }
+        .onFailure { println("No se pudo guardar: ${it.message}") }
+    cargarTorneo(fichero)
+        .onSuccess { println("Cargado: ${it.nombre}, ${it.partidos.size} partidos, líder ${it.tablaDePosiciones().first().equipo.nombre}") }
+        .onFailure { println("No se pudo cargar: ${it.message}") }
 }

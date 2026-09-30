@@ -1,7 +1,10 @@
 package com.sebastiannarvaez.marcador.torneo
 
+import kotlinx.serialization.Serializable
+
 // `enum class`: un conjunto cerrado de valores, todos con el mismo aspecto.
 // Cada constante puede llevar datos (aquí, la etiqueta para mostrar).
+@Serializable
 enum class ColorDeTarjeta(val etiqueta: String) {
     AMARILLA("Amarilla"),
     ROJA("Roja"),

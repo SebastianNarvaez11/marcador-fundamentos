@@ -1,6 +1,11 @@
 plugins {
     // Plugin de Kotlin para la JVM: libreria o programa de consola, sin Android.
     alias(libs.plugins.kotlinJvm)
+    // Es un plugin de COMPILADOR: mira cada clase marcada con @Serializable y
+    // genera, al compilar, el codigo que la convierte a JSON y de vuelta.
+    // Sin el, la anotacion no hace nada y la ejecucion falla en tiempo de
+    // ejecucion, no al compilar.
+    alias(libs.plugins.kotlinxSerialization)
     // Anade la tarea `run`: ./gradlew :torneo:run
     application
 }
@@ -15,6 +20,9 @@ application {
 }
 
 dependencies {
+    // La LIBRERIA: trae Json, encodeToString, decodeFromString y las anotaciones.
+    // El plugin de arriba y esta libreria son dos piezas distintas y hacen falta las dos.
+    implementation(libs.kotlinx.serialization.json)
     testImplementation(kotlin("test"))
 }
 
