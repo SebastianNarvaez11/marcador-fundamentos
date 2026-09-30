@@ -14,8 +14,20 @@ final class MarcadorAppUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
         XCTAssertTrue(app.staticTexts["Rayo FC"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["2 - 1"].exists)
+        XCTAssertTrue(app.staticTexts["0 - 0"].exists)
         capturar(app, "f69-marcador")
+    }
+
+    // f70: cada botón cambia el @State y la tarjeta se redibuja.
+    @MainActor
+    func testLosBotonesDeGolCambianElMarcador() throws {
+        let app = XCUIApplication()
+        app.launch()
+        app.buttons["Gol Rayo FC"].tap()
+        app.buttons["Gol Rayo FC"].tap()
+        app.buttons["Gol Toros"].tap()
+        XCTAssertTrue(app.staticTexts["2 - 1"].waitForExistence(timeout: 3))
+        capturar(app, "f70-marcador-2-1")
     }
 
     @MainActor

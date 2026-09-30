@@ -5,7 +5,7 @@ struct ContentView: View {
     var body: some View {
         TabView {
             Tab("Marcador", systemImage: "sportscourt") {
-                PantallaMarcadorEstatica()
+                PantallaMarcador()
             }
             Tab("Laboratorio", systemImage: "flask") {
                 LaboratorioView()
