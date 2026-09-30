@@ -59,4 +59,11 @@ fun main() {
     println("Antes: ${inicio.eventos.size} eventos, después: ${alFinal.eventos.size}")
     alFinal.eventos.forEach { println(describir(it)) }
     println("Marcador: ${alFinal.golesLocal}-${alFinal.golesVisitante} -> ${alFinal.resultado().titular()}")
+
+    // Lambdas: filtrar eventos y sacar goleadores.
+    println("Tarjetas: ${alFinal.eventos { it is Tarjeta }.map(::describir)}")
+    println("Primera mitad: ${alFinal.eventos(antesDelMinuto(45)).size} eventos")
+    println("Goleadores: ${alFinal.goleadores().map { it.nombre }}")
+    println("Minutos de gol de Ana: ${alFinal.minutosDeGolDe(ana)}")
+    repetir(2) { vuelta -> println("Vuelta $vuelta") }
 }

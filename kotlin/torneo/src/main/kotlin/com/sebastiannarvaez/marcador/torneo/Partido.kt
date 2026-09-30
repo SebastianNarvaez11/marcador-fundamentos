@@ -20,4 +20,24 @@ data class Partido(
         golesLocal < golesVisitante -> Resultado.Victoria(ganador = visitante, perdedor = local)
         else -> Resultado.Empate
     }
+
+    // Función de orden superior: recibe una función como parámetro.
+    // `(EventoDePartido) -> Boolean` es un tipo función: toma un evento y
+    // devuelve si cumple. Al llamarla, la lambda va fuera de los paréntesis
+    // (trailing lambda): partido.eventos { it is Tarjeta }
+    fun eventos(filtro: (EventoDePartido) -> Boolean): List<EventoDePartido> = eventos.filter(filtro)
+
+    // `Gol::jugador` es una referencia a propiedad: equivale a { gol -> gol.jugador }.
+    fun goleadores(): List<Jugador> = eventos.filterIsInstance<Gol>().map(Gol::jugador)
+
+    // Retorno con etiqueta: `return@forEach` sale solo de la lambda actual
+    // (como `continue`), no de la función. Un `return` a secas saldría de la función.
+    fun minutosDeGolDe(jugador: Jugador): List<Int> {
+        val minutos = mutableListOf<Int>()
+        eventos.forEach { evento ->
+            if (evento !is Gol) return@forEach
+            if (evento.jugador == jugador) minutos.add(evento.minuto)
+        }
+        return minutos
+    }
 }
