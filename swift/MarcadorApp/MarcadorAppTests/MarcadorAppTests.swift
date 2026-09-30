@@ -46,4 +46,15 @@ struct MarcadorAppTests {
         #expect(avisos.withLock { $0 } == 1)
         #expect(ajustes.duracion == 60)
     }
+
+    // f76: los goleadores se calculan de los partidos: la suma de sus goles es la de todos los partidos.
+    @Test func losGoleadoresSumanLosGolesDeTodosLosPartidos() {
+        let repositorio = RepositorioEnMemoria()
+        let golesTotales = repositorio.partidos.reduce(0) { $0 + $1.partido.golesLocal + $1.partido.golesVisitante }
+        let golesDeGoleadores = repositorio.goleadores().reduce(0) { $0 + $1.goles }
+        #expect(golesDeGoleadores == golesTotales)
+        // Ordenados de más a menos goles.
+        let goles = repositorio.goleadores().map(\.goles)
+        #expect(goles == goles.sorted(by: >))
+    }
 }

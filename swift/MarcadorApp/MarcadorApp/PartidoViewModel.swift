@@ -104,21 +104,33 @@ final class PartidoViewModel {
 
     // La vista la llama desde `.task(id: duración)` (f74): se cancela sola al irse la pantalla.
     // UN SOLO BUCLE marca el tiempo y el cronómetro solo cuenta lo que le mandan.
+    //
+    // f76: `.task` se CANCELA cuando otra pantalla se apila encima (Goleadores) y se RELANZA al volver,
+    // pero el ViewModel sigue vivo (su `@State` sobrevive). Por eso `jugar` no puede empezar siempre de
+    // cero: si ya había un partido en marcha con esta duración, RETOMA desde el minuto actual (sin
+    // borrar goles ni volver a avisar de los que ya ocurrieron); si ya había terminado, no hace nada.
+    // Solo empieza de nuevo cuando es la primera vez o cambia la duración. En Android no hace falta:
+    // el ViewModel de la entrada sigue vivo y su corrutina no se cancela al apilar otra pantalla.
     func jugar(duracion nueva: Int) async {
         cargar()
         guard let partido else { return }
-        duracion = nueva
-        minuto = 0
-        golesEnVivo = Marcador(local: 0, visitante: 0)
-        golesAMano = Marcador(local: 0, visitante: 0)
-        ultimoAviso = "ninguno"
-        eventosDelGuion = partido.eventos.filter { $0.minuto <= nueva }
-
-        let reloj = Cronometro()
-        cronometro = reloj
-        prepararReloj(reloj)
+        let reloj: Cronometro
+        if let vivo = cronometro, duracion == nueva {
+            if vivo.minuto >= nueva { return }   // ya terminó: volver a la pantalla no lo relanza
+            reloj = vivo                          // en marcha (o pausado por la navegación): sigue donde iba
+        } else {
+            duracion = nueva
+            minuto = 0
+            golesEnVivo = Marcador(local: 0, visitante: 0)
+            golesAMano = Marcador(local: 0, visitante: 0)
+            ultimoAviso = "ninguno"
+            eventosDelGuion = partido.eventos.filter { $0.minuto <= nueva }
+            reloj = Cronometro()
+            cronometro = reloj
+            prepararReloj(reloj)
+        }
         corriendo = true
-        for _ in 1...nueva {
+        while reloj.minuto < nueva {
             do {
                 try await Task.sleep(for: .milliseconds(msPorMinuto))
             } catch {

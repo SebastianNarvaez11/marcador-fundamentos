@@ -14,33 +14,42 @@ import Torneo
 //   - ESTRUCTURAL: si no hay id, SwiftUI usa la POSICIÓN en el código (la vista que va
 //     primero, la segunda…). Sirve para vistas fijas (`VStack { A; B }`) y falla en listas que
 //     cambian: el estado se queda pegado a la posición. Es lo que pasa en Compose sin `key`.
+// f76 · NAVEGACIÓN POR VALOR (gemelo de Navigation 3, f47)
+//
+// `NavigationStack` es la pila de pantallas de iOS. Cada fila es un `NavigationLink(value:)`: al
+// tocarla se EMPUJA un valor (`Destino`) a la pila, y `.navigationDestination(for:)` traduce cada
+// valor en una pantalla. La barra de arriba con el botón «atrás» la pone SwiftUI. Sustituye a las
+// hojas modales de f72–f75, que no eran navegación (tapaban la lista, no la «apilaban»).
 struct ListaDePartidosView: View {
     // f75: la lista LEE los partidos del repositorio (`@Observable`): al registrar un gol, la fila cambia sola.
     @Environment(RepositorioEnMemoria.self) private var repositorio
 
-    // f72: el partido tocado se abre en una hoja modal (la navegación de verdad llega en f76).
-    // `sheet(item:)` se abre cuando el valor deja de ser nil, y necesita `Identifiable`.
-    @State private var elegido: PartidoDeLista?
+    // La pila entera es un array de destinos, en un `@State`: se puede inspeccionar y manipular.
+    @State private var ruta: [Destino] = []
 
     var body: some View {
-        // `PartidoDeLista` es `Identifiable`, así que basta pasarle la colección.
-        // Equivale a `List(partidos, id: \.id)`.
-        List(repositorio.partidos) { item in
-            Button {
-                elegido = item
-            } label: {
-                FilaDePartido(
-                    local: item.partido.local.nombre,
-                    visitante: item.partido.visitante.nombre,
-                    resultado: item.partido.marcador().description
-                )
+        NavigationStack(path: $ruta) {
+            List(repositorio.partidos) { item in
+                NavigationLink(value: Destino.partido(item.id)) {
+                    FilaDePartido(
+                        local: item.partido.local.nombre,
+                        visitante: item.partido.visitante.nombre,
+                        resultado: item.partido.marcador().description
+                    )
+                }
+                .accessibilityIdentifier("partido-\(item.id)")
             }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("partido-\(item.id)")
-        }
-        .listStyle(.plain)
-        .sheet(item: $elegido) { item in
-            PartidoContenedor(item: item)
+            .listStyle(.plain)
+            .navigationTitle("Partidos")
+            // UN solo sitio decide qué pantalla corresponde a cada destino.
+            .navigationDestination(for: Destino.self) { destino in
+                switch destino {
+                case let .partido(id):
+                    PartidoContenedor(id: id)
+                case .goleadores:
+                    GoleadoresView()
+                }
+            }
         }
     }
 }

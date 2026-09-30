@@ -71,6 +71,8 @@ struct PartidoEnDirectoView: View {
                         .accessibilityIdentifier("estado")
                     Text("Último aviso (cada 15'): \(datos.ultimoAviso)")
                     Text("Veces que la pantalla pasó a segundo plano: \(pausas)")
+                    // f76: empuja OTRO valor en la pila (gemelo del botón que empuja `Goleadores` en Kotlin).
+                    NavigationLink("Ver goleadores", value: Destino.goleadores)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -114,21 +116,22 @@ struct BotonesDeGolConAccion: View {
 // El PADRE que provocaba el bug de f72: tiene su propio estado y, al cambiarlo, recalcula su `body`,
 // con lo que RECREA el struct de `PartidoEnDirectoView`. El botón «Redibujar el padre» lo hace a propósito.
 struct PartidoContenedor: View {
-    let item: PartidoDeLista
+    let id: Int
     @Environment(RepositorioEnMemoria.self) private var repositorio
     @State private var redibujados = 0
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Partido n.º \(item.id)").font(.headline)
                 Spacer()
                 Button("Redibujar el padre (\(redibujados))") { redibujados += 1 }
                     .buttonStyle(.bordered)
             }
             .padding([.horizontal, .top], 16)
 
-            PartidoEnDirectoView(partidoId: item.id, repositorio: repositorio)
+            PartidoEnDirectoView(partidoId: id, repositorio: repositorio)
         }
+        .navigationTitle("Partido n.º \(id)")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
