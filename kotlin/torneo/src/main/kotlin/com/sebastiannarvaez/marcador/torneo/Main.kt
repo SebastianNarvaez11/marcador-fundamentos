@@ -3,11 +3,29 @@ package com.sebastiannarvaez.marcador.torneo
 // Punto de entrada de consola: ./gradlew :torneo:run
 fun main() {
     val nombreDelTorneo = "Copa Barrio"
-    var jornada = 1
-    val equipos = 4
-    val partidosPorJornada = equipos / 2
+    val totalDeJornadas = 3
     println("Torneo: $nombreDelTorneo")
-    println("Jornada $jornada de ${equipos - 1}: $partidosPorJornada partidos")
-    jornada += 1
-    println("La siguiente jornada será la $jornada")
+
+    // Rangos y bucles: cada jornada del 1 al total.
+    for (jornada in 1..totalDeJornadas) {
+        // Argumento con nombre: se lee sin adivinar qué es cada número.
+        println(encabezadoDeJornada(numero = jornada, totalDeJornadas = totalDeJornadas))
+    }
+    println(encabezadoDeJornada(1, 3, prefijo = "Fecha"))
+
+    // Todos los marcadores posibles de 0 a 2 goles y los puntos del local.
+    for (golesLocal in 0..2) {
+        for (golesVisitante in 0..2) {
+            val puntos = puntosPor(golesLocal, golesVisitante)
+            println("$golesLocal-$golesVisitante -> $puntos puntos para el local")
+        }
+    }
+
+    // `if` como expresión, `downTo`, `step` y `while`.
+    val hayEmpates = puntosPor(1, 1) == 1
+    println(if (hayEmpates) "Un empate vale 1 punto" else "Sin empates")
+    for (minuto in 90 downTo 0 step 30) println("Minuto $minuto")
+    var minuto = 0
+    while (minuto < 90) minuto += 45
+    println("El partido acaba en el minuto $minuto")
 }
