@@ -28,7 +28,7 @@ class FlowFrioTest {
 
     @Test
     fun soloSalenLosGoles() = runBlocking {
-        assertEquals(3, enVivo.goles().toList().size)
+        assertEquals(3, enVivo.golesEnFrio().toList().size)
     }
 
     @Test

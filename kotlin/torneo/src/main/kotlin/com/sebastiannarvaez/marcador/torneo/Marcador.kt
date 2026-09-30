@@ -18,17 +18,19 @@ data class Marcador(val local: Int, val visitante: Int) {
 
 fun Partido.marcador(): Marcador = Marcador(golesLocal, golesVisitante)
 
+// El marcador tras un evento: solo un gol lo cambia.
+fun Marcador.despuesDe(evento: EventoDePartido, partido: Partido): Marcador = when {
+    evento !is Gol -> this
+    evento.equipo == partido.local -> copy(local = local + 1)
+    else -> copy(visitante = visitante + 1)
+}
+
 // `scan` es como `fold` pero emite cada paso: parte de 0-0 y va emitiendo el
 // marcador tras cada evento. `distinctUntilChanged` deja pasar solo los cambios
 // (una tarjeta no cambia el marcador, así que no emite nada).
 fun PartidoEnVivo.marcadores(): Flow<Marcador> =
     eventos()
-        .scan(Marcador(0, 0)) { marcador, evento ->
-            if (evento is Gol) {
-                if (evento.equipo == guion.local) marcador.copy(local = marcador.local + 1)
-                else marcador.copy(visitante = marcador.visitante + 1)
-            } else marcador
-        }
+        .scan(Marcador(0, 0)) { marcador, evento -> marcador.despuesDe(evento, guion) }
         .distinctUntilChanged()
 
 // Los dos marcadores de la jornada, en un solo Flow.

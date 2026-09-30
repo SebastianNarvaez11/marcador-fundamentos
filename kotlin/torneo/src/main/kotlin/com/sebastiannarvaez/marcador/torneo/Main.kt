@@ -1,9 +1,13 @@
 package com.sebastiannarvaez.marcador.torneo
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -73,7 +77,35 @@ fun main(args: Array<String>) {
 
         println("== f21: la jornada, dos marcadores combinados ==")
         demoJornada()
+
+        println("== f22: dos partidos simultáneos con StateFlow y SharedFlow ==")
+        demoEnVivo()
     }
+}
+
+// Los dos partidos a la vez, con la pantalla (marcadores) y el aviso de goles
+// como espectadores, y un cronómetro. Al pitar el final se cancela todo: los
+// espectadores son corrutinas infinitas y, si nadie las cancela, el programa no
+// terminaría nunca.
+suspend fun demoEnVivo() {
+    val alcance = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    val jornada = Jornada(PartidoEnVivo(Ejemplo.rayoContraToros), PartidoEnVivo(Ejemplo.lobosContraAguilas), alcance)
+
+    val reloj = alcance.cronometro(msPorMinuto = 10) { minuto -> if (minuto % 30 == 0) println("  ⏱ minuto $minuto") }
+    val goles = alcance.launch(start = CoroutineStart.UNDISPATCHED) {
+        jornada.goles.collect { println("  ⚽ ${describir(it)}") }
+    }
+    val pantalla = alcance.launch(start = CoroutineStart.UNDISPATCHED) {
+        jornada.marcadores.collect { println("  ${Ejemplo.rayo.nombre} ${it.primero} ${Ejemplo.toros.nombre} | ${Ejemplo.lobos.nombre} ${it.segundo} ${Ejemplo.aguilas.nombre}") }
+    }
+
+    jornada.iniciar().join()
+    println("Pitido final: se cancelan el reloj y los espectadores")
+    val espectadores = listOf(reloj, goles, pantalla)
+    espectadores.forEach { it.cancelAndJoin() }
+    println("Cancelados: ${espectadores.map { it.isCancelled }}")
+    println("Marcadores finales: ${jornada.marcadores.value.primero} y ${jornada.marcadores.value.segundo}")
+    alcance.cancel()
 }
 
 suspend fun demoJornada() {
