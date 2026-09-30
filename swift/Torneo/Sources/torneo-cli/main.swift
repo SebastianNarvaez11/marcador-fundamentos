@@ -17,3 +17,16 @@ for golesLocal in 0...2 {
         print("\(golesLocal)-\(golesVisitante) -> \(puntos) puntos para el local")
     }
 }
+
+// Opcionales: jugadores con y sin dorsal.
+let jugadores = [
+    Jugador(nombre: "Ana", dorsal: 9),
+    Jugador(nombre: "Luis"),
+    Jugador(nombre: "Marta", dorsal: 1),
+]
+for jugador in jugadores { print(presentar(jugador)) }
+print(presentar(nil))
+
+for texto in ["10", " 7 ", "diez", ""] {
+    print("«\(texto)» -> \(dorsalDesdeTexto(texto).map(String.init) ?? "no es un dorsal")")
+}
