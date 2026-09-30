@@ -1,6 +1,23 @@
 import Foundation
 import Torneo
 
+// `torneo-cli cronometro` ejecuta SOLO la demo del cronómetro y termina. Sirve para
+// mirar la memoria con `leaks --atExit -- .build/debug/torneo-cli cronometro` (f66).
+// La demo vive en una función: un objeto guardado en una variable global de
+// `main.swift` sigue siendo alcanzable al salir y `leaks` no lo contaría como fuga.
+@MainActor
+func demoCronometro() {
+    let reloj = Cronometro()
+    reloj.avisarCadaMinuto { minuto in print("  minuto \(minuto)") }
+    for _ in 1...3 { reloj.avanzar() }
+    print("Fin de la demo: el cronómetro sale de su alcance")
+}
+
+if CommandLine.arguments.dropFirst().contains("cronometro") {
+    demoCronometro()
+    exit(0)
+}
+
 // `let` es constante (como `val` de Kotlin); `var` se puede reasignar.
 // El tipo se infiere: `nombreDelTorneo` es String y `totalDeJornadas` es Int.
 let nombreDelTorneo = "Copa Barrio"
