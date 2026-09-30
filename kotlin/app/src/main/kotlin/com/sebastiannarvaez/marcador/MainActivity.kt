@@ -7,6 +7,10 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Button
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,6 +27,23 @@ import com.sebastiannarvaez.marcador.torneo.Ejemplo
 // o en Android Studio: Logcat, y filtra por `tag:Ciclo`.
 class MainActivity : ComponentActivity() {
 
+    // Dos contadores, dos destinos distintos al girar la pantalla.
+    //
+    // Al rotar, Android DESTRUYE esta Activity y crea otra nueva: las propiedades
+    // de la clase empiezan otra vez desde su valor inicial. Este contador se pierde
+    // A PROPOSITO, para que veas el problema.
+    //
+    // Para reproducirlo: toca el primer boton, gira el movil (o
+    //   adb shell settings put system accelerometer_rotation 0
+    //   adb shell settings put system user_rotation 1)
+    // y el numero vuelve a 0. Para la MUERTE DEL PROCESO: pulsa Home y ejecuta
+    //   adb shell am kill com.sebastiannarvaez.marcador
+    // y vuelve a la app desde recientes: el segundo contador sigue, el primero no.
+    private var golesQueSePierden by mutableIntStateOf(0)
+
+    // Este se guarda en el Bundle de onSaveInstanceState y se restaura en onCreate.
+    private var golesQueSobreviven by mutableIntStateOf(0)
+
     // `super.onXxx()` primero en todos: la clase madre hace su trabajo (por
     // ejemplo, restaurar el estado de las vistas) y `ComponentActivity` avisa a
     // Compose y a los componentes de Jetpack. Sin la llamada a `super`, Android
@@ -31,12 +52,21 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         anotar("onCreate (estado guardado: ${if (savedInstanceState == null) "no" else "si"})")
 
+        // Si `savedInstanceState` no es null, Android nos devuelve lo que guardamos.
+        golesQueSobreviven = savedInstanceState?.getInt(CLAVE_GOLES) ?: 0
+
         // Prueba de que `:app` ve el modulo `:torneo`: la tabla del torneo de ejemplo.
         val tabla = Ejemplo.torneoConPartidos().tablaDePosiciones()
         setContent {
             MaterialTheme {
                 Column(Modifier.padding(24.dp)) {
                     Text("Marcador")
+                    Button(onClick = { golesQueSePierden++ }) {
+                        Text("Gol (se pierde al rotar): $golesQueSePierden")
+                    }
+                    Button(onClick = { golesQueSobreviven++ }) {
+                        Text("Gol (sobrevive): $golesQueSobreviven")
+                    }
                     tabla.forEach { fila ->
                         Text("${fila.equipo.nombre}: ${fila.puntos} pts")
                     }
@@ -80,6 +110,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+        // Un Bundle es un mapa pequeno (clave, valor): solo datos sencillos y poco
+        // peso (limite practico de ~1 MB para TODO el proceso). Es para el ESTADO DE
+        // LA PANTALLA, no para guardar datos de verdad: eso llega con Room y DataStore.
+        outState.putInt(CLAVE_GOLES, golesQueSobreviven)
         anotar("onSaveInstanceState")
     }
 
@@ -105,6 +139,10 @@ class MainActivity : ComponentActivity() {
     override fun onTopResumedActivityChanged(isTopResumedActivity: Boolean) {
         super.onTopResumedActivityChanged(isTopResumedActivity)
         anotar("onTopResumedActivityChanged($isTopResumedActivity)")
+    }
+
+    private companion object {
+        const val CLAVE_GOLES = "golesQueSobreviven"
     }
 
     private fun anotar(mensaje: String) {
