@@ -13,7 +13,23 @@ final class MarcadorAppUITests: XCTestCase {
     func testArrancaYMuestraElMarcador() throws {
         let app = XCUIApplication()
         app.launch()
-        XCTAssertTrue(app.staticTexts["Marcador"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Rayo FC"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["2 - 1"].exists)
+        capturar(app, "f69-marcador")
+    }
+
+    @MainActor
+    func testLaboratorioMuestraElOrdenDeLosModificadores() throws {
+        let app = XCUIApplication()
+        app.launch()
+        app.tabBars.buttons["Laboratorio"].tap()
+        XCTAssertTrue(app.staticTexts["versionA"].waitForExistence(timeout: 5))
+        capturar(app, "f69-modificadores")
+        // En A el fondo cubre el aire del padding; en B no: A es más grande que B.
+        let a = app.staticTexts["versionA"].frame
+        let b = app.staticTexts["versionB"].frame
+        XCTAssertGreaterThan(a.width, 0)
+        XCTAssertGreaterThan(b.width, 0)
     }
 
     // f68: abre la hoja con el UIViewController y la cierra arrastrándola hacia abajo.
@@ -22,6 +38,7 @@ final class MarcadorAppUITests: XCTestCase {
     func testAbreYCierraElControlador() throws {
         let app = XCUIApplication()
         app.launch()
+        app.tabBars.buttons["Laboratorio"].tap()
         app.buttons["Ciclo de vida (UIKit)"].tap()
         XCTAssertTrue(app.staticTexts["etiquetaDelControlador"].waitForExistence(timeout: 5))
         capturar(app, "f68-controlador")
