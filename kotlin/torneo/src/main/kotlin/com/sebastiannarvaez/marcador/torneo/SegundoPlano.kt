@@ -1,5 +1,6 @@
 package com.sebastiannarvaez.marcador.torneo
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -17,8 +18,8 @@ import java.io.File
 // secuencial para quien la lee.
 
 // Escribir el JSON es esperar al disco: IO.
-suspend fun Torneo.guardarEnSegundoPlano(fichero: File): Result<Unit> =
-    withContext(Dispatchers.IO) { guardar(fichero) }
+suspend fun Torneo.guardarEnSegundoPlano(fichero: File, dispatcher: CoroutineDispatcher = Dispatchers.IO): Result<Unit> =
+    withContext(dispatcher) { guardar(fichero) }
 
 suspend fun cargarTorneoEnSegundoPlano(fichero: File): Result<Torneo> =
     withContext(Dispatchers.IO) { cargarTorneo(fichero) }
@@ -26,11 +27,11 @@ suspend fun cargarTorneoEnSegundoPlano(fichero: File): Result<Torneo> =
 // Calcular la tabla es CPU: Default. Se toma una copia de los partidos ANTES de
 // cambiar de hilo: el Torneo es mutable y no está preparado para que otro hilo
 // lo lea mientras alguien registra un partido.
-suspend fun Torneo.tablaEnSegundoPlano(): List<FilaDePosicion> {
+suspend fun Torneo.tablaEnSegundoPlano(dispatcher: CoroutineDispatcher = Dispatchers.Default): List<FilaDePosicion> {
     val copiaDePartidos = partidos
     val equiposInscritos = equipos
     val reglas = reglamento
-    return withContext(Dispatchers.Default) { copiaDePartidos.tablaDePosiciones(equiposInscritos, reglas) }
+    return withContext(dispatcher) { copiaDePartidos.tablaDePosiciones(equiposInscritos, reglas) }
 }
 
 // Las dos cosas a la vez, cada una en su dispatcher. Si el guardado falla, se

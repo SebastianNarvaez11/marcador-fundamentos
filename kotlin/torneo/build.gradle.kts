@@ -27,6 +27,10 @@ dependencies {
     // lenguaje: solo `suspend` es del lenguaje; todo lo demas vive aqui.
     implementation(libs.kotlinx.coroutines.core)
     testImplementation(kotlin("test"))
+    // runTest, TestScope, StandardTestDispatcher y el reloj virtual.
+    testImplementation(libs.kotlinx.coroutines.test)
+    // Turbine: probar Flows con `test { awaitItem() ... }`.
+    testImplementation(libs.turbine)
 }
 
 tasks.test {

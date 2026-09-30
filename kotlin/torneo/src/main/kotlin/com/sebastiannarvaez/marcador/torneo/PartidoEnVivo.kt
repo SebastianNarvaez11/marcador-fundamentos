@@ -1,5 +1,6 @@
 package com.sebastiannarvaez.marcador.torneo
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -25,7 +26,16 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 // Un partido que se está jugando. `guion` es todo lo que va a pasar.
-class PartidoEnVivo(val guion: Partido, val msPorMinuto: Long = 10) {
+//
+// `dispatcher` se INYECTA (llega de fuera con un valor por defecto): en la app
+// es Default, pero una prueba con `runTest` le pasa su propio dispatcher de
+// pruebas. Con `flowOn(Dispatchers.Default)` clavado en el código, el `delay`
+// correría en tiempo real y el reloj virtual de `runTest` no podría adelantarlo.
+class PartidoEnVivo(
+    val guion: Partido,
+    val msPorMinuto: Long = 10,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
+) {
 
     // Un Flow FRÍO: `flow { ... }` no hace nada hasta que alguien lo recoge con
     // `collect` (o `first`, `toList`, `fold`…). Y cada `collect` ejecuta el bloque
@@ -42,7 +52,7 @@ class PartidoEnVivo(val guion: Partido, val msPorMinuto: Long = 10) {
             delay(msPorMinuto)
             guion.eventos.filter { it.minuto == minuto }.forEach { emit(it) }
         }
-    }.flowOn(Dispatchers.Default)
+    }.flowOn(dispatcher)
 
     // Operadores: cada uno devuelve OTRO Flow, y sigue sin ejecutarse nada hasta
     // que se recoja el resultado.

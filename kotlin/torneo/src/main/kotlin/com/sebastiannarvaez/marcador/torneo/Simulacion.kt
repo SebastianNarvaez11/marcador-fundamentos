@@ -1,5 +1,7 @@
 package com.sebastiannarvaez.marcador.torneo
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -19,8 +21,12 @@ const val MINUTOS_DEL_PARTIDO = 90
 // Desde f20 el minuto a minuto vive en `PartidoEnVivo.eventos()` (un Flow) y
 // aquí solo se acumula lo que emite: `fold` parte de un partido vacío y va
 // registrando cada evento.
-suspend fun jugarPartido(partido: Partido, msPorMinuto: Long = 10): Partido =
-    PartidoEnVivo(partido, msPorMinuto).eventos()
+suspend fun jugarPartido(
+    partido: Partido,
+    msPorMinuto: Long = 10,
+    dispatcher: CoroutineDispatcher = Dispatchers.Default,
+): Partido =
+    PartidoEnVivo(partido, msPorMinuto, dispatcher).eventos()
         .fold(Partido(partido.local, partido.visitante)) { jugado, evento -> jugado.registrar(evento) }
 
 // `async` lanza una corrutina que DEVUELVE un valor: un `Deferred<T>` (una

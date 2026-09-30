@@ -1,6 +1,7 @@
 package com.sebastiannarvaez.marcador.torneo
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,10 +37,11 @@ fun CoroutineScope.cronometro(msPorMinuto: Long, alMinuto: (Int) -> Unit): Job =
 suspend fun jugarConCronometro(
     partido: Partido,
     msPorMinuto: Long = 10,
+    dispatcher: CoroutineDispatcher = Dispatchers.Default,
     alMinuto: (Int) -> Unit = {},
 ): Partido = coroutineScope {
     val reloj = cronometro(msPorMinuto, alMinuto)
-    val final = jugarPartido(partido, msPorMinuto)
+    val final = jugarPartido(partido, msPorMinuto, dispatcher)
     reloj.cancel()
     final
 }
@@ -81,11 +83,12 @@ suspend fun <T> intentar(bloque: suspend () -> T): Result<T> = try {
 // consola como «Exception in thread …».
 class Transmisor(
     private val alFallar: (Throwable) -> Unit = {},
-    private val jugar: suspend (Partido, Long) -> Partido = { partido, ms -> jugarConCronometro(partido, ms) },
+    dispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val jugar: suspend (Partido, Long) -> Partido = { partido, ms -> jugarConCronometro(partido, ms, dispatcher) },
 ) {
     private val trabajo = SupervisorJob()
     private val manejador = CoroutineExceptionHandler { _, error -> alFallar(error) }
-    private val alcance = CoroutineScope(Dispatchers.Default + trabajo + manejador)
+    private val alcance = CoroutineScope(dispatcher + trabajo + manejador)
 
     val activo: Boolean get() = trabajo.isActive
 
