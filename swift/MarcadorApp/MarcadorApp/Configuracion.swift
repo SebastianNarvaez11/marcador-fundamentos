@@ -19,6 +19,12 @@ nonisolated enum Configuracion {
         UserDefaults.standard.bool(forKey: "cicloDelCronometro")
     }
 
+    // `-sinAvisosEnPrimerPlano YES`: con la app delante, `willPresent` no enseña banner ni suena (lo pasan las
+    // pruebas de UI, salvo la de notificaciones). Por defecto, apagado: la app enseña el banner.
+    static var sinAvisosEnPrimerPlano: Bool {
+        UserDefaults.standard.bool(forKey: "sinAvisosEnPrimerPlano")
+    }
+
     // `-reiniciarDatos YES`: borra el `torneo.json` guardado al arrancar (las pruebas de UI parten de cero).
     static var reiniciarDatos: Bool {
         UserDefaults.standard.bool(forKey: "reiniciarDatos")

@@ -28,8 +28,11 @@ struct PartidoEnDirectoView: View {
     @State private var pausas = 0
     @Environment(\.scenePhase) private var fase
 
-    init(partidoId: Int, repositorio: any PartidosRepositorio) {
-        _viewModel = State(wrappedValue: PartidoViewModel(partidoId: partidoId, repositorio: repositorio))
+    // f78: el notificador (lo puso la raíz en el entorno) y su permiso, que se lee para pintar el botón.
+    @Environment(NotificadorDeSistema.self) private var notificador
+
+    init(partidoId: Int, repositorio: any PartidosRepositorio, notificador: any Notificador) {
+        _viewModel = State(wrappedValue: PartidoViewModel(partidoId: partidoId, repositorio: repositorio, notificador: notificador))
     }
 
     var body: some View {
@@ -51,6 +54,7 @@ struct PartidoEnDirectoView: View {
         .task(id: duracion) {
             await viewModel.jugar(duracion: duracion)
         }
+        .task { await notificador.actualizarPermiso() }
         .onChange(of: fase) { _, nueva in
             if nueva == .background { pausas += 1 }
         }
@@ -76,6 +80,12 @@ struct PartidoEnDirectoView: View {
                     Text("Veces que la pantalla pasó a segundo plano: \(pausas)")
                     // f76: empuja OTRO valor en la pila (gemelo del botón que empuja `Goleadores` en Kotlin).
                     NavigationLink("Ver goleadores", value: Destino.goleadores)
+                    // f78: pedir el permiso de notificaciones. La primera vez sale el diálogo del sistema.
+                    Button(notificador.permitido ? "Avisos de gol: activados" : "Activar avisos de gol") {
+                        Task { await notificador.pedirPermiso() }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(notificador.permitido)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -121,6 +131,7 @@ struct BotonesDeGolConAccion: View {
 struct PartidoContenedor: View {
     let id: Int
     @Environment(RepositorioDePartidos.self) private var repositorio
+    @Environment(NotificadorDeSistema.self) private var notificador
     @State private var redibujados = 0
 
     var body: some View {
@@ -132,7 +143,7 @@ struct PartidoContenedor: View {
             }
             .padding([.horizontal, .top], 16)
 
-            PartidoEnDirectoView(partidoId: id, repositorio: repositorio)
+            PartidoEnDirectoView(partidoId: id, repositorio: repositorio, notificador: notificador)
         }
         .navigationTitle("Partido n.º \(id)")
         .navigationBarTitleDisplayMode(.inline)

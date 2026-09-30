@@ -23,11 +23,16 @@ struct MarcadorApp: App {
         return RepositorioDePartidos(almacen: .predeterminado)
     }()
 
+    // f78: el notificador se crea UNA vez al arrancar la app (registra su delegado en el centro de notificaciones)
+    // y se reparte por el entorno.
+    @State private var notificador = NotificadorDeSistema()
+
     var body: some Scene {
         // `WindowGroup` es la escena normal de una app de iOS: una ventana con esta vista raíz.
         WindowGroup {
             ContentView()
                 .environment(repositorio)
+                .environment(notificador)
         }
         // `onChange(of:)` con dos parámetros (antiguo, nuevo) es la forma de iOS 17+.
         .onChange(of: fase) { antigua, nueva in

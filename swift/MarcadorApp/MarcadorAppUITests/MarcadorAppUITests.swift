@@ -12,6 +12,7 @@ final class MarcadorAppUITests: XCTestCase {
     @MainActor
     func testArrancaYMuestraElMarcador() throws {
         let app = XCUIApplication()
+        app.launchArguments = sinAvisos
         app.launch()
         app.tabBars.buttons["Marcador"].tap()
         XCTAssertTrue(app.staticTexts["Rayo FC"].waitForExistence(timeout: 5))
@@ -23,7 +24,7 @@ final class MarcadorAppUITests: XCTestCase {
     @MainActor
     func testElPartidoSobreviveAlRedibujadoDelPadre() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-msPorMinuto", "40"]
+        app.launchArguments = ["-msPorMinuto", "40"] + sinAvisos
         app.launch()
         app.buttons["partido-1"].tap()
         let minuto = app.staticTexts["minuto"]
@@ -49,7 +50,7 @@ final class MarcadorAppUITests: XCTestCase {
     @MainActor
     func testAlSalirDelPartidoSeCancelaElTask() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-msPorMinuto", "60"]
+        app.launchArguments = ["-msPorMinuto", "100"] + sinAvisos
         app.launch()
         app.buttons["partido-2"].tap()
         XCTAssertTrue(app.staticTexts["minuto"].waitForExistence(timeout: 5))
@@ -64,6 +65,7 @@ final class MarcadorAppUITests: XCTestCase {
     @MainActor
     func testTaskFrenteAOnAppear() throws {
         let app = XCUIApplication()
+        app.launchArguments = sinAvisos
         app.launch()
         app.tabBars.buttons["Laboratorio"].tap()
         app.buttons[".task frente a .onAppear"].tap()
@@ -77,11 +79,38 @@ final class MarcadorAppUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 4)
     }
 
+    // f78: pide el permiso de notificaciones (diálogo del sistema) y, con él, el gol del minuto 12 saca un banner.
+    @MainActor
+    func testUnGolSacaUnaNotificacion() throws {
+        let app = XCUIApplication()
+        // Esta es la ÚNICA prueba que no pasa `sinAvisos`: aquí el banner es justo lo que se comprueba.
+        app.launchArguments = ["-msPorMinuto", "50", "-reiniciarDatos", "YES"]
+        app.launch()
+        app.buttons["partido-1"].tap()
+        let activar = app.buttons["Activar avisos de gol"]
+        if activar.waitForExistence(timeout: 5) {
+            activar.tap()
+            // El diálogo lo dibuja SpringBoard (otra app), no la nuestra.
+            let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+            for texto in ["Permitir", "Allow"] {
+                let boton = springboard.alerts.buttons[texto]
+                if boton.waitForExistence(timeout: 3) { capturarPantalla("f78-permiso"); boton.tap(); break }
+            }
+        }
+        XCTAssertTrue(app.buttons["Avisos de gol: activados"].waitForExistence(timeout: 5))
+        // Cambiar la duración relanza el partido (`.task(id:)`) y el gol del minuto 12 vuelve a ocurrir.
+        app.buttons["60 min"].tap()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let banner = springboard.staticTexts["¡Gol!"]
+        XCTAssertTrue(banner.waitForExistence(timeout: 10), "No salió el banner de «¡Gol!»")
+        capturarPantalla("f78-notificacion")
+    }
+
     // f77: un gol a mano y la duración elegida sobreviven a cerrar la app (torneo.json y @AppStorage).
     @MainActor
     func testLosDatosSobrevivenAReiniciarLaApp() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-msPorMinuto", "60", "-reiniciarDatos", "YES"]
+        app.launchArguments = ["-msPorMinuto", "60", "-reiniciarDatos", "YES"] + sinAvisos
         app.launch()
         let resultado = app.buttons["partido-1"].staticTexts["resultado"]
         XCTAssertTrue(resultado.waitForExistence(timeout: 5))
@@ -99,7 +128,7 @@ final class MarcadorAppUITests: XCTestCase {
         app.terminate()
         // Segundo arranque SIN `-reiniciarDatos`: lee el JSON y las preferencias.
         let otra = XCUIApplication()
-        otra.launchArguments = ["-msPorMinuto", "60"]
+        otra.launchArguments = ["-msPorMinuto", "60"] + sinAvisos
         otra.launch()
         XCTAssertEqual(otra.buttons["partido-1"].staticTexts["resultado"].label, despues)
         otra.buttons["partido-1"].tap()
@@ -112,7 +141,7 @@ final class MarcadorAppUITests: XCTestCase {
     @MainActor
     func testNavegaDeLaListaAlPartidoYALosGoleadores() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-msPorMinuto", "60"]
+        app.launchArguments = ["-msPorMinuto", "60"] + sinAvisos
         app.launch()
         app.buttons["partido-1"].tap()
         XCTAssertTrue(app.navigationBars["Partido n.º 1"].waitForExistence(timeout: 5))
@@ -131,7 +160,7 @@ final class MarcadorAppUITests: XCTestCase {
     @MainActor
     func testVolverDeGoleadoresNoReiniciaElPartido() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-msPorMinuto", "150"]
+        app.launchArguments = ["-msPorMinuto", "150"] + sinAvisos
         app.launch()
         app.buttons["partido-1"].tap()
         let minuto = app.staticTexts["minuto"]
@@ -175,7 +204,7 @@ final class MarcadorAppUITests: XCTestCase {
     func testAbreYCierraUnPartidoParaMedirLaMemoria() throws {
         let app = XCUIApplication()
         let entorno = ProcessInfo.processInfo.environment
-        app.launchArguments = ["-msPorMinuto", "100", "-cicloDelCronometro", entorno["CICLO"] ?? "NO"]
+        app.launchArguments = ["-msPorMinuto", "100", "-cicloDelCronometro", entorno["CICLO"] ?? "NO"] + sinAvisos
         app.launch()
         app.buttons["partido-1"].tap()
         XCTAssertTrue(app.staticTexts["minuto"].waitForExistence(timeout: 10))
@@ -191,6 +220,7 @@ final class MarcadorAppUITests: XCTestCase {
     @MainActor
     func testLaListaMuestraLosPartidos() throws {
         let app = XCUIApplication()
+        app.launchArguments = sinAvisos
         app.launch()
         XCTAssertTrue(app.otherElements["partido-1"].waitForExistence(timeout: 5)
             || app.staticTexts["Rayo FC"].waitForExistence(timeout: 5))
@@ -201,6 +231,7 @@ final class MarcadorAppUITests: XCTestCase {
     @MainActor
     func testIdentidadPorPosicionFrenteAIdentidadPorDato() throws {
         let app = XCUIApplication()
+        app.launchArguments = sinAvisos
         app.launch()
         app.tabBars.buttons["Laboratorio"].tap()
         let marcaA = app.switches["A Ana"]
@@ -222,6 +253,7 @@ final class MarcadorAppUITests: XCTestCase {
     @MainActor
     func testLosBotonesDeGolCambianElMarcador() throws {
         let app = XCUIApplication()
+        app.launchArguments = sinAvisos
         app.launch()
         app.tabBars.buttons["Marcador"].tap()
         app.buttons["Gol Rayo FC"].tap()
@@ -234,6 +266,7 @@ final class MarcadorAppUITests: XCTestCase {
     @MainActor
     func testLaboratorioMuestraElOrdenDeLosModificadores() throws {
         let app = XCUIApplication()
+        app.launchArguments = sinAvisos
         app.launch()
         app.tabBars.buttons["Laboratorio"].tap()
         XCTAssertTrue(app.staticTexts["versionA"].waitForExistence(timeout: 5))
@@ -250,6 +283,7 @@ final class MarcadorAppUITests: XCTestCase {
     @MainActor
     func testAbreYCierraElControlador() throws {
         let app = XCUIApplication()
+        app.launchArguments = sinAvisos
         app.launch()
         app.tabBars.buttons["Laboratorio"].tap()
         app.buttons["Ciclo de vida (UIKit)"].tap()

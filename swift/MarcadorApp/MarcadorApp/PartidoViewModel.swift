@@ -38,6 +38,8 @@ final class PartidoViewModel {
     @ObservationIgnored private let registrarGol: RegistrarGol
     @ObservationIgnored private let msPorMinuto: Int
     @ObservationIgnored private let reintroducirElCiclo: Bool
+    // f78: quien avisa de los goles (nil = nadie). Es un protocolo: en las pruebas, un espía.
+    @ObservationIgnored private let notificador: (any Notificador)?
 
     // EL DUEÑO del cronómetro es este ViewModel (referencia FUERTE). Ojo a la flecha inversa: el
     // cronómetro guarda una closure (`alTick`) y esa closure llama al ViewModel. Si la closure captura
@@ -48,12 +50,14 @@ final class PartidoViewModel {
     init(
         partidoId: Int,
         repositorio: any PartidosRepositorio,
+        notificador: (any Notificador)? = nil,
         msPorMinuto: Int = Configuracion.msPorMinuto,
         reintroducirElCiclo: Bool = Configuracion.cicloDelCronometro
     ) {
         self.partidoId = partidoId
         self.repositorio = repositorio
         self.registrarGol = RegistrarGol(repositorio: repositorio)
+        self.notificador = notificador
         self.msPorMinuto = msPorMinuto
         self.reintroducirElCiclo = reintroducirElCiclo
         cargar()
@@ -171,6 +175,10 @@ final class PartidoViewModel {
         let nuevo = reloj.minuto
         for evento in eventosDelGuion where evento.minuto == nuevo {
             golesEnVivo = golesEnVivo.despuesDe(evento, en: partido)
+            // f78: cada gol del guion avisa (los «a mano» no: los puso el usuario, que ya lo sabe).
+            if case let .gol(minutoDelGol, jugador, equipo) = evento {
+                notificador?.notificarGol(minuto: minutoDelGol, jugador: jugador.nombre, equipo: equipo.nombre)
+            }
         }
         minuto = nuevo
         if nuevo % 15 == 0 { ultimoAviso = "minuto \(nuevo) con \(marcador)" }

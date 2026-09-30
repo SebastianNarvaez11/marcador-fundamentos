@@ -4,6 +4,16 @@ import Torneo
 
 // f75 · Pruebas del ViewModel con el repositorio en memoria (en f79 se sustituye por un falso).
 // `@MainActor`: el ViewModel lo es, y el target de pruebas no tiene el aislamiento por defecto.
+// f78 · El espía: un falso que solo anota lo que le piden (el ViewModel no sabe que no es el de verdad).
+final class NotificadorEspia: Notificador {
+    var permitido = true
+    private(set) var avisos: [(minuto: Int, jugador: String, equipo: String)] = []
+
+    func notificarGol(minuto: Int, jugador: String, equipo: String) {
+        avisos.append((minuto, jugador, equipo))
+    }
+}
+
 @MainActor
 struct PartidoViewModelTests {
 
@@ -78,5 +88,25 @@ struct PartidoViewModelTests {
             await viewModel.jugar(duracion: 3)
         }
         #expect(referencia != nil)
+    }
+
+    // f78 · Cada gol del guion avisa: goles de Ana (12), Iván (55) y Ana (80).
+    @Test func cadaGolDelGuionAvisaAlNotificador() async {
+        let espia = NotificadorEspia()
+        let viewModel = PartidoViewModel(partidoId: 1, repositorio: repositorio(), notificador: espia, msPorMinuto: 0)
+        await viewModel.jugar(duracion: 90)
+        #expect(espia.avisos.map(\.minuto) == [12, 55, 80])
+        #expect(espia.avisos.map(\.jugador) == ["Ana", "Iván", "Ana"])
+        #expect(espia.avisos.first?.equipo == "Rayo FC")
+    }
+
+    // Los goles «a mano» no avisan, y un partido de 60 minutos no avisa del gol del minuto 80.
+    @Test func losGolesAManoNoAvisanYLosPosterioresALaDuracionTampoco() async {
+        let espia = NotificadorEspia()
+        let viewModel = PartidoViewModel(partidoId: 1, repositorio: repositorio(), notificador: espia, msPorMinuto: 0)
+        viewModel.alGol(.local)
+        #expect(espia.avisos.isEmpty)
+        await viewModel.jugar(duracion: 60)
+        #expect(espia.avisos.map(\.minuto) == [12, 55])
     }
 }

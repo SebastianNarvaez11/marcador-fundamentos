@@ -15,6 +15,7 @@ final class MarcadorAppUITestsLaunchTests: XCTestCase {
     @MainActor
     func testLaunch() throws {
         let app = XCUIApplication()
+        app.launchArguments = sinAvisos
         app.launch()
 
         // Aquí se pueden añadir pasos antes de la captura, como iniciar sesión.
