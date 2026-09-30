@@ -88,6 +88,17 @@ print("Etiqueta: \(ana.etiqueta()); capitán de Toros: \(toros.capitanONinguno)"
 let golesPorJugador = Dictionary(grouping: alFinal.goleadores(), by: { $0 }).mapValues(\.count)
 print("Goles de Ana: \(golesPorJugador[ana] ?? 0)")
 
+// Genéricos: el mismo Ranking sirve para jugadores y para cualquier otra cosa.
+let lobos = Equipo(nombre: "Lobos", plantilla: [Jugador(nombre: "Pedro", dorsal: 4)])!
+let partidoDeToros = Partido(local: toros, visitante: lobos).registrando(.gol(minuto: 20, jugador: ivan, equipo: toros))
+let goleadores = [alFinal, partidoDeToros].goleadores()
+for jugador in goleadores {
+    print("\(goleadores.puesto(de: jugador) ?? 0). \(jugador.etiqueta()): \(goleadores.puntosDe(jugador))")
+}
+print("Líder: \(lider(goleadores)?.nombre ?? "nadie"); nombres: \(nombres(de: goleadores))")
+let porLongitud = Ranking(elementos: ["Rayo FC", "Toros", "Lobos"], puntos: \.count)
+print("Ranking de textos: \(porLongitud.ordenados)")
+
 let torneo = Torneo(nombre: nombreDelTorneo, equipos: [rayo, toros])
 let mismoTorneo = torneo        // MISMA referencia: class
 mismoTorneo.registrar(alFinal)
