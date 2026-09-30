@@ -4,6 +4,7 @@ import Torneo
 // f72 · @StateObject FRENTE A @ObservedObject FRENTE A @EnvironmentObject (el bug de `@ObservedObject`)
 // f73 · @State, @Bindable Y @Environment (con `@Observable`)
 // f74 · `.task`: el partido arranca solo y se cancela al salir
+// f77 · la duración vive en `@AppStorage`
 // f75 · MVVM: la vista solo PINTA el `uiState` del ViewModel y le pasa los toques
 //
 // (La historia del bug de f72 está en el diario: con `@ObservedObject var modelo = PartidoEnVivoModelo(…)`
@@ -15,8 +16,12 @@ import Torneo
 struct PartidoEnDirectoView: View {
     @State private var viewModel: PartidoViewModel
 
-    // Lo puso la raíz de la app con `.environment(ajustes)`; se recoge por TIPO.
-    @Environment(AjustesModelo.self) private var ajustes
+    // f77 · `@AppStorage`: una propiedad que LEE y ESCRIBE en `UserDefaults` (un diccionario clave-valor
+    // guardado en `Library/Preferences/<bundle id>.plist` dentro del sandbox). Funciona como un `@State`
+    // (cambiar el valor redibuja la vista) y además sobrevive a cerrar la app: es el DataStore de
+    // Android (f46) en una línea. Solo vale para cosas pequeñas y simples (Bool, Int, String, Double, URL).
+    // Sustituye al `AjustesModelo` de f72–f76.
+    @AppStorage(Ajustes.claveDuracion) private var duracion = Ajustes.duracionPorDefecto
     @Environment(\.dismiss) private var cerrar
 
     // Estado propio de la pantalla: cuántas veces pasó a segundo plano (`pausas` en Kotlin).
@@ -43,8 +48,8 @@ struct PartidoEnDirectoView: View {
             }
         }
         // `.task(id:)`: arranca al aparecer, se CANCELA al irse la vista y se relanza si cambia la duración.
-        .task(id: ajustes.duracion) {
-            await viewModel.jugar(duracion: ajustes.duracion)
+        .task(id: duracion) {
+            await viewModel.jugar(duracion: duracion)
         }
         .onChange(of: fase) { _, nueva in
             if nueva == .background { pausas += 1 }
@@ -52,9 +57,7 @@ struct PartidoEnDirectoView: View {
     }
 
     private func contenido(_ datos: MarcadorUiState.Exito) -> some View {
-        // `@Bindable` da `$ajustes.duracion` (un Binding) a un objeto `@Observable`.
-        @Bindable var ajustes = ajustes
-        return ScrollView {
+        ScrollView {
             VStack(spacing: 24) {
                 TarjetaDePartido(partido: datos.partido, marcador: datos.marcador)
 
@@ -78,8 +81,8 @@ struct PartidoEnDirectoView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Duración del partido")
-                    Picker("Duración", selection: $ajustes.duracion) {
-                        ForEach(AjustesModelo.duraciones, id: \.self) { minutos in
+                    Picker("Duración", selection: $duracion) {
+                        ForEach(Ajustes.duraciones, id: \.self) { minutos in
                             Text("\(minutos) min").tag(minutos)
                         }
                     }
@@ -117,7 +120,7 @@ struct BotonesDeGolConAccion: View {
 // con lo que RECREA el struct de `PartidoEnDirectoView`. El botón «Redibujar el padre» lo hace a propósito.
 struct PartidoContenedor: View {
     let id: Int
-    @Environment(RepositorioEnMemoria.self) private var repositorio
+    @Environment(RepositorioDePartidos.self) private var repositorio
     @State private var redibujados = 0
 
     var body: some View {

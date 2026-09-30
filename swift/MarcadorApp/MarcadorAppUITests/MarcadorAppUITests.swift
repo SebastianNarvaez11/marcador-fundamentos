@@ -77,6 +77,37 @@ final class MarcadorAppUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 4)
     }
 
+    // f77: un gol a mano y la duración elegida sobreviven a cerrar la app (torneo.json y @AppStorage).
+    @MainActor
+    func testLosDatosSobrevivenAReiniciarLaApp() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-msPorMinuto", "60", "-reiniciarDatos", "YES"]
+        app.launch()
+        let resultado = app.buttons["partido-1"].staticTexts["resultado"]
+        XCTAssertTrue(resultado.waitForExistence(timeout: 5))
+        let antes = resultado.label
+        app.buttons["partido-1"].tap()
+        app.buttons["Gol Rayo FC"].tap()
+        app.buttons["60 min"].tap()
+        app.navigationBars.buttons.firstMatch.tap()
+        let despues = app.buttons["partido-1"].staticTexts["resultado"].label
+        XCTAssertNotEqual(antes, despues)
+        let golesLocal = Int(antes.split(separator: "-")[0])! + 1
+        XCTAssertEqual(despues.split(separator: "-")[0], Substring("\(golesLocal)"))
+        capturar(app, "f77-antes-de-cerrar")
+
+        app.terminate()
+        // Segundo arranque SIN `-reiniciarDatos`: lee el JSON y las preferencias.
+        let otra = XCUIApplication()
+        otra.launchArguments = ["-msPorMinuto", "60"]
+        otra.launch()
+        XCTAssertEqual(otra.buttons["partido-1"].staticTexts["resultado"].label, despues)
+        otra.buttons["partido-1"].tap()
+        XCTAssertTrue(otra.buttons["60 min"].waitForExistence(timeout: 5))
+        XCTAssertTrue(otra.buttons["60 min"].isSelected)
+        capturar(otra, "f77-tras-reabrir")
+    }
+
     // f76: lista → partido → goleadores → atrás → atrás.
     @MainActor
     func testNavegaDeLaListaAlPartidoYALosGoleadores() throws {

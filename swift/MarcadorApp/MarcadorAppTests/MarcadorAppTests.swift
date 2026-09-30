@@ -1,8 +1,12 @@
+import Foundation
 import Observation
 import Synchronization
 import Testing
 import Torneo
 @testable import MarcadorApp
+
+// Un objeto `@Observable` mínimo para la prueba de observación.
+@Observable final class Contador { var valor = 0 }
 
 // El modelo es de la app y la app aísla todo a MainActor por defecto; el target de pruebas NO:
 // hay que decirlo a mano.
@@ -34,27 +38,55 @@ struct MarcadorAppTests {
 
     // f73: `@Observable` avisa cuando cambia lo que se LEYÓ dentro de `withObservationTracking`.
     @Test func observableAvisaSoloDeLoQueSeLee() {
-        let ajustes = AjustesModelo()
+        let ajustes = Contador()
         // `Mutex`: el `onChange` es @Sendable y no puede mutar una `var` capturada.
         let avisos = Mutex(0)
         withObservationTracking {
-            _ = ajustes.duracion
+            _ = ajustes.valor
         } onChange: {
             avisos.withLock { $0 += 1 }
         }
-        ajustes.duracion = 60
+        ajustes.valor = 60
         #expect(avisos.withLock { $0 } == 1)
-        #expect(ajustes.duracion == 60)
+        #expect(ajustes.valor == 60)
     }
 
     // f76: los goleadores se calculan de los partidos: la suma de sus goles es la de todos los partidos.
     @Test func losGoleadoresSumanLosGolesDeTodosLosPartidos() {
-        let repositorio = RepositorioEnMemoria()
+        let repositorio = RepositorioDePartidos()
         let golesTotales = repositorio.partidos.reduce(0) { $0 + $1.partido.golesLocal + $1.partido.golesVisitante }
         let golesDeGoleadores = repositorio.goleadores().reduce(0) { $0 + $1.goles }
         #expect(golesDeGoleadores == golesTotales)
         // Ordenados de más a menos goles.
         let goles = repositorio.goleadores().map(\.goles)
         #expect(goles == goles.sorted(by: >))
+    }
+
+    // f77 · El torneo se guarda como JSON en un fichero y se vuelve a leer igual.
+    @Test func elTorneoSobreviveAGuardarseYCargarse() throws {
+        let carpeta = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: carpeta, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: carpeta) }
+        let almacen = AlmacenDelTorneo(url: carpeta.appending(path: "torneo.json"))
+        #expect(!almacen.existe)
+
+        let repositorio = RepositorioDePartidos(almacen: almacen)
+        repositorio.registrarGol(partidoId: 1, gol: .gol(minuto: 5, jugador: Ejemplo.ana, equipo: Ejemplo.rayo))
+        #expect(almacen.existe)
+        let esperado = repositorio.partido(id: 1)?.marcador()
+
+        // Otro repositorio, que arranca leyendo el fichero: mismo partido, mismo marcador.
+        let recargado = RepositorioDePartidos(almacen: almacen)
+        #expect(recargado.partidos.count == 18)
+        #expect(recargado.partido(id: 1)?.marcador() == esperado)
+    }
+
+    // Un JSON roto no impide arrancar: se usan los datos de ejemplo.
+    @Test func unJsonRotoNoImpideArrancar() throws {
+        let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).json")
+        try Data("esto no es json".utf8).write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let repositorio = RepositorioDePartidos(almacen: AlmacenDelTorneo(url: url))
+        #expect(repositorio.partidos.count == 18)
     }
 }

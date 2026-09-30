@@ -18,4 +18,9 @@ nonisolated enum Configuracion {
     static var cicloDelCronometro: Bool {
         UserDefaults.standard.bool(forKey: "cicloDelCronometro")
     }
+
+    // `-reiniciarDatos YES`: borra el `torneo.json` guardado al arrancar (las pruebas de UI parten de cero).
+    static var reiniciarDatos: Bool {
+        UserDefaults.standard.bool(forKey: "reiniciarDatos")
+    }
 }

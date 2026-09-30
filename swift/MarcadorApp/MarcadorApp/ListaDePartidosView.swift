@@ -22,7 +22,7 @@ import Torneo
 // hojas modales de f72–f75, que no eran navegación (tapaban la lista, no la «apilaban»).
 struct ListaDePartidosView: View {
     // f75: la lista LEE los partidos del repositorio (`@Observable`): al registrar un gol, la fila cambia sola.
-    @Environment(RepositorioEnMemoria.self) private var repositorio
+    @Environment(RepositorioDePartidos.self) private var repositorio
 
     // La pila entera es un array de destinos, en un `@State`: se puede inspeccionar y manipular.
     @State private var ruta: [Destino] = []
@@ -63,7 +63,7 @@ struct FilaDePartido: View {
     var body: some View {
         HStack {
             Text(local).frame(maxWidth: .infinity, alignment: .leading)
-            Text(resultado).bold().monospacedDigit()
+            Text(resultado).bold().monospacedDigit().accessibilityIdentifier("resultado")
             Text(visitante).frame(maxWidth: .infinity, alignment: .trailing)
         }
         // Que toda la fila (no solo el texto) sea tocable. Sin esto, tocar el hueco entre textos no cuenta.
@@ -73,6 +73,5 @@ struct FilaDePartido: View {
 
 #Preview {
     ListaDePartidosView()
-        .environment(RepositorioEnMemoria())
-        .environment(AjustesModelo())
+        .environment(RepositorioDePartidos())
 }

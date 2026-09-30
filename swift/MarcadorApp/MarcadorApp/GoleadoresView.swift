@@ -9,7 +9,7 @@ struct Goleador: Identifiable, Equatable {
     var id: String { jugador }   // la identidad es el nombre, como la `key` de Kotlin
 }
 
-extension RepositorioEnMemoria {
+extension RepositorioDePartidos {
     // Los goleadores no se guardan: se CALCULAN a partir de los partidos (una sola fuente de la verdad).
     func goleadores() -> [Goleador] {
         let ranking = partidos.map(\.partido).goleadores()
@@ -18,7 +18,7 @@ extension RepositorioEnMemoria {
 }
 
 struct GoleadoresView: View {
-    @Environment(RepositorioEnMemoria.self) private var repositorio
+    @Environment(RepositorioDePartidos.self) private var repositorio
     // `dismiss` quita esta pantalla de la pila: el equivalente de `pila.removeLast()`.
     @Environment(\.dismiss) private var cerrar
 
@@ -44,5 +44,5 @@ struct GoleadoresView: View {
 
 #Preview {
     NavigationStack { GoleadoresView() }
-        .environment(RepositorioEnMemoria())
+        .environment(RepositorioDePartidos())
 }

@@ -7,8 +7,8 @@ import Torneo
 @MainActor
 struct PartidoViewModelTests {
 
-    private func repositorio() -> RepositorioEnMemoria {
-        RepositorioEnMemoria(
+    private func repositorio() -> RepositorioDePartidos {
+        RepositorioDePartidos(
             equipos: [Ejemplo.rayo, Ejemplo.toros],
             partidos: [PartidoDeLista(id: 1, partido: Ejemplo.rayoContraToros)]
         )
