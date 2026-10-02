@@ -201,10 +201,11 @@ class MainActivity : ComponentActivity() {
                     Button(onClick = { activarAvisos() }) {
                         Text(if (avisosActivados) "Avisos de gol: activados" else "Activar avisos de gol")
                     }
-                    // f30: WorkManager. Para la demo el «una hora» son 15 segundos.
+                    // f30: WorkManager. Para la demo el «una hora» son 60 segundos: margen de
+                    // sobra para matar el proceso con am kill antes de que llegue el aviso.
                     Button(onClick = {
-                        RecordatorioWorker.programar(applicationContext, Ejemplo.rayoContraToros.resumen(), retrasoSegundos = 15)
-                        Toast.makeText(this@MainActivity, "Recordatorio en 15 s (en la app real, 1 h)", Toast.LENGTH_SHORT).show()
+                        RecordatorioWorker.programar(applicationContext, Ejemplo.rayoContraToros.resumen(), retrasoSegundos = 60)
+                        Toast.makeText(this@MainActivity, "Recordatorio en 60 s (en la app real, 1 h)", Toast.LENGTH_SHORT).show()
                     }) { Text("Recordarme el partido") }
                     Button(onClick = { calcularBloqueando() }) {
                         Text("Calcular (BLOQUEA: ANR)")
