@@ -47,9 +47,12 @@ fun notificarGol(contexto: Context, gol: Gol) {
     // Un PendingIntent es un Intent que se entrega a OTRA app (el sistema) para
     // que lo lance en tu nombre cuando el usuario toque la notificacion.
     // FLAG_IMMUTABLE es obligatorio desde la API 31 salvo que necesites mutarlo.
+    // El requestCode (aqui, el minuto) distingue unos PendingIntent de otros: con el
+    // mismo codigo y FLAG_UPDATE_CURRENT, todos los goles compartirian el mismo y
+    // al tocar CUALQUIER notificacion se veria el texto del ultimo gol.
     val alTocar = PendingIntent.getActivity(
         contexto,
-        0,
+        gol.minuto,
         Intent(contexto, DetalleActivity::class.java)
             .putExtra(DetalleActivity.EXTRA_RESUMEN, "${gol.minuto}' ${gol.jugador.nombre} (${gol.equipo.nombre})"),
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
