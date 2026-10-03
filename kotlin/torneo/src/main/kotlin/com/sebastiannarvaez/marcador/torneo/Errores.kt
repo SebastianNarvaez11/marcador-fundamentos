@@ -18,7 +18,7 @@ suspend fun jugarConApagon(partido: Partido, msPorMinuto: Long = 10, minutoDelAp
 // `supervisorScope` cambia esa regla: cada hija falla POR SU CUENTA y las
 // demás siguen. El error de cada una llega al hacer `await()` sobre ella.
 //
-// El resultado es un Result por partido, en el mismo orden. `intentar` (f17)
+// El resultado es un Result por partido, en el mismo orden. `intentar`
 // convierte el error en valor sin tragarse la CancellationException.
 suspend fun jugarJornadaSupervisada(
     partidos: List<Partido>,

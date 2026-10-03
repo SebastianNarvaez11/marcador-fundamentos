@@ -27,13 +27,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
-// f48 · TESTS DEL VIEWMODEL
+// TESTS DEL VIEWMODEL
 //
 // Tres piezas:
 //  1. `Dispatchers.setMain(testDispatcher)`: viewModelScope usa Dispatchers.Main.immediate,
 //     que en la JVM no existe (no hay hilo principal de Android). Se sustituye por uno de
 //     pruebas y se RESTAURA en @AfterTest.
-//  2. `runTest` + el mismo scheduler: el tiempo es VIRTUAL (f23). Un partido de 90 minutos
+//  2. `runTest` + el mismo scheduler: el tiempo es VIRTUAL. Un partido de 90 minutos
 //     de 250 ms cada uno se «juega» en milisegundos reales con `advanceTimeBy`.
 //  3. Turbine (`flow.test { awaitItem() }`): recoge un Flow y deja hacer asserts sobre cada
 //     emision en orden, sin `delay` ni carreras.
@@ -68,7 +68,7 @@ class PartidoViewModelTest {
 
     @Test
     fun unPartidoQueNoExisteSaleComoError() = runTest {
-        // Desde f47 el id llega en la NavKey (aqui, `partidoInicial`): abrir el 99 es el error.
+        // Ahora el id llega en la NavKey (aqui, `partidoInicial`): abrir el 99 es el error.
         val viewModel = crear(partidoInicial = 99)
         viewModel.uiState.test {
             assertEquals(MarcadorUiState.Cargando, awaitItem())

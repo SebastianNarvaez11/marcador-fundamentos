@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-// f45 · El repositorio con Room detras. Implementa LA MISMA interfaz que el de memoria (f43):
+// El repositorio con Room detras. Implementa LA MISMA interfaz que el de memoria:
 // ni los casos de uso ni los ViewModels cambian. Su trabajo es TRADUCIR entre filas
 // (entidades) y dominio, y ser el unico que conoce el DAO.
 class PartidosRepositoryRoom(
@@ -38,7 +38,7 @@ class PartidosRepositoryRoom(
         }
     }
 
-    // Dos flujos de tablas distintas; `combine` (f21) reconstruye la lista cada vez que
+    // Dos flujos de tablas distintas; `combine` reconstruye la lista cada vez que
     // CUALQUIERA cambia. Asi un gol nuevo (INSERT en `gol`) refresca la lista sin recargar.
     override fun observarPartidos(): Flow<List<PartidoDeLista>> =
         combine(dao.observarPartidos(), dao.observarGoles()) { partidos, goles ->
@@ -61,7 +61,7 @@ class PartidosRepositoryRoom(
         dao.observarGoleadores().map { filas -> filas.map { Goleador(it.jugador, it.goles) } }
 
     // Fila -> dominio. Los equipos se buscan en el catalogo POR NOMBRE: `Equipo` no define
-    // `equals`, asi que `Torneo` solo reconoce las MISMAS instancias (f04).
+    // `equals`, asi que `Torneo` solo reconoce las MISMAS instancias.
     private fun aDominio(fila: PartidoEntity, goles: List<GolEntity>): Partido {
         val local = equipo(fila.local)
         val visitante = equipo(fila.visitante)

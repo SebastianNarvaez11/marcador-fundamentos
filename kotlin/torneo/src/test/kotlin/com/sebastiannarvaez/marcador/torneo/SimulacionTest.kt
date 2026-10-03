@@ -5,8 +5,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class SimulacionTest {
-    // `runBlocking` para probar código suspendido sin más librerías. En f23
-    // llega `runTest`, que además adelanta el reloj en vez de esperar de verdad.
+    // `runBlocking` para probar código suspendido sin más librerías. Más
+    // adelante llega `runTest`, que además adelanta el reloj en vez de esperar de verdad.
     @Test
     fun jugarUnPartidoReproduceElGuion() = runBlocking {
         val jugado = jugarPartido(Ejemplo.rayoContraToros, msPorMinuto = 0)

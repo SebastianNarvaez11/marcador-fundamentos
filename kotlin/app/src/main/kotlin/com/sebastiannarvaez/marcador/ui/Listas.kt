@@ -34,7 +34,7 @@ import com.sebastiannarvaez.marcador.torneo.Torneo
 import com.sebastiannarvaez.marcador.torneo.marcador
 import kotlinx.coroutines.launch
 
-// f35 · LISTAS CON LazyColumn
+// LISTAS CON LazyColumn
 //
 // `Column` compone TODOS sus hijos aunque no se vean. `LazyColumn` solo compone (y
 // mide) los que caben en pantalla mas un poco de margen: con 10.000 filas, sigue
@@ -60,7 +60,7 @@ fun PantallaPartidos(
     onElegir: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // f37 · LazyListState es el estado del scroll. Se lee `firstVisibleItemIndex`, que
+    // LazyListState es el estado del scroll. Se lee `firstVisibleItemIndex`, que
     // cambia con CADA pixel de desplazamiento; si el `if` dependiera de el directamente,
     // esta funcion se recompondria continuamente. derivedStateOf lo evita: calcula
     // «¿ya bajo de la fila 3?» y solo avisa cuando ese BOOLEANO cambia (2 veces en total).

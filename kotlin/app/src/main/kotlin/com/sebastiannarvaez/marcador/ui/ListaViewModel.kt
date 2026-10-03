@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-// f43 · Los partidos y las tablas, OBSERVADOS desde el repositorio. Cada vez que el
+// Los partidos y las tablas, OBSERVADOS desde el repositorio. Cada vez que el
 // repositorio cambia (un gol nuevo), la lista y las tablas se recalculan solas.
 class ListaViewModel(private val repositorio: PartidosRepository) : ViewModel() {
 

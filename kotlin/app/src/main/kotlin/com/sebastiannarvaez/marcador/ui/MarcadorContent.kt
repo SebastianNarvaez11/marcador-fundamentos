@@ -19,7 +19,7 @@ import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Marcador
 import com.sebastiannarvaez.marcador.torneo.Partido
 
-// f34 · STATE HOISTING («elevar el estado»)
+// STATE HOISTING («elevar el estado»)
 //
 // Regla: un composable que necesita estado NO lo crea; lo RECIBE como parametro y
 // avisa de lo que pasa con lambdas. El estado «sube» al ancestro comun mas bajo
@@ -33,8 +33,8 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 // Ventajas de MarcadorContent frente a tener el `remember` dentro:
 //   - se puede probar y previsualizar con cualquier estado (mira las @Preview de
 //     abajo: dos marcadores distintos sin ejecutar nada);
-//   - es reutilizable: hoy el estado viene de rememberSaveable, en f38 vendra de un
-//     StateFlow y en F5 de un ViewModel, SIN tocar este archivo;
+//   - es reutilizable: el estado puede venir de rememberSaveable, de un StateFlow
+//     o de un ViewModel, SIN tocar este archivo;
 //   - hay una sola fuente de la verdad: nadie puede dejar el marcador desincronizado.
 
 // Que se pinta. Es un dato inmutable: para cambiar el marcador se crea otro.
