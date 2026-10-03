@@ -2,7 +2,7 @@ package com.sebastiannarvaez.marcador.domain
 
 import kotlinx.coroutines.flow.Flow
 
-// f46 · Los ajustes del usuario, como los ve el dominio: un Flow con el valor actual y una
+// Los ajustes del usuario, como los ve el dominio: un Flow con el valor actual y una
 // funcion `suspend` para cambiarlo. Igual que PartidosRepository: el dominio dice QUE, la
 // capa de datos (DataStore) dice COMO.
 interface PreferenciasRepository {

@@ -1,8 +1,5 @@
 rootProject.name = "Marcador"
 
-// Accesores tipados: projects.torneo en vez de project(":torneo").
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-
 pluginManagement {
     repositories {
         google {

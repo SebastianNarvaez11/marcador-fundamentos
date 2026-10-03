@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.sebastiannarvaez.marcador.torneo.Jugador
 import com.sebastiannarvaez.marcador.torneo.Torneo
 
-// f36 · RECOMPOSICION
+// RECOMPOSICION
 //
 // QUE LA DISPARA: escribir en un State que alguna funcion LEYO durante la composicion.
 // Compose apunta «esta funcion leyo ese State» y, al cambiar, vuelve a ejecutar solo
@@ -61,12 +61,12 @@ import com.sebastiannarvaez.marcador.torneo.Torneo
 //
 // EL ARREGLO: `remember(torneo) { ... }` calcula la lista UNA vez y devuelve la misma
 // instancia mientras `torneo` no cambie. Si la lista viniese de fuera (un ViewModel,
-// en F5) se le pasaria ya estable: un StateFlow<List<...>> emite otra lista solo
+// por ejemplo) se le pasaria ya estable: un StateFlow<List<...>> emite otra lista solo
 // cuando hay datos nuevos. Otras salidas: `@Immutable` sobre un envoltorio de la
 // lista, `kotlinx.collections.immutable`, o un fichero de configuracion de
 // estabilidad que declare `com.sebastiannarvaez.marcador.torneo.*` como estable.
 //
-// KEY (f35) y lambdas: la key hace que el contador de cada fila siga a SU jugador
+// KEY y lambdas: la key hace que el contador de cada fila siga a SU jugador
 // (sin key, el `remember` iria pegado a la posicion). Y con strong skipping las
 // lambdas se «recuerdan» solas mientras lo que capturan sea la misma instancia; un
 // `onClick = { ... }` que capture un valor que cambia en cada pasada rompe el skipping.
@@ -104,7 +104,7 @@ fun PantallaRecomposicion(torneo: Torneo, modifier: Modifier = Modifier) {
 // recomposiciones. Se incrementa en el CUERPO del composable, a proposito y solo para
 // medir: un composable deberia ser una funcion pura y esto no lo es (puede ejecutarse
 // varias veces antes de dibujarse). El sitio correcto para «hacer algo tras cada
-// composicion» es SideEffect, que se explica en f37.
+// composicion» es SideEffect, que se explica con los efectos.
 @Composable
 private fun FilaContada(par: Pair<Jugador, Int>) {
     val veces = remember { intArrayOf(0) }
