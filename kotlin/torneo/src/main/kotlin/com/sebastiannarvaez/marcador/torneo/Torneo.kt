@@ -45,7 +45,7 @@ class Torneo(
     private fun validar(evento: EventoDePartido, partido: Partido) {
         require(evento.minuto in 0..120) { "Minuto fuera del partido: ${evento.minuto}" }
         val jugadoresDelPartido = partido.local.plantilla + partido.visitante.plantilla
-        // `when` como sentencia sobre un tipo sellado: también debe ser exhaustivo.
+        // Un `when` que no devuelve nada, sobre un tipo sellado: también debe cubrir todos los casos.
         when (evento) {
             is Gol -> {
                 require(evento.equipo == partido.local || evento.equipo == partido.visitante) {
@@ -68,7 +68,7 @@ class Torneo(
 
     fun goleadores(): Ranking<Jugador> = partidosJugados.goleadores()
 
-    // `companion object`: lo que en otros lenguajes es «estático». Se usa con el
+    // `companion object`: lo que pertenece a la clase y no a cada torneo. Se usa con el
     // nombre de la clase: Torneo.conEquipos(...), Torneo.MINIMO_DE_EQUIPOS.
     companion object {
         // `const val`: constante conocida al compilar (solo tipos básicos).
