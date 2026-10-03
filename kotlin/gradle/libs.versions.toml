@@ -15,10 +15,6 @@ work = "2.12.0"
 coroutines = "1.11.0"
 serialization = "1.11.0"
 turbine = "1.2.1"
-room = "3.0.3"
-navigation3 = "1.1.7"
-datastore = "1.2.1"
-ksp = "2.3.12"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -43,4 +39,3 @@ androidApplication = { id = "com.android.application", version.ref = "agp" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
