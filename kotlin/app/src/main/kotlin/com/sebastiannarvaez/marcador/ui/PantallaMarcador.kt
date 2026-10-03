@@ -37,12 +37,12 @@ import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Marcador
 import com.sebastiannarvaez.marcador.torneo.Partido
 
-// f32 · PRIMEROS PASOS CON COMPOSE
+// PRIMEROS PASOS CON COMPOSE
 //
 // PARADIGMA DECLARATIVO. Con Views/XML describias un arbol de objetos y luego
 // lo MUTABAS a mano (`textView.text = "2-1"`). Con Compose describes como se ve
 // la pantalla PARA UN ESTADO DADO, con funciones; cuando el estado cambia, Compose
-// vuelve a llamar a esas funciones (recomposicion, f36) y actualiza lo necesario.
+// vuelve a llamar a esas funciones (recomposicion) y actualiza lo necesario.
 // Nadie hace `setText`: la pantalla es una funcion del estado.
 //
 // COMPOSABLE = funcion con @Composable. No devuelve nada: EMITE elementos al arbol.
@@ -57,7 +57,7 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 //
 // CenterAlignedTopAppBar es «experimental» en Material 3: hay que aceptarlo con
 // @OptIn, o el compilador se niega (ver diario).
-// f41 · LA PANTALLA CON ESTADO («stateful»): la fina capa que conecta con el ViewModel.
+// LA PANTALLA CON ESTADO («stateful»): la fina capa que conecta con el ViewModel.
 // Recoge UN StateFlow y pasa el estado hacia abajo y los eventos hacia arriba.
 @Composable
 fun PantallaMarcador(
@@ -105,7 +105,7 @@ fun PantallaMarcadorContenido(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(estado.mensaje, color = MaterialTheme.colorScheme.error)
-                // f47: «volver» es navegar (quitar esta clave de la pila), no cambiar de partido
+                // «Volver» es navegar (quitar esta clave de la pila), no cambiar de partido
                 // dentro del ViewModel: el id del partido vive en la PartidoKey, en un solo sitio.
                 Button(onClick = onVolver) { Text("Volver") }
             }
@@ -119,14 +119,14 @@ fun PantallaMarcadorContenido(
                     // Un slot: lo que sobra de la pantalla se inyecta desde fuera.
                     extras = {
                         Text("Partido n.º ${estado.partidoId} (elegido en la lista de partidos)")
-                        // f47: empuja otra clave en la pila de Navigation 3.
+                        // Empuja otra clave en la pila de Navigation 3.
                         Button(onClick = onVerGoleadores) { Text("Ver goleadores") }
                         PanelDelCronometro(
                             estado.minuto, estado.corriendo, estado.ultimoAviso, pausas,
                             onEmpezar = { onEvento(MarcadorEvento.Empezar) },
                             duracion = estado.duracion,
                         )
-                        // f46 · La preferencia, guardada en DataStore: sobrevive a cerrar la app.
+                        // La preferencia, guardada en DataStore: sobrevive a cerrar la app.
                         Text("Duracion del partido (preferencia guardada)")
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             PreferenciasRepository.DURACIONES.forEach { minutos ->
@@ -137,7 +137,7 @@ fun PantallaMarcadorContenido(
                                 )
                             }
                         }
-                        // f48: aqui ya no van las demos de F3 y F4 ni el «provocar error» de f41:
+                        // Aqui ya no van las demos de Android y Compose ni el «provocar error»:
                         // esta pantalla es la del partido. El Error se prueba en los tests.
                     },
                 )

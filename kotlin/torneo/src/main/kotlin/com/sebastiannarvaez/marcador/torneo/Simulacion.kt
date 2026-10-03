@@ -18,7 +18,7 @@ const val MINUTOS_DEL_PARTIDO = 90
 // minuto y devuelve el partido tal como quedó. `msPorMinuto` es cuánto dura un
 // minuto de juego en tiempo real (10 ms hace un partido de un segundo).
 //
-// Desde f20 el minuto a minuto vive en `PartidoEnVivo.eventos()` (un Flow) y
+// El minuto a minuto vive en `PartidoEnVivo.eventos()` (un Flow) y
 // aquí solo se acumula lo que emite: `fold` parte de un partido vacío y va
 // registrando cada evento.
 suspend fun jugarPartido(
