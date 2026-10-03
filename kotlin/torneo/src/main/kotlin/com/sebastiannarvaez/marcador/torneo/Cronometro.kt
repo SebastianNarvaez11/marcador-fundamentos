@@ -77,7 +77,7 @@ suspend fun <T> intentar(bloque: suspend () -> T): Result<T> = try {
 // todo lo que lanza. El Job del alcance es el padre de todas las corrutinas;
 // cancelarlo las cancela a todas. Al pitar el final, `pitarElFinal()`.
 //
-// Con `SupervisorJob` (f19), un partido que falla no cancela al alcance ni a los
+// Con `SupervisorJob`, un partido que falla no cancela al alcance ni a los
 // demás partidos. Su error llega al CoroutineExceptionHandler, que aquí avisa
 // con `alFallar`. Sin handler, un error en un `launch` de la raíz acaba en la
 // consola como «Exception in thread …».
