@@ -10,10 +10,10 @@ import com.sebastiannarvaez.marcador.domain.PreferenciasRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-// f46 · DATASTORE PREFERENCES
+// DATASTORE PREFERENCES
 //
 // SharedPreferences (la de siempre) es sincrona: `getString` lee de un mapa en memoria que
-// se carga en el HILO PRINCIPAL la primera vez (puede provocar un ANR, f26), `apply()`
+// se carga en el HILO PRINCIPAL la primera vez (puede provocar un ANR), `apply()`
 // escribe sin avisar de fallos y `commit()` bloquea. DataStore es su sustituto:
 //   - asincrono: leer es un Flow, escribir es `suspend` (`edit { }`); nunca bloquea el hilo;
 //   - transaccional: cada `edit` es atomico, y los errores llegan como excepciones;
