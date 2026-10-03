@@ -3,7 +3,7 @@ package com.sebastiannarvaez.marcador.torneo
 // Una clase es `final` por defecto: nadie puede heredar de Equipo salvo que
 // se escriba `open class`. Aquí no hace falta.
 //
-// `nombre` es `val` en el constructor primario: se convierte en propiedad.
+// `nombre` lleva `val` en los paréntesis de la clase: se convierte en propiedad.
 // `plantilla` es solo un parámetro (sin val): existe durante la construcción.
 class Equipo(val nombre: String, plantilla: List<Jugador>) {
 
