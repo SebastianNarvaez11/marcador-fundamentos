@@ -38,7 +38,7 @@ fun puedeNotificar(contexto: Context): Boolean =
         ContextCompat.checkSelfPermission(contexto, Manifest.permission.POST_NOTIFICATIONS) ==
         PackageManager.PERMISSION_GRANTED
 
-// `notify` lanza SecurityException si falta el permiso y el compilador no lo sabe
+// `notify` lanza SecurityException si falta el permiso y el revisor (lint) no lo sabe
 // seguir a traves de `puedeNotificar`; por eso se comprueba aqui y se silencia el aviso.
 @SuppressLint("MissingPermission")
 fun notificarGol(contexto: Context, gol: Gol) {
