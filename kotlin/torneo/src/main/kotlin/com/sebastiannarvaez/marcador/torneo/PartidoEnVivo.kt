@@ -64,7 +64,7 @@ class PartidoEnVivo(
     // el resto del flujo: el partido no se sigue jugando por nada.
     suspend fun primerGol(): Gol = golesEnFrio().first()
 
-    // ---- f22: flujos CALIENTES ----
+    // ---- Flujos CALIENTES ----
     //
     // `eventos()` es frío: cada espectador ve SU partido. Pero un partido de
     // verdad es uno solo y todos ven lo mismo. Para eso hay flujos calientes: la

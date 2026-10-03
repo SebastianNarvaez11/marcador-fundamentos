@@ -25,7 +25,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.serialization.Serializable
 
-// f47 · NAVIGATION 3
+// NAVIGATION 3
 //
 // En Navigation 3 la pila de pantallas ES UNA LISTA que tu posees: `pila.add(clave)` navega,
 // `pila.removeAt(pila.lastIndex)` vuelve. Nada de grafo XML, ni `navController`, ni rutas de
@@ -60,7 +60,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
     val pila = rememberNavBackStack(ListaKey)
     val actual = pila.lastOrNull()
 
-    // Un Scaffold dentro de otro (f35): el de fuera pone la barra inferior y los de dentro
+    // Un Scaffold dentro de otro: el de fuera pone la barra inferior y los de dentro
     // sus TopAppBar. Todos con `contentWindowInsets = WindowInsets(0)`, o sale margen doble.
     Scaffold(
         modifier = modifier,
@@ -105,7 +105,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                     val vm: ListaViewModel = viewModel(factory = Fabricas.lista)
                     val partidos by vm.partidos.collectAsStateWithLifecycle()
                     Scaffold(
-                        // Las demos de F3 (ciclo de vida, intents, permisos...) ya no cuelgan de la
+                        // Las demos de Android (ciclo de vida, intents, permisos...) ya no cuelgan de la
                         // pantalla del partido: se abren desde la lista.
                         topBar = {
                             CenterAlignedTopAppBar(

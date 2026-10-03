@@ -5,14 +5,14 @@ import androidx.room3.Insert
 import androidx.room3.Query
 import kotlinx.coroutines.flow.Flow
 
-// f45 · DAO (Data Access Object): la interfaz con las operaciones sobre la base. Room
+// DAO (Data Access Object): la interfaz con las operaciones sobre la base. Room
 // GENERA la implementacion (PartidoDao_Impl) al compilar leyendo estas anotaciones.
 //
 // En Room 3 TODO es corrutina:
 //   - las lecturas que OBSERVAN devuelven Flow: emiten la lista actual y VUELVEN A EMITIR
 //     cada vez que cambia una tabla de la consulta. Nadie recarga a mano;
 //   - las escrituras y las lecturas puntuales son `suspend`.
-// Room ejecuta todo fuera del hilo principal por su cuenta (f26): no hay withContext.
+// Room ejecuta todo fuera del hilo principal por su cuenta: no hay withContext.
 @Dao
 interface PartidoDao {
 

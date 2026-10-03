@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.sebastiannarvaez.marcador.domain.Goleador
 
-// f47 · Tercera pantalla de la pila: lista -> partido -> goleadores. Sin estado propio.
+// Tercera pantalla de la pila: lista -> partido -> goleadores. Sin estado propio.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaGoleadores(goleadores: List<Goleador>, alVolver: () -> Unit, modifier: Modifier = Modifier) {

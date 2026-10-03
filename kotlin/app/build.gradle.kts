@@ -1,9 +1,9 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
-    // f47: las claves de Navigation 3 son @Serializable (la pila sobrevive a am kill).
+    // Las claves de Navigation 3 son @Serializable (la pila sobrevive a am kill).
     alias(libs.plugins.kotlinxSerialization)
-    // f45: KSP (Kotlin Symbol Processing) es el motor que ejecuta procesadores como el de
+    // KSP (Kotlin Symbol Processing) es el motor que ejecuta procesadores como el de
     // Room; el plugin `androidx.room3` de Room solo configura donde se exportan los esquemas.
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
@@ -56,7 +56,9 @@ android {
         release {
             // Sin minificar de momento: R8 (recortar y ofuscar el codigo) queda para
             // cuando toque publicar, porque hay que probar la app ya recortada.
-            isMinifyEnabled = false
+            optimization {
+                enable = false
+            }
             buildConfigField("String", "MODO", "\"PRODUCCION\"")
         }
     }
@@ -81,13 +83,13 @@ room3 {
 }
 
 dependencies {
-    // f47: Navigation 3, la misma que la Pokedex. `runtime` = NavKey y la pila; `ui` = NavDisplay;
+    // Navigation 3, la misma que la Pokedex. `runtime` = NavKey y la pila; `ui` = NavDisplay;
     // `viewmodel-navigation3` = un almacen de ViewModel POR ENTRADA de la pila.
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.kotlinx.serialization.json)
-    // f46: DataStore Preferences: pares clave-valor pequenos, asincronos, con Flow.
+    // DataStore Preferences: pares clave-valor pequenos, asincronos, con Flow.
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)
     // LA LINEA CLAVE: `ksp(...)` en un modulo com.android.application. El procesador de
@@ -117,7 +119,7 @@ dependencies {
     // Las @Preview y el Layout Inspector necesitan ui-tooling, solo en debug.
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    // f48: pruebas unitarias del ViewModel (corren en la JVM, sin emulador).
+    // Pruebas unitarias del ViewModel (corren en la JVM, sin emulador).
     // kotlin-test (assertEquals, @Test...). En :torneo basta `kotlin("test")` porque el plugin de
     // Kotlin elige la variante JUnit; con el Kotlin integrado de AGP no, y hay que pedir
     // `kotlin-test-junit` a mano (sin el, `AfterTest` da «Unresolved reference 'AfterTest'»).

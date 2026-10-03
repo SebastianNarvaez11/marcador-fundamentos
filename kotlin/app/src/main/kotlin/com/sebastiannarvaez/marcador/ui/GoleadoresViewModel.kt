@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
-// f47 · Los goleadores salen de la consulta GROUP BY de Room (f45): la base cuenta, la
+// Los goleadores salen de la consulta GROUP BY de Room: la base cuenta, la
 // pantalla solo pinta. Cada gol nuevo vuelve a emitir la lista.
 class GoleadoresViewModel(repositorio: PartidosRepository) : ViewModel() {
     val goleadores: StateFlow<List<Goleador>> = repositorio.observarGoleadores()

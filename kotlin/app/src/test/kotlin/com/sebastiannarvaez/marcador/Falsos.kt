@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
-// f48 · FAKES frente a MOCKS
+// FAKES frente a MOCKS
 //
 // Un MOCK (Mockito, MockK) es un objeto que finge ser la interfaz y al que se le PROGRAMA
 // cada respuesta (`every { repo.partido(1) } returns ...`) y se le PREGUNTA despues
@@ -21,8 +21,8 @@ import kotlinx.coroutines.flow.map
 //
 // Un FAKE es una implementacion REAL pero simple (una lista en memoria) de la misma interfaz.
 // El test comprueba el RESULTADO (que el gol quedo guardado), no las llamadas. Aguanta refactors,
-// se reutiliza en todos los tests y es exactamente lo que ya escribimos en f43. Por eso
-// la interfaz del repositorio (f43) y la inyeccion (f44) son lo que hace esto posible.
+// se reutiliza en todos los tests y es exactamente lo que ya escribimos para la app. Por eso
+// la interfaz del repositorio y la inyeccion son lo que hace esto posible.
 class FakePartidosRepository(
     partidos: List<PartidoDeLista> = listOf(PartidoDeLista(1, Partido(Ejemplo.rayo, Ejemplo.toros))),
 ) : PartidosRepository {
