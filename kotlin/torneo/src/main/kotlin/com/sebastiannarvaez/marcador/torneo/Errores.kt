@@ -19,7 +19,7 @@ suspend fun jugarConApagon(partido: Partido, msPorMinuto: Long = 10, minutoDelAp
 // demás siguen. El error de cada una llega al hacer `await()` sobre ella.
 //
 // El resultado es un Result por partido, en el mismo orden. `intentar` (la que
-// escribiste en Scopes y cancelación) convierte el error en valor sin tragarse la CancellationException.
+// escribiste en Alcance, Job y cancelación) convierte el error en valor sin tragarse la CancellationException.
 suspend fun jugarJornadaSupervisada(
     partidos: List<Partido>,
     jugar: suspend (Partido) -> Partido = { jugarPartido(it) },
