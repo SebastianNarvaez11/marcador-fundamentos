@@ -141,7 +141,7 @@ switch torneo.intentarRegistrar(partidoValido) {
 case let .success(partido): print("Marcador: \(partido.golesLocal)-\(partido.golesVisitante)")
 case let .failure(error): print("Error: \(error)")
 }
-print("Partidos: \((try? torneo.registrar(local: lobos, visitante: lobos).eventos.count) ?? -1)")
+print("Eventos (o -1 si falla): \((try? torneo.registrar(local: lobos, visitante: lobos).eventos.count) ?? -1)")
 
 // `throws` de verdad: `try`, `try?` y `do/catch` con patrones.
 for texto in ["10", "diez", "150"] {
