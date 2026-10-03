@@ -31,7 +31,7 @@ data class Partido(
     fun goleadores(): List<Jugador> = eventos.filterIsInstance<Gol>().map(Gol::jugador)
 
     // Retorno con etiqueta: `return@forEach` sale solo de la lambda actual
-    // (como `continue`), no de la función. Un `return` a secas saldría de la función.
+    // (salta ese evento), no de la función. Un `return` a secas saldría de la función.
     fun minutosDeGolDe(jugador: Jugador): List<Int> {
         val minutos = mutableListOf<Int>()
         eventos.forEach { evento ->
