@@ -18,10 +18,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// `runTest` ejecuta el cuerpo en un TestScope con un reloj VIRTUAL: cuando lo
-// único que queda por hacer es esperar un `delay`, el planificador salta
-// directamente al momento en que acabaría. 90 minutos «reales» cuestan
-// milisegundos, y el resultado es determinista: nada depende de la máquina.
 @OptIn(ExperimentalCoroutinesApi::class)
 class TiempoVirtualTest {
     private val guion = Ejemplo.rayoContraToros
@@ -86,18 +82,6 @@ class TiempoVirtualTest {
     }
 
     @Test
-    fun turbineProbandoLosMarcadores() = runTest {
-        PartidoEnVivo(guion, minuto, StandardTestDispatcher(testScheduler)).marcadores().test {
-            assertEquals(Marcador(0, 0), awaitItem())
-            assertEquals(Marcador(1, 0), awaitItem())
-            assertEquals(12 * minuto, currentTime)
-            assertEquals(Marcador(1, 1), awaitItem())
-            assertEquals(Marcador(2, 1), awaitItem())
-            awaitComplete()
-        }
-    }
-
-    @Test
     fun turbineProbandoElStateFlow() = runTest {
         val enVivo = PartidoEnVivo(guion, minuto, StandardTestDispatcher(testScheduler))
         enVivo.marcador.test {
@@ -108,6 +92,18 @@ class TiempoVirtualTest {
             assertEquals(Marcador(2, 1), awaitItem())
             expectNoEvents()
             cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun turbineProbandoLosMarcadores() = runTest {
+        PartidoEnVivo(guion, minuto, StandardTestDispatcher(testScheduler)).marcadores().test {
+            assertEquals(Marcador(0, 0), awaitItem())
+            assertEquals(Marcador(1, 0), awaitItem())
+            assertEquals(12 * minuto, currentTime)
+            assertEquals(Marcador(1, 1), awaitItem())
+            assertEquals(Marcador(2, 1), awaitItem())
+            awaitComplete()
         }
     }
 
