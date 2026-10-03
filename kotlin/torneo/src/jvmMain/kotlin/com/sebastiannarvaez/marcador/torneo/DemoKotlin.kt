@@ -2,7 +2,7 @@ package com.sebastiannarvaez.marcador.torneo
 
 import java.io.File
 
-// La demo de Kotlin sin corrutinas. Ya no es el punto de entrada:
+// La demo del módulo de Kotlin, sin corrutinas. Ya no es el punto de entrada:
 // se lanza con ./gradlew :torneo:jvmRun --args=kotlin
 fun demoKotlin() {
     val nombreDelTorneo = "Copa Barrio"

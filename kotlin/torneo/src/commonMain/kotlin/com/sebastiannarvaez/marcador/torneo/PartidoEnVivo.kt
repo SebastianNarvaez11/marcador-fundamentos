@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 // Un partido que se está jugando. `guion` es todo lo que va a pasar.
-//
 // `dispatcher` se INYECTA (llega de fuera con un valor por defecto): en la app
 // es Default, pero una prueba con `runTest` le pasa su propio dispatcher de
 // pruebas. Con `flowOn(Dispatchers.Default)` clavado en el código, el `delay`
@@ -64,26 +63,20 @@ class PartidoEnVivo(
     // el resto del flujo: el partido no se sigue jugando por nada.
     suspend fun primerGol(): Gol = golesEnFrio().first()
 
-    // ---- Flujos CALIENTES ----
-    //
-    // `eventos()` es frío: cada espectador ve SU partido. Pero un partido de
-    // verdad es uno solo y todos ven lo mismo. Para eso hay flujos calientes: la
-    // fuente existe aunque nadie escuche.
-    //
-    // StateFlow: siempre TIENE un valor (`value`), el estado actual. Un
-    // suscriptor nuevo recibe primero ese valor. Es CONFLATED (si llegan dos
-    // valores muy seguidos, el lento solo ve el último) y descarta valores iguales
-    // al anterior. Es la elección para ESTADO que se pinta: el marcador.
+    // `eventos()` es frío: cada espectador ve SU partido. Un partido de verdad es
+    // uno solo y todos ven lo mismo, y para eso hacen falta flujos calientes.
+
+    // StateFlow: siempre tiene un valor (`value`), el estado actual, y quien se
+    // suscribe recibe primero ese valor. Si llegan dos valores muy seguidos, un
+    // espectador lento solo ve el último, y los valores iguales al anterior se
+    // descartan. Es la elección para ESTADO que se pinta: el marcador.
     private val marcadorActual = MutableStateFlow(Marcador(0, 0))
     val marcador: StateFlow<Marcador> = marcadorActual.asStateFlow()
 
     // SharedFlow: un canal de EVENTOS. Sin valor actual y sin repetición
     // (`replay = 0`): quien se suscribe tarde NO ve los goles que ya pasaron, y
-    // cada gol llega a todos los suscriptores, uno por uno, sin conflar.
-    // Es la elección para cosas que ocurren (un gol, un aviso), no para estado.
-    // Equivalente de LiveData en corrutinas: StateFlow ~ LiveData con valor
-    // inicial; SharedFlow ~ un evento de una sola vez (lo que LiveData hacía mal).
-    // (Un Channel también reparte eventos, pero UNO a cada receptor, no a todos.)
+    // cada gol llega a todos los suscriptores, uno por uno. Es la elección para
+    // cosas que ocurren (un gol, un aviso), no para estado.
     private val golesEmitidos = MutableSharedFlow<Gol>(extraBufferCapacity = 16)
     val goles: SharedFlow<Gol> = golesEmitidos.asSharedFlow()
 

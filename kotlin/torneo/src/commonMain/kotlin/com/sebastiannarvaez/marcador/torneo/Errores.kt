@@ -18,8 +18,8 @@ suspend fun jugarConApagon(partido: Partido, msPorMinuto: Long = 10, minutoDelAp
 // `supervisorScope` cambia esa regla: cada hija falla POR SU CUENTA y las
 // demás siguen. El error de cada una llega al hacer `await()` sobre ella.
 //
-// El resultado es un Result por partido, en el mismo orden. `intentar`
-// convierte el error en valor sin tragarse la CancellationException.
+// El resultado es un Result por partido, en el mismo orden. `intentar` (la que
+// escribiste en Scopes y cancelación) convierte el error en valor sin tragarse la CancellationException.
 // Antes `jugar` tenia por defecto `{ jugarPartido(it) }`. Al compilar el target
 // JVM (`compileKotlinJvm`) el compilador 2.4.20 se cae con ese valor por defecto
 // (una lambda suspend que llama a otra suspend con parametros por defecto:
