@@ -1,6 +1,6 @@
 package com.sebastiannarvaez.marcador.torneo
 
-// Datos de ejemplo para la consola y las pruebas de F2: equipos, jugadores y dos
+// Datos de ejemplo para la consola y las pruebas de corrutinas: equipos, jugadores y dos
 // «guiones» de partido (la lista de cosas que pasan y en qué minuto).
 object Ejemplo {
     val ana = Jugador("Ana", 9)
