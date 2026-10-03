@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 
-// Empty Activity de la plantilla de Android Studio. No evoluciona hasta F3.
+// Empty Activity de la plantilla de Android Studio.
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -19,7 +19,7 @@ class Equipo(val nombre: String, plantilla: List<Jugador>) {
 
     // Copia defensiva: `toList()` crea una lista nueva. Sin ella, quien nos pasó
     // su lista mutable podría seguir modificándola por fuera y saltarse el
-    // `require` de arriba (f09).
+    // `require` de arriba.
     val plantilla: List<Jugador> = plantilla.toList()
 
     // Propiedad calculada: sin campo, se evalúa en cada lectura.
