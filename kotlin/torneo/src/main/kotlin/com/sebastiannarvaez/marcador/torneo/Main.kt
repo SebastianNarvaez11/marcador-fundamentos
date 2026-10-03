@@ -171,8 +171,8 @@ suspend fun demoDispatchers() {
     val torneo = Ejemplo.torneoConPartidos()
     val fichero = File("torneo.json")
     println("Empiezo en: ${Thread.currentThread().name}")
-    withContext(Dispatchers.IO) { println("Guardar corre en: ${Thread.currentThread().name}") }
-    withContext(Dispatchers.Default) { println("Calcular corre en: ${Thread.currentThread().name}") }
+    withContext(Dispatchers.IO) { println("IO corre en: ${Thread.currentThread().name}") }
+    withContext(Dispatchers.Default) { println("Default corre en: ${Thread.currentThread().name}") }
     val tabla = torneo.cerrarJornada(fichero)
     println("Guardado en ${fichero.absolutePath}; líder: ${tabla.first().equipo.nombre} con ${tabla.first().puntos} puntos")
     println("Vuelvo a: ${Thread.currentThread().name}")
