@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// f42 · CAPA DE DOMINIO
+// CAPA DE DOMINIO
 //
 // Tres capas, y una regla: cada una solo conoce a la de DEBAJO.
 //
@@ -32,10 +32,10 @@ import kotlinx.coroutines.launch
 // goles del guion y calcula el aviso con ese mismo marcador. (Con dos relojes, uno para el
 // minuto y otro para los goles, el aviso podia salir un gol por detras del marcador.)
 //
-// Antes de f42 el ViewModel hacia todo esto (reloj, avisos, goles de los botones). Ahora
+// Antes el ViewModel hacia todo esto (reloj, avisos, goles de los botones). Ahora
 // el ViewModel solo traduce: esto no depende de Android y por eso se puede probar en la JVM.
 //
-// f46: la DURACION viene de las preferencias (90 o 60). Un partido de 60 minutos ignora los
+// La DURACION viene de las preferencias (90 o 60). Un partido de 60 minutos ignora los
 // eventos del guion posteriores al 60 y su reloj termina ahi; :torneo no se toca.
 class Directo(
     val partidoId: Int,

@@ -6,7 +6,7 @@ import androidx.room3.ForeignKey
 import androidx.room3.Index
 import androidx.room3.PrimaryKey
 
-// f45 · ENTIDADES: una clase = una TABLA; cada propiedad = una COLUMNA.
+// ENTIDADES: una clase = una TABLA; cada propiedad = una COLUMNA.
 //
 // Son clases APARTE del dominio a proposito: una fila tiene tipos de columna, clave primaria
 // y anotaciones, y `Partido` (con Equipo, Jugador, listas de eventos) no cabe en una fila.

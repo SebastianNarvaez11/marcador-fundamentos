@@ -50,7 +50,7 @@ class GuardadoTest {
         )
     }
 
-    // f82: con rutas (String) en vez de java.io.File, esta prueba ya corre tambien en iOS.
+    // Con rutas (String) en vez de java.io.File, esta prueba ya corre tambien en iOS.
     @Test
     fun unaRutaQueNoExisteEsFailure() {
         assertTrue(cargarTorneo("/no/existe/torneo.json").isFailure)
