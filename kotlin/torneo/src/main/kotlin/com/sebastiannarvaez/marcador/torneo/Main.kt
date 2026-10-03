@@ -111,7 +111,7 @@ fun main() {
         onSuccess = { "${it.golesLocal}-${it.golesVisitante}" },
         onFailure = { "error" },
     ))
-    println("Partidos: " + torneo.registrar(lobos, lobos).map { it.eventos.size }.getOrElse { -1 })
+    println("Eventos (o -1 si falla): " + torneo.registrar(lobos, lobos).map { it.eventos.size }.getOrElse { -1 })
 
     // `try` es una expresión: devuelve un valor.
     for (texto in listOf("10", " 7 ", "diez", "")) {
