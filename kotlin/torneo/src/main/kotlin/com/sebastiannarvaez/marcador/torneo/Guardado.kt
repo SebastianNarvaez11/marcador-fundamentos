@@ -102,14 +102,14 @@ private fun EquipoGuardado.aEquipo(): Equipo {
 // Las referencias por nombre se resuelven aquí: si falta un equipo o un jugador,
 // `first` o `getValue` lanzan y el Result de `torneoDesdeJson` lo cuenta.
 private fun PartidoGuardado.aPartido(equiposPorNombre: Map<String, Equipo>): Partido {
-    val local = equiposPorNombre.getValue(local)
-    val visitante = equiposPorNombre.getValue(visitante)
-    val jugadores = local.plantilla + visitante.plantilla
+    val equipoLocal = equiposPorNombre.getValue(local)
+    val equipoVisitante = equiposPorNombre.getValue(visitante)
+    val jugadores = equipoLocal.plantilla + equipoVisitante.plantilla
     fun jugador(nombre: String): Jugador = jugadores.first { it.nombre == nombre }
 
     return Partido(
-        local = local,
-        visitante = visitante,
+        local = equipoLocal,
+        visitante = equipoVisitante,
         eventos = eventos.map { evento ->
             when (evento) {
                 is GolGuardado -> Gol(evento.minuto, jugador(evento.jugador), equiposPorNombre.getValue(evento.equipo))
