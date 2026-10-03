@@ -10,7 +10,7 @@ data class Jugador(val nombre: String, val dorsal: Int?) {
     fun dorsalOGuion(): String = dorsal?.let { "#$it" } ?: "-"
 
     // `!!` promete «esto no es null». Si mientes, salta NullPointerException.
-    // Existe para que la lección lea el stack trace; no lo uses en código real.
+    // Existe para que la lección lea la pila de llamadas; no lo uses en código real.
     fun dorsalForzado(): Int = dorsal!!
 
     // Smart cast: tras comprobar `dorsal != null`, el compilador ya lo trata
