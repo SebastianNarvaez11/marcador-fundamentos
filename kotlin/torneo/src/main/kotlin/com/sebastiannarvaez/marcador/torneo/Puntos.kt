@@ -1,6 +1,6 @@
 package com.sebastiannarvaez.marcador.torneo
 
-// Función de nivel superior: no vive dentro de ninguna clase.
+// Función suelta: escrita directamente en el fichero.
 // La regla vive ahora en el reglamento de la liga; esta función se queda
 // como atajo y ya no repite los números.
 fun puntosPor(golesAFavor: Int, golesEnContra: Int): Int =
