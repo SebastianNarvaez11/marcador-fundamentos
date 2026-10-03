@@ -170,8 +170,8 @@ suspend fun demoDispatchers() {
     val torneo = Ejemplo.torneoConPartidos()
     val ruta = "torneo.json"
     println("Empiezo en: ${Thread.currentThread().name}")
-    withContext(Dispatchers.IO) { println("Guardar corre en: ${Thread.currentThread().name}") }
-    withContext(Dispatchers.Default) { println("Calcular corre en: ${Thread.currentThread().name}") }
+    withContext(Dispatchers.IO) { println("IO corre en: ${Thread.currentThread().name}") }
+    withContext(Dispatchers.Default) { println("Default corre en: ${Thread.currentThread().name}") }
     val tabla = torneo.cerrarJornada(ruta)
     println("Guardado en $ruta; líder: ${tabla.first().equipo.nombre} con ${tabla.first().puntos} puntos")
     println("Vuelvo a: ${Thread.currentThread().name}")
