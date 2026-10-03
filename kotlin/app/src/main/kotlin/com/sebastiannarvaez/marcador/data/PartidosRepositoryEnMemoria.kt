@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
-// f43 · La implementacion de datos: una lista en memoria dentro de un StateFlow.
+// La implementacion de datos: una lista en memoria dentro de un StateFlow.
 // El StateFlow ES la fuente de la verdad; `observarPartidos` la ofrece de solo lectura.
-// Se pierde al morir el proceso: f45 la sustituye por Room sin tocar la interfaz.
+// Se pierde al morir el proceso: Room la sustituye sin tocar la interfaz.
 class PartidosRepositoryEnMemoria(
     override val equipos: List<Equipo> = DatosDeEjemplo.torneo.equipos,
     inicial: List<PartidoDeLista> = DatosDeEjemplo.partidos,

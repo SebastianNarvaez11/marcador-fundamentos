@@ -7,7 +7,7 @@ import androidx.room3.Room
 import androidx.room3.RoomDatabase
 import androidx.sqlite.driver.AndroidSQLiteDriver
 
-// f45 · LA BASE DE DATOS: lista las entidades, su version y da acceso a los DAO.
+// LA BASE DE DATOS: lista las entidades, su version y da acceso a los DAO.
 // `exportSchema = true` escribe el esquema en app/schemas/<version>.json (ver build.gradle.kts).
 //
 // SOLO ANDROID: en un modulo KMP (la Pokedex) hace falta ademas un `expect object ...Constructor`

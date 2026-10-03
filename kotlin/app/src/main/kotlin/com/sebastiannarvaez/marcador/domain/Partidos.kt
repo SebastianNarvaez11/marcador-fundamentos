@@ -6,16 +6,16 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 import com.sebastiannarvaez.marcador.torneo.Torneo
 import kotlinx.coroutines.flow.Flow
 
-// La lista necesita un identificador ESTABLE para cada fila (la `key` de LazyColumn, f35).
+// La lista necesita un identificador ESTABLE para cada fila (la `key` de LazyColumn).
 // `Partido` no tiene id (dos partidos pueden repetir equipos), asi que se envuelve.
 data class PartidoDeLista(val id: Int, val partido: Partido)
 
-// f43 · REPOSITORIO: la UNICA puerta a los datos.
+// REPOSITORIO: la UNICA puerta a los datos.
 //
 // Es una INTERFAZ en la capa de dominio: el dominio dice QUE necesita («dame los
 // partidos», «guarda este gol») y la capa de datos decide COMO (memoria, Room, red).
 // Quien la usa (un caso de uso, un ViewModel) no sabe de donde salen los datos ni si
-// cambian: hoy es una lista en memoria, en f45 sera Room, y nadie mas se entera.
+// cambian: puede ser una lista en memoria o Room, y nadie mas se entera.
 //
 // Reglas del repositorio:
 //   - devuelve y recibe tipos de DOMINIO (Partido, Gol), nunca entidades de Room ni DTO;
@@ -33,7 +33,7 @@ interface PartidosRepository {
     fun observarGoleadores(): Flow<List<Goleador>>
 }
 
-// Cuantos goles lleva un jugador (f47 los pinta). Se calcula en la base con GROUP BY.
+// Cuantos goles lleva un jugador (la pantalla de goleadores los pinta). Se calcula en la base con GROUP BY.
 data class Goleador(val jugador: String, val goles: Int)
 
 // Las tablas y los goleadores no se guardan: se CALCULAN a partir de los partidos. Guardar

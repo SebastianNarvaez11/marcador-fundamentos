@@ -13,7 +13,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -22,7 +21,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.sebastiannarvaez.marcador.torneo.Marcador
 import kotlinx.coroutines.delay
 
-// f37 · EFECTOS
+// EFECTOS
 //
 // Un composable debe ser una funcion pura del estado: se puede ejecutar muchas veces,
 // en cualquier orden y hasta descartarse a medias. Todo lo que NO es «dibujar»
@@ -121,7 +120,7 @@ fun TituloDeLaActividad(marcador: Marcador) {
 }
 
 // La parte visible del cronometro (sin estado: recibe todo y avisa con lambdas).
-// En f38 desaparecen Pausa y Reiniciar: el partido en vivo solo corre hacia delante
+// Sin Pausa ni Reiniciar: el partido en vivo solo corre hacia delante
 // (no se pausa ni se reinicia) y el boton se deshabilita al empezar.
 @Composable
 fun PanelDelCronometro(

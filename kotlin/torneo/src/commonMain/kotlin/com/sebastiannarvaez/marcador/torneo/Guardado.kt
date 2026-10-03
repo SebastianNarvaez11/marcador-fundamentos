@@ -130,7 +130,7 @@ fun torneoDesdeJson(texto: String): Result<Torneo> = runCatching {
     }
 }
 
-// f82: antes recibian un java.io.File; ahora una ruta y `leerTexto`/`escribirTexto` (Ficheros.kt).
+// Antes recibian un java.io.File; ahora una ruta y `leerTexto`/`escribirTexto` (Ficheros.kt).
 fun Torneo.guardar(ruta: String): Result<Unit> = runCatching { escribirTexto(ruta, aJson()) }
 
 fun cargarTorneo(ruta: String): Result<Torneo> = runCatching { leerTexto(ruta) }.mapCatching {
