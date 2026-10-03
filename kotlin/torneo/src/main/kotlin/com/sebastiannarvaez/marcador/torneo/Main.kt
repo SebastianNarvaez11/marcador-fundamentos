@@ -43,7 +43,7 @@ fun main() {
     val error = runCatching { Equipo("Toros", listOf(Jugador("A", 7), Jugador("B", 7))) }
     println("Toros: ${error.exceptionOrNull()?.message}")
 
-    // data class: copy, == frente a ===, desestructuración.
+    // data class: copy y == frente a ===.
     val toros = Equipo("Toros", listOf(Jugador("Iván", 7)))
     val ana = jugadores.first()
     val ivan = toros.plantilla.first()
