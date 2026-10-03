@@ -6,8 +6,7 @@ package com.sebastiannarvaez.marcador.torneo
 // `by lazy` es una propiedad delegada: en vez de guardar un valor, delega
 // leer la propiedad en otro objeto (el Lazy). El bloque corre la PRIMERA vez
 // que alguien lee `tabla`; las siguientes lecturas devuelven el resultado
-// guardado. Es la misma sintaxis `by` de `by viewModels()` en Android y de
-// `by remember { … }` en Compose: una propiedad cuyo get/set lo lleva otro.
+// guardado.
 class InstantaneaDelTorneo(
     val partidos: List<Partido>,
     val equipos: List<Equipo>,
