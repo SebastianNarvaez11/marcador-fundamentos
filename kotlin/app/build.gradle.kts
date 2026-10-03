@@ -50,7 +50,9 @@ android {
         release {
             // Sin minificar de momento: R8 (recortar y ofuscar el codigo) queda para
             // cuando toque publicar, porque hay que probar la app ya recortada.
-            isMinifyEnabled = false
+            optimization {
+                enable = false
+            }
             buildConfigField("String", "MODO", "\"PRODUCCION\"")
         }
     }

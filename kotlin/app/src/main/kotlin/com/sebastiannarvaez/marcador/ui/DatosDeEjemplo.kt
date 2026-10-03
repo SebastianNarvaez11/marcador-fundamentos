@@ -7,11 +7,11 @@ import com.sebastiannarvaez.marcador.torneo.Gol
 import com.sebastiannarvaez.marcador.torneo.Partido
 import com.sebastiannarvaez.marcador.torneo.Torneo
 
-// f35 · DATOS DE EJEMPLO
+// DATOS DE EJEMPLO
 //
 // Un torneo de verdad de :torneo (el que valida los partidos al registrarlos) con
 // tres vueltas de todos contra todos: 18 partidos, con marcadores repartidos de forma
-// determinista. Hasta F5 (Room) no hay datos guardados: esto hace de «base de datos».
+// determinista. Hasta que llega Room no hay datos guardados: esto hace de «base de datos».
 //
 // La lista de partidos necesita un identificador ESTABLE para cada fila (la `key` de
 // LazyColumn). `Partido` no tiene id (dos partidos pueden repetir equipos), asi que la

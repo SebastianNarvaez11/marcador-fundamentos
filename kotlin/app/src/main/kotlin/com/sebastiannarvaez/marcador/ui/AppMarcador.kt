@@ -15,8 +15,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 
-// f35 · RAIZ DE LA APP: tres pestañas. No es navegacion de verdad (Navigation 3 llega
-// en F5): es un `Int` con rememberSaveable y un `when`. Vale para llegar a las listas.
+// RAIZ DE LA APP: tres pestañas. No es navegacion de verdad (Navigation 3 llega
+// mas adelante): es un `Int` con rememberSaveable y un `when`. Vale para llegar a las listas.
 //
 // Un Scaffold dentro de otro: el de fuera pone la barra inferior (NavigationBar ya
 // respeta la barra de gestos por su cuenta) y los de dentro pintan su TopAppBar, que

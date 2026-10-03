@@ -43,12 +43,12 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import com.sebastiannarvaez.marcador.torneo.Partido
 
-// f32 · PRIMEROS PASOS CON COMPOSE
+// PRIMEROS PASOS CON COMPOSE
 //
 // PARADIGMA DECLARATIVO. Con Views/XML describias un arbol de objetos y luego
 // lo MUTABAS a mano (`textView.text = "2-1"`). Con Compose describes como se ve
 // la pantalla PARA UN ESTADO DADO, con funciones; cuando el estado cambia, Compose
-// vuelve a llamar a esas funciones (recomposicion, f36) y actualiza lo necesario.
+// vuelve a llamar a esas funciones (recomposicion) y actualiza lo necesario.
 // Nadie hace `setText`: la pantalla es una funcion del estado.
 //
 // COMPOSABLE = funcion con @Composable. No devuelve nada: EMITE elementos al arbol.
@@ -66,19 +66,19 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
-    // f34 · COMPOSABLE CON ESTADO (el «contenedor»): es el unico sitio que POSEE los
+    // COMPOSABLE CON ESTADO (el «contenedor»): es el unico sitio que POSEE los
     // goles. No dibuja nada por su cuenta: crea el estado, lo pasa hacia abajo y
     // recoge los eventos que suben. Se le llama tambien «stateful».
     // Aqui pasa de `remember` a `rememberSaveable`: ahora si sobrevive a rotar.
     val partido = Ejemplo.rayoContraToros
 
-    // f38 · EL PARTIDO EN VIVO VIVE EN LA COMPOSICION, A PROPOSITO.
+    // EL PARTIDO EN VIVO VIVE EN LA COMPOSICION, A PROPOSITO.
     //
     // `remember { MutableStateFlow(...) }` crea el marcador del partido la primera vez y lo
     // guarda mientras el composable siga en la composicion (igual que el minuto y el resto
     // del reloj, mas abajo). Al ROTAR, Android destruye la Activity, la composicion se
     // descarta y `remember` empieza de cero: NACE OTRO partido, sin empezar, en 0-0. El
-    // reloj que lo hacia avanzar es un LaunchedEffect (f37) y muere con la composicion.
+    // reloj que lo hacia avanzar es un LaunchedEffect y muere con la composicion.
     //
     // UN SOLO RELOJ. El bucle de `RelojDelPartido` es la unica fuente del tiempo: en cada
     // minuto aplica los goles del guion al marcador y, si toca, calcula el aviso con ESE
@@ -90,15 +90,15 @@ fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
     //   adb shell settings put system user_rotation 1). El marcador vuelve a 0-0, el
     // minuto a 0' y el boton vuelve a decir «Empezar partido». No es un fallo de
     // collectAsStateWithLifecycle: el fallo es que el partido no debia vivir aqui.
-    // Lo arregla F5: un ViewModel sobrevive a la rotacion y el partido vive en el.
+    // Lo arregla un ViewModel: sobrevive a la rotacion y el partido vive en el.
     val marcadorEnVivo = remember { MutableStateFlow(Marcador(0, 0)) }
 
-    // Goles «a mano» (los botones de f33/f34), sumados a los del partido en vivo.
+    // Goles «a mano» (los botones de sumar), sumados a los del partido en vivo.
     // Tambien en `remember`: es parte del mismo partido y se reinicia con el.
     var golesLocalAMano by remember { mutableIntStateOf(0) }
     var golesVisitanteAMano by remember { mutableIntStateOf(0) }
 
-    // RECOGER UN StateFlow EN COMPOSE. `marcadorEnVivo` es un StateFlow<Marcador> (f22):
+    // RECOGER UN StateFlow EN COMPOSE. `marcadorEnVivo` es un StateFlow<Marcador>:
     // siempre tiene valor, asi que no hace falta valor inicial. Hay dos formas de
     // convertirlo en un State de Compose:
     //
@@ -109,7 +109,7 @@ fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
     //   collectAsStateWithLifecycle() recoge solo mientras el ciclo de vida este al menos
     //                                 en STARTED (visible): al pasar a STOPPED CANCELA la
     //                                 recogida, y al volver la REANUDA con el ultimo valor.
-    //                                 Es lo mismo que repeatOnLifecycle(STARTED) de f26, ya
+    //                                 Es lo mismo que repeatOnLifecycle(STARTED), ya
     //                                 empaquetado. Es la opcion por defecto en Android.
     //
     // El interruptor de abajo deja probar las dos; `onEach` escribe en Logcat cada valor
@@ -131,7 +131,7 @@ fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
         Marcador(marcadorDelPartido.local + golesLocalAMano, marcadorDelPartido.visitante + golesVisitanteAMano),
     )
 
-    // f37: el reloj, el observador y el titulo. Tambien en `remember`: el minuto es del partido.
+    // El reloj, el observador y el titulo. Tambien en `remember`: el minuto es del partido.
     var minuto by remember { mutableIntStateOf(0) }
     var corriendo by remember { mutableStateOf(false) }
     var ultimoAviso by remember { mutableStateOf("ninguno") }
@@ -161,7 +161,7 @@ fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
         contentWindowInsets = WindowInsets(0),
         topBar = { CenterAlignedTopAppBar(title = { Text("Marcador") }) },
         bottomBar = {
-            // Otro slot: una barra inferior con un boton para ir a las demos de F3.
+            // Otro slot: una barra inferior con un boton para ir a las demos de Android.
             Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.Center) {
                 Button(onClick = onVerDemos) { Text("Demos de F3") }
             }
@@ -177,11 +177,11 @@ fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                 }
             },
             modifier = Modifier.padding(paddingValues),
-            // Un slot mas: lo que sobra de la pantalla (demos de f32 y f33) se inyecta desde fuera.
+            // Un slot mas: lo que sobra de la pantalla (las demos del principio) se inyecta desde fuera.
             extras = {
                 PanelDelCronometro(
                     minuto, corriendo, ultimoAviso, pausas,
-                    // Empezar = poner en marcha el unico reloj (f37).
+                    // Empezar = poner en marcha el unico reloj.
                     onEmpezar = { corriendo = true },
                 )
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
