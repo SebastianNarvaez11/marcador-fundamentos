@@ -127,7 +127,7 @@ fun PantallaMarcadorContenido(
                             duracion = estado.duracion,
                         )
                         // La preferencia, guardada en DataStore: sobrevive a cerrar la app.
-                        Text("Duracion del partido (preferencia guardada)")
+                        Text("Duración del partido (preferencia guardada)")
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             PreferenciasRepository.DURACIONES.forEach { minutos ->
                                 FilterChip(
@@ -190,7 +190,7 @@ fun OrdenDeLosModifiers() {
                 .padding(16.dp)
                 .background(MaterialTheme.colorScheme.primaryContainer),
         )
-        Text("B) background y luego padding: el color SI incluye el margen")
+        Text("B) background y luego padding: el color SÍ incluye el margen")
         Text(
             "Rayo FC",
             Modifier
