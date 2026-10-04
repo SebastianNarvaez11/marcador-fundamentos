@@ -39,7 +39,7 @@ class PreferenciasDataStore(private val almacen: DataStore<Preferences>) : Prefe
     }
 
     override suspend fun cambiarDuracion(minutos: Int) {
-        require(minutos in PreferenciasRepository.DURACIONES) { "Duracion no permitida: $minutos" }
+        require(minutos in PreferenciasRepository.DURACIONES) { "Duración no permitida: $minutos" }
         almacen.edit { it[claveDuracion] = minutos }
     }
 }
