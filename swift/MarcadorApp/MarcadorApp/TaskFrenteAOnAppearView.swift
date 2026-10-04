@@ -1,6 +1,6 @@
 import SwiftUI
 
-// f74 · `.task` FRENTE A `.onAppear { Task { … } }`
+// `.task` FRENTE A `.onAppear { Task { … } }`
 //
 // Dos contadores que cuentan cada 200 ms hasta 50 (10 segundos). Ábrelo en una hoja y ciérrala
 // a los 2 segundos; mira el registro:

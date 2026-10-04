@@ -2,12 +2,12 @@ import Testing
 import Torneo
 @testable import MarcadorApp
 
-// f75 · Pruebas del ViewModel con el repositorio en memoria (en f79 se sustituye por un falso).
+// Pruebas del ViewModel con el repositorio en memoria (en las otras pruebas, un falso).
 // `@MainActor`: el ViewModel lo es, y el target de pruebas no tiene el aislamiento por defecto.
 @MainActor
 struct PartidoViewModelTests {
 
-    // f79: el repositorio es un FALSO (ver `Dobles.swift`): sin disco y con los goles anotados.
+    // El repositorio es un FALSO (ver `Dobles.swift`): sin disco y con los goles anotados.
     private func repositorio() -> RepositorioFalso { RepositorioFalso() }
 
     @Test func jugarAplicaLosGolesDelGuionYActualizaElEstado() async {
@@ -69,7 +69,7 @@ struct PartidoViewModelTests {
         #expect(!viewModel.corriendo)
     }
 
-    // f75 · LA PRUEBA DEL CICLO. Con `[weak self]` el ViewModel se libera en cuanto se suelta...
+    // LA PRUEBA DEL CICLO. Con `[weak self]` el ViewModel se libera en cuanto se suelta...
     @Test func elViewModelSeLiberaAlSoltarlo() async {
         weak var referencia: PartidoViewModel?
         do {
@@ -92,7 +92,7 @@ struct PartidoViewModelTests {
         #expect(referencia != nil)
     }
 
-    // f78 · Cada gol del guion avisa: goles de Ana (12), Iván (55) y Ana (80).
+    // Cada gol del guion avisa: goles de Ana (12), Iván (55) y Ana (80).
     @Test func cadaGolDelGuionAvisaAlNotificador() async {
         let espia = NotificadorEspia()
         let viewModel = PartidoViewModel(partidoId: 1, repositorio: repositorio(), notificador: espia, msPorMinuto: 0)

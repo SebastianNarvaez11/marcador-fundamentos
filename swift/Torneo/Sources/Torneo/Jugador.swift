@@ -4,9 +4,9 @@ import Foundation
 // jugadores sin dorsal. Un opcional NO es un Int: es una caja que puede estar
 // vacía, y el compilador no deja usarla como número sin abrirla antes.
 //
-// Es un `struct` (tipo de valor); en f52 se cuenta qué cambia frente a `class`.
+// Es un `struct` (tipo de valor): al asignarlo a otra variable, se copia.
 // `Equatable` y `Hashable` los sintetiza el compilador (en Kotlin, `data class`).
-// `Sendable`: se puede pasar entre tareas sin riesgo (Swift 6, f65). Un struct con
+// `Sendable`: se puede pasar entre tareas sin riesgo (Swift 6). Un struct con
 // solo propiedades `let` de tipos Sendable lo es; en un tipo `public` hay que decirlo.
 public struct Jugador: Equatable, Hashable, Sendable {
     public let nombre: String
@@ -28,6 +28,14 @@ public struct Jugador: Equatable, Hashable, Sendable {
         return "-"
     }
 
+    // `if let` con comparación: tras abrir la caja, `numero` es un Int.
+    public func esPortero() -> Bool {
+        if let numero = dorsal {
+            return numero == 1
+        }
+        return false
+    }
+
     // Lo mismo con optional chaining y `??`, en una línea. `map` sobre un
     // opcional aplica la función solo si hay valor (el `?.let` de Kotlin).
     public func dorsalOGuionCorto() -> String {
@@ -39,14 +47,6 @@ public struct Jugador: Equatable, Hashable, Sendable {
     // Existe para que la lección lea el fallo; no lo uses en código real.
     public func dorsalForzado() -> Int {
         dorsal!
-    }
-
-    // `if let` con comparación: tras abrir la caja, `numero` es un Int.
-    public func esPortero() -> Bool {
-        if let numero = dorsal {
-            return numero == 1
-        }
-        return false
     }
 
     // Optional chaining: `?.` encadena; si algo es nil, todo el resultado es nil.

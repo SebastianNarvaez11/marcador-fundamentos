@@ -2,11 +2,11 @@ import Foundation
 import Observation
 import Torneo
 
-// f75 · EL REPOSITORIO: la ÚNICA puerta a los datos (gemelo de `PartidosRepository` de Kotlin, f43).
+// EL REPOSITORIO: la ÚNICA puerta a los datos (gemelo de `PartidosRepository` de Kotlin).
 //
 // Es un PROTOCOLO: quien lo usa (un ViewModel) dice QUÉ necesita («dame el partido 3», «guarda este
-// gol») y no sabe de dónde salen los datos. Hoy son una lista en memoria; en f77 se guardarán en un
-// JSON; en las pruebas (f79) será un falso. El ViewModel no cambia en ninguno de los tres casos.
+// gol») y no sabe de dónde salen los datos. Primero fueron una lista en memoria; luego, un
+// JSON; en las pruebas será un falso. El ViewModel no cambia en ninguno de los tres casos.
 protocol PartidosRepositorio: AnyObject {
     var equipos: [Equipo] { get }
     var partidos: [PartidoDeLista] { get }
@@ -14,7 +14,7 @@ protocol PartidosRepositorio: AnyObject {
     func registrarGol(partidoId: Int, gol: EventoDePartido)
 }
 
-// La implementación real: los partidos de ejemplo, y (f77) guardados en un JSON de `Documents`.
+// La implementación real: los partidos de ejemplo, y guardados en un JSON de `Documents`.
 //
 // Al arrancar, si ya hay un `torneo.json`, se parte de él; si no, de los datos de ejemplo. Cada gol
 // registrado se vuelve a guardar. Con `almacen: nil` (las pruebas) vive solo en memoria.

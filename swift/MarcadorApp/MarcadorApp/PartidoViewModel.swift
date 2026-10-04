@@ -2,7 +2,7 @@ import Foundation
 import Observation
 import Torneo
 
-// f75 · MVVM EN SWIFTUI (gemelo del `PartidoViewModel` de Android, f39)
+// MVVM EN SWIFTUI (gemelo del `PartidoViewModel` de Android)
 //
 //   Vista (SwiftUI)  ──eventos──▶  ViewModel  ──llama──▶  caso de uso / repositorio  ──▶  datos
 //        ▲                            │
@@ -10,10 +10,10 @@ import Torneo
 //
 // La VISTA solo pinta `uiState` y traduce toques en llamadas al ViewModel. El VIEWMODEL sabe de
 // pantalla (qué se ve, en qué orden) pero NO de SwiftUI: no importa `SwiftUI`. Por eso se puede
-// probar sin dibujar nada (f79).
+// probar sin dibujar nada.
 //
 // `@MainActor`: el ViewModel es estado de INTERFAZ y SwiftUI lo lee desde el hilo principal. Con
-// esta anotación el compilador impide tocarlo desde otro hilo sin `await` (f65). En un proyecto de
+// esta anotación el compilador impide tocarlo desde otro hilo sin `await`. En un proyecto de
 // Xcode 26 el aislamiento a MainActor ya es el valor por defecto de TODO el módulo, así que aquí es
 // redundante; se escribe igualmente porque dice la intención y porque en el paquete `Torneo` (que no
 // lo tiene por defecto) sí haría falta. Comparado con Android: `Dispatchers.Main` + `viewModelScope`.
@@ -38,7 +38,7 @@ final class PartidoViewModel {
     @ObservationIgnored private let registrarGol: RegistrarGol
     @ObservationIgnored private let msPorMinuto: Int
     @ObservationIgnored private let reintroducirElCiclo: Bool
-    // f78: quien avisa de los goles (nil = nadie). Es un protocolo: en las pruebas, un espía.
+    // Quien avisa de los goles (nil = nadie). Es un protocolo: en las pruebas, un espía.
     @ObservationIgnored private let notificador: (any Notificador)?
 
     // EL DUEÑO del cronómetro es este ViewModel (referencia FUERTE). Ojo a la flecha inversa: el
@@ -64,7 +64,7 @@ final class PartidoViewModel {
     }
 
     // `deinit` sale en el registro cuando ARC libera el ViewModel. Si NO sale al cerrar la pantalla,
-    // algo lo retiene (f66): es la prueba más barata de que no hay una fuga.
+    // algo lo retiene: es la prueba más barata de que no hay una fuga.
     deinit {
         Registro.anotar("PartidoViewModel LIBERADO")
     }
@@ -106,10 +106,10 @@ final class PartidoViewModel {
         }
     }
 
-    // La vista la llama desde `.task(id: duración)` (f74): se cancela sola al irse la pantalla.
+    // La vista la llama desde `.task(id: duración)`: se cancela sola al irse la pantalla.
     // UN SOLO BUCLE marca el tiempo y el cronómetro solo cuenta lo que le mandan.
     //
-    // f76: `.task` se CANCELA cuando otra pantalla se apila encima (Goleadores) y se RELANZA al volver,
+    // `.task` se CANCELA cuando otra pantalla se apila encima (Goleadores) y se RELANZA al volver,
     // pero el ViewModel sigue vivo (su `@State` sobrevive). Por eso `jugar` no puede empezar siempre de
     // cero: si ya había un partido en marcha con esta duración, RETOMA desde el minuto actual (sin
     // borrar goles ni volver a avisar de los que ya ocurrieron); si ya había terminado, no hace nada.
@@ -148,7 +148,7 @@ final class PartidoViewModel {
         Registro.anotar("partido TERMINADO en el minuto \(minuto)")
     }
 
-    // EL CICLO DE RETENCIÓN (f66) EN UNA APP DE VERDAD.
+    // EL CICLO DE RETENCIÓN EN UNA APP DE VERDAD.
     //
     //   ASÍ NO VALE:        reloj.alTick = { self.alMinuto() }
     //   BIEN:               reloj.alTick = { [weak self] in self?.alMinuto() }
@@ -175,7 +175,7 @@ final class PartidoViewModel {
         let nuevo = reloj.minuto
         for evento in eventosDelGuion where evento.minuto == nuevo {
             golesEnVivo = golesEnVivo.despuesDe(evento, en: partido)
-            // f78: cada gol del guion avisa (los «a mano» no: los puso el usuario, que ya lo sabe).
+            // Cada gol del guion avisa (los «a mano» no: los puso el usuario, que ya lo sabe).
             if case let .gol(minutoDelGol, jugador, equipo) = evento {
                 notificador?.notificarGol(minuto: minutoDelGol, jugador: jugador.nombre, equipo: equipo.nombre)
             }

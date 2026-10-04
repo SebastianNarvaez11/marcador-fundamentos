@@ -47,13 +47,13 @@ public func probabilidadDeVictoria(_ partido: Partido, simulaciones: Int = 5_000
     return Double(victoriasLocales) / Double(simulaciones)
 }
 
-// ---- f62: varias cosas a la vez ----
+// ---- Varias cosas a la vez ----
 
 // `async let` lanza una tarea HIJA que corre a la vez que el resto de la función.
 // Las dos líneas `async let` arrancan antes del primer `await`, así que los dos
 // partidos se juegan a la vez; el `await` de la última línea espera a los dos.
 // El total dura lo que el más largo, no la suma. (El `async { }` + `await()` de
-// Kotlin f16.)
+// Kotlin.)
 //
 // «A la vez» aquí es CONCURRENCIA, no necesariamente paralelismo: en Swift las
 // tareas se reparten entre los hilos del sistema, así que además pueden correr
@@ -113,7 +113,7 @@ public func jugarJornada(_ partidos: [Partido], msPorMinuto: Int = 10) async thr
     }
 }
 
-// ---- Errores en tareas hijas (f19 de Kotlin) ----
+// ---- Errores en tareas hijas (como en Kotlin) ----
 
 // Algo que sale mal en mitad de un partido: se va la luz del campo.
 public struct SuspendidoPorApagon: Error, Equatable {
@@ -132,7 +132,7 @@ public func jugarConApagon(_ partido: Partido, msPorMinuto: Int = 10, minutoDelA
 // CUENTA, la hija atrapa su error y lo devuelve como VALOR (un `Result`): al
 // grupo solo le llegan resultados, nunca errores (el `supervisorScope` de Kotlin).
 //
-// La cancelación NO se traga (igual que `intentar` en Kotlin f17): un `catch`
+// La cancelación NO se traga (igual que `intentar` en Kotlin): un `catch`
 // genérico atraparía también la `CancellationError`, y una tarea cancelada
 // seguiría como si nada. Se atrapa aparte y se vuelve a lanzar; solo los demás
 // errores se guardan como resultado.

@@ -8,7 +8,7 @@
 // `StateFlow.update { }` o un dispatcher de un solo hilo: el lenguaje no lo impone.)
 //
 // Se llama `MarcadorSeguro` y no `Marcador` porque `Marcador` ya es la estructura
-// de f63 (el valor: 2-1). El actor es la caja que protege UN valor `Marcador`.
+// del valor (2-1). El actor es la caja que protege UN valor `Marcador`.
 public actor MarcadorSeguro {
     public private(set) var marcador = Marcador(local: 0, visitante: 0)
 

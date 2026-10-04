@@ -13,8 +13,8 @@ struct MarcadorApp: App {
     // la escena y no de una pantalla.
     @Environment(\.scenePhase) private var fase
 
-    // f75: el repositorio, creado una vez y repartido a las pantallas por el entorno.
-    // f77: con el torneo guardado en `Documents/torneo.json` (`-reiniciarDatos YES` lo borra al arrancar).
+    // El repositorio, creado una vez y repartido a las pantallas por el entorno.
+    // Con el torneo guardado en `Documents/torneo.json` (`-reiniciarDatos YES` lo borra al arrancar).
     @State private var repositorio: RepositorioDePartidos = {
         if Configuracion.reiniciarDatos {
             AlmacenDelTorneo.predeterminado.borrar()
@@ -23,7 +23,7 @@ struct MarcadorApp: App {
         return RepositorioDePartidos(almacen: .predeterminado)
     }()
 
-    // f78: el notificador se crea UNA vez al arrancar la app (registra su delegado en el centro de notificaciones)
+    // El notificador se crea UNA vez al arrancar la app (registra su delegado en el centro de notificaciones)
     // y se reparte por el entorno.
     @State private var notificador = NotificadorDeSistema()
 

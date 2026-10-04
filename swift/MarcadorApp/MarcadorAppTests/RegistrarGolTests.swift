@@ -2,7 +2,7 @@ import Testing
 import Torneo
 @testable import MarcadorApp
 
-// f79 · El caso de uso, probado solo con el falso: sin ViewModel, sin pantalla, sin tiempo.
+// El caso de uso, probado solo con el falso: sin ViewModel, sin pantalla, sin tiempo.
 @MainActor
 struct RegistrarGolTests {
 
