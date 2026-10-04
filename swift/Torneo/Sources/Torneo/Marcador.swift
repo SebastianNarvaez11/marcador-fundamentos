@@ -1,5 +1,5 @@
 // El marcador en un instante. Inmutable: cada gol produce uno nuevo.
-// (El gemelo de `data class Marcador` de Kotlin; en f64 aparece el actor que lo
+// (El gemelo de `data class Marcador` de Kotlin; más adelante aparece el actor que lo
 // protege cuando lo tocan varias tareas a la vez, `MarcadorSeguro`.)
 public struct Marcador: Equatable, Sendable, CustomStringConvertible {
     public let local: Int

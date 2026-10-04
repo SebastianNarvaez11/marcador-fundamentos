@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-// f68 · CICLO DE VIDA DE UN UIViewController
+// CICLO DE VIDA DE UN UIViewController
 //
 // Antes de SwiftUI, cada pantalla de iOS era un `UIViewController`. Sigue siendo la base
 // (SwiftUI se apoya en UIKit por debajo) y todavía hay código y librerías que lo usan.
@@ -23,7 +23,7 @@ import UIKit
 //   - Rotar NO destruye el VC (en Android sí destruye la Activity): solo cambia el tamaño y
 //     se vuelve a maquetar (`viewWillLayoutSubviews`).
 //   - `deinit` no es de UIKit sino de Swift: corre cuando ARC libera el objeto, no cuando
-//     «se cierra» la pantalla. Si nunca sale en el registro, algo lo está reteniendo (f66).
+//     «se cierra» la pantalla. Si nunca sale en el registro, algo lo está reteniendo.
 final class CicloDeVidaViewController: UIViewController {
 
     // El identificador se añade a cada mensaje, como el `identityHashCode` de la Activity.

@@ -2,9 +2,9 @@ import Foundation
 import Observation
 import UserNotifications
 
-// f78 · NOTIFICACIÓN «¡GOL!» (gemelo de `Notificaciones.kt`, f29)
+// NOTIFICACIÓN «¡GOL!» (gemelo de `Notificaciones.kt`)
 //
-// El ViewModel no conoce `UserNotifications`: habla con este protocolo, y en las pruebas (f78, f79)
+// El ViewModel no conoce `UserNotifications`: habla con este protocolo, y en las pruebas
 // se sustituye por un espía que anota lo que le piden. Es la misma idea que el repositorio.
 protocol Notificador: AnyObject {
     var permitido: Bool { get }

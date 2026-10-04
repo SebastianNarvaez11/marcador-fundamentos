@@ -2,7 +2,7 @@ import Foundation
 import Torneo
 
 // `torneo-cli cronometro` ejecuta SOLO la demo del cronómetro y termina. Sirve para
-// mirar la memoria con `leaks --atExit -- .build/debug/torneo-cli cronometro` (f66).
+// mirar la memoria con `leaks --atExit -- .build/debug/torneo-cli cronometro`.
 // La demo vive en una función: un objeto guardado en una variable global de
 // `main.swift` sigue siendo alcanzable al salir y `leaks` no lo contaría como fuga.
 @MainActor
@@ -56,17 +56,30 @@ let jugadores = [
 for jugador in jugadores { print(presentar(jugador)) }
 print(presentar(nil))
 
+// Cuatro textos: dos son números (uno con espacios) y dos no.
 for texto in ["10", " 7 ", "diez", ""] {
-    print("«\(texto)» -> \(dorsalDesdeTexto(texto).map(String.init) ?? "no es un dorsal")")
+    // `.map { String($0) }`: si hay dorsal, lo convierte en texto; si no, nil.
+    // `?? "no es un dorsal"` da el texto de reserva.
+    let dorsal = dorsalDesdeTexto(texto).map { String($0) } ?? "no es un dorsal"
+    print("«\(texto)» -> \(dorsal)")
 }
 
 // Struct frente a class.
 let ana = jugadores[0]
 let ivan = Jugador(nombre: "Iván", dorsal: 7)
+// `Equipo(...)` devuelve un opcional (es un `init?`); el `!` lo abre a la fuerza.
 let rayo = Equipo(nombre: "Rayo FC", plantilla: jugadores)!
-rayo.nombrarCapitan(ana)
-print("\(rayo), capitán: \(rayo.capitan?.nombre ?? "sin capitán")")
-print("Toros con dorsales repetidos: \(Equipo(nombre: "Toros", plantilla: [Jugador(nombre: "A", dorsal: 7), Jugador(nombre: "B", dorsal: 7)]) == nil ? "nil" : "creado")")
+rayo.nombrarCapitan(ana)                        // sin usar el Bool que devuelve
+let nombreDelCapitan = rayo.capitan?.nombre ?? "sin capitán"
+print("\(rayo), capitán: \(nombreDelCapitan)")
+
+// Dos jugadores con el mismo dorsal: el `init?` devuelve nil.
+let conRepetidos = Equipo(nombre: "Toros", plantilla: [Jugador(nombre: "A", dorsal: 7), Jugador(nombre: "B", dorsal: 7)])
+if conRepetidos == nil {
+    print("Toros con dorsales repetidos: nil")
+} else {
+    print("Toros con dorsales repetidos: creado")
+}
 
 let toros = Equipo(nombre: "Toros", plantilla: [ivan])!
 let inicio = Partido(local: rayo, visitante: toros)
@@ -82,11 +95,20 @@ print("Marcador: \(alFinal.golesLocal)-\(alFinal.golesVisitante) -> \(alFinal.re
 print("Colores de tarjeta: \(ColorDeTarjeta.allCases.map(\.rawValue))")
 
 // Closures: filtrar eventos y sacar goleadores.
-print("Tarjetas: \(alFinal.eventos { if case .tarjeta = $0 { true } else { false } }.map(describir))")
-print("Primera mitad: \(alFinal.eventos(antesDelMinuto(45)).count) eventos")
-print("Goleadores: \(alFinal.goleadores().map(\.nombre))")
-print("Minutos de gol de Ana: \(alFinal.minutosDeGolDe(ana))")
+// La closure final decide qué eventos pasan; `.map(describir)` pasa cada uno a texto.
+let lasTarjetas = alFinal.eventos { if case .tarjeta = $0 { true } else { false } }
+print("Tarjetas: \(lasTarjetas.map(describir))")
+// `antesDelMinuto(45)` devuelve la closure que hace de filtro.
+let primeraMitad = alFinal.eventos(antesDelMinuto(45))
+print("Primera mitad: \(primeraMitad.count) eventos")
+// `goleadores()` da un jugador por gol; `\.nombre` se queda con el nombre de cada uno.
+let quienesMarcaron = alFinal.goleadores()
+print("Goleadores: \(quienesMarcaron.map(\.nombre))")
+let minutosDeAna = alFinal.minutosDeGolDe(ana)
+print("Minutos de gol de Ana: \(minutosDeAna)")
+// `repetir` llama a la closure con 1 y con 2.
 repetir(2) { vuelta in print("Vuelta \(vuelta)") }
+// `contador()` devuelve una closure que recuerda la cuenta entre llamada y llamada.
 let siguiente = contador()
 print("Contador: \(siguiente()), \(siguiente()), \(siguiente())")
 alResolver(alFinal) { ganador in
@@ -109,11 +131,14 @@ print("Goles de Ana: \(golesPorJugador[ana] ?? 0)")
 // Genéricos: el mismo Ranking sirve para jugadores y para cualquier otra cosa.
 let lobos = Equipo(nombre: "Lobos", plantilla: [Jugador(nombre: "Pedro", dorsal: 4)])!
 let partidoDeToros = Partido(local: toros, visitante: lobos).registrando(.gol(minuto: 20, jugador: ivan, equipo: toros))
-let goleadores = [alFinal, partidoDeToros].goleadores()
-for jugador in goleadores {
-    print("\(goleadores.puesto(de: jugador) ?? 0). \(jugador.etiqueta()): \(goleadores.puntosDe(jugador))")
+// Los goleadores de dos partidos, ya ordenados: Ana e Iván con 2 goles cada uno.
+let tablaDeGoleadores = [alFinal, partidoDeToros].goleadores()
+// Un Ranking se recorre con `for` porque es una Sequence.
+for jugador in tablaDeGoleadores {
+    print("\(tablaDeGoleadores.puesto(de: jugador) ?? 0). \(jugador.etiqueta()): \(tablaDeGoleadores.puntosDe(jugador))")
 }
-print("Líder: \(lider(goleadores)?.nombre ?? "nadie"); nombres: \(nombres(de: goleadores))")
+print("Líder: \(lider(tablaDeGoleadores)?.nombre ?? "nadie"); nombres: \(nombres(de: tablaDeGoleadores))")
+// El mismo Ranking con textos: se puntúa por la longitud (`\.count` es un key path).
 let porLongitud = Ranking(elementos: ["Rayo FC", "Toros", "Lobos"], puntos: \.count)
 print("Ranking de textos: \(porLongitud.ordenados)")
 

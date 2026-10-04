@@ -2,7 +2,7 @@ import XCTest
 import Torneo
 @testable import MarcadorApp
 
-// f79 · LAS MISMAS PRUEBAS, EN XCTEST (el marco anterior a Swift Testing, de 2014).
+// LAS MISMAS PRUEBAS, EN XCTEST (el marco anterior a Swift Testing, de 2014).
 //
 // Es lo que vas a encontrar en casi todo el código que ya existe, y sigue siendo OBLIGATORIO para
 // las pruebas de UI y de rendimiento. Diferencias con Swift Testing (`PartidoViewModelTests`):
