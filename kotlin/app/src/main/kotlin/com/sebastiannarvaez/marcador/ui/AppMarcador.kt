@@ -132,7 +132,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                     val vm: ListaViewModel = viewModel(factory = Fabricas.lista)
                     val torneo by vm.torneo.collectAsStateWithLifecycle()
                     Scaffold(
-                        topBar = { CenterAlignedTopAppBar(title = { Text("Recomposicion") }) },
+                        topBar = { CenterAlignedTopAppBar(title = { Text("Recomposición") }) },
                         contentWindowInsets = WindowInsets(0),
                     ) { interior -> PantallaRecomposicion(torneo, Modifier.padding(interior)) }
                 }
