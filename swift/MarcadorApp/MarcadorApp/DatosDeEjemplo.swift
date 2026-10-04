@@ -1,6 +1,6 @@
 import Torneo
 
-// La lista necesita un identificador ESTABLE para cada fila (f71). `Partido` no tiene id (dos
+// La lista necesita un identificador ESTABLE para cada fila. `Partido` no tiene id (dos
 // partidos pueden repetir equipos), así que se envuelve: es el `PartidoDeLista` de Kotlin.
 //
 // `Identifiable` es un protocolo con UNA exigencia: una propiedad `id` que sea `Hashable`.

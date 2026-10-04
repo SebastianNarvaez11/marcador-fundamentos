@@ -1,6 +1,6 @@
 import Foundation
 
-// f77 · Los ajustes del usuario ya no son un objeto en memoria (`AjustesModelo`, f72-f76): la
+// Los ajustes del usuario ya no son un objeto en memoria (`AjustesModelo`): la
 // «duración del partido» se guarda en `UserDefaults` con `@AppStorage` (mira `PartidoEnDirectoView`)
 // y sobrevive a cerrar la app. Aquí solo quedan la clave y los valores posibles.
 enum Ajustes {

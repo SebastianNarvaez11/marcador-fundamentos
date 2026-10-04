@@ -1,7 +1,7 @@
 import Foundation
 import Torneo
 
-// f77 · EL TORNEO GUARDADO COMO JSON EN `Documents`
+// EL TORNEO GUARDADO COMO JSON EN `Documents`
 //
 // Cada app de iOS vive en su SANDBOX: una carpeta propia que ninguna otra app puede ver, con
 //   Documents/   lo del usuario; se incluye en las copias de seguridad (aquí, `torneo.json`)

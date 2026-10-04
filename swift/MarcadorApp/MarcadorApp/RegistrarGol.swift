@@ -1,6 +1,6 @@
 import Torneo
 
-// f75 · CASO DE USO: una acción del usuario con sentido para el negocio (gemelo de `RegistrarGol.kt`).
+// CASO DE USO: una acción del usuario con sentido para el negocio (gemelo de `RegistrarGol.kt`).
 //
 // Regla: el gol a mano no dice quién lo marcó, así que lo marca el jugador de la plantilla que toca
 // por turno (los goles que ya lleva el equipo, módulo el tamaño). Los errores esperables (no existe el

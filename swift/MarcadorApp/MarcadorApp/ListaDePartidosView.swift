@@ -1,7 +1,7 @@
 import SwiftUI
 import Torneo
 
-// f71 · LISTAS E IDENTIDAD (gemelo de f35, LazyColumn con `key`)
+// LISTAS E IDENTIDAD (gemelo de LazyColumn con `key`)
 //
 // `List` es la lista de iOS: filas con separadores, se desplaza y RECICLA las filas que no se
 // ven (como LazyColumn: solo se crean las visibles). `ForEach` es la pieza que convierte una
@@ -14,14 +14,14 @@ import Torneo
 //   - ESTRUCTURAL: si no hay id, SwiftUI usa la POSICIÓN en el código (la vista que va
 //     primero, la segunda…). Sirve para vistas fijas (`VStack { A; B }`) y falla en listas que
 //     cambian: el estado se queda pegado a la posición. Es lo que pasa en Compose sin `key`.
-// f76 · NAVEGACIÓN POR VALOR (gemelo de Navigation 3, f47)
+// NAVEGACIÓN POR VALOR (gemelo de Navigation 3)
 //
 // `NavigationStack` es la pila de pantallas de iOS. Cada fila es un `NavigationLink(value:)`: al
 // tocarla se EMPUJA un valor (`Destino`) a la pila, y `.navigationDestination(for:)` traduce cada
 // valor en una pantalla. La barra de arriba con el botón «atrás» la pone SwiftUI. Sustituye a las
-// hojas modales de f72–f75, que no eran navegación (tapaban la lista, no la «apilaban»).
+// hojas modales de antes, que no eran navegación (tapaban la lista, no la «apilaban»).
 struct ListaDePartidosView: View {
-    // f75: la lista LEE los partidos del repositorio (`@Observable`): al registrar un gol, la fila cambia sola.
+    // La lista LEE los partidos del repositorio (`@Observable`): al registrar un gol, la fila cambia sola.
     @Environment(RepositorioDePartidos.self) private var repositorio
 
     // La pila entera es un array de destinos, en un `@State`: se puede inspeccionar y manipular.

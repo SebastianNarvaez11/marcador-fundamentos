@@ -4,8 +4,8 @@
 //
 // Las etiquetas de argumento (`golesAFavor:`, `golesEnContra:`) son parte del
 // nombre de la función: `puntosPor(golesAFavor:golesEnContra:)`.
-// Desde f55 la regla vive en el reglamento de la liga; esta función se queda
-// como atajo y ya no repite los números.
+// La regla vive en el reglamento de la liga; esta función se queda como atajo
+// y no repite los números.
 public func puntosPor(golesAFavor: Int, golesEnContra: Int) -> Int {
     ReglamentoLiga().puntosPor(golesAFavor: golesAFavor, golesEnContra: golesEnContra)
 }
@@ -13,7 +13,7 @@ public func puntosPor(golesAFavor: Int, golesEnContra: Int) -> Int {
 // Cada parámetro tiene DOS nombres: el de fuera (la etiqueta, que se escribe al
 // llamar) y el de dentro (el que se usa en el cuerpo). `para golesAFavor: Int`
 // se llama `puntos(para: 2, contra: 1)` y se lee como una frase.
-// (El `switch` con `where` que había aquí en f51 se mudó al protocolo Reglamento.)
+// (El `switch` con `where` que había aquí antes se mudó al protocolo Reglamento.)
 public func puntos(para golesAFavor: Int, contra golesEnContra: Int) -> Int {
     puntosPor(golesAFavor: golesAFavor, golesEnContra: golesEnContra)
 }

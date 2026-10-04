@@ -16,7 +16,7 @@ public final class PartidoEnVivo {
     // para que las pruebas (y la consola) vean que de verdad se liberó.
     private let alLiberarse: (() -> Void)?
 
-    // El marcador del partido, protegido por un actor (f64): quien lo mira y quien
+    // El marcador del partido, protegido por un actor: quien lo mira y quien
     // lo actualiza pueden ser tareas distintas.
     public let marcadorSeguro = MarcadorSeguro()
 
@@ -38,7 +38,7 @@ public final class PartidoEnVivo {
     // Un `AsyncStream` FRÍO: crear el stream no arranca nada. Cada vez que alguien
     // lo recorre con `for await`, se ejecuta el cierre de `AsyncStream { }` y
     // empieza OTRO partido desde el minuto 0: dos espectadores = dos partidos
-    // independientes. Es el `flow { }` de Kotlin (f20).
+    // independientes. Es el `flow { }` de Kotlin.
     //
     // `continuation.yield` entrega un valor (el `emit` de Kotlin) y
     // `continuation.finish()` cierra el stream. Como el productor es una `Task` que
@@ -48,7 +48,7 @@ public final class PartidoEnVivo {
     // jugándose para nadie.
     //
     // OJO: el cierre NO captura `self` (usa copias de `guion` y `ms`). Si capturara
-    // `self`, la tarea mantendría vivo el partido mientras dure (ver f66).
+    // `self`, la tarea mantendría vivo el partido mientras dure (un ciclo de retención).
     public var eventos: AsyncStream<EventoDePartido> {
         let guion = self.guion
         let ms = self.msPorMinuto
