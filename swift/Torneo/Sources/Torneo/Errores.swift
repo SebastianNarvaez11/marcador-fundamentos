@@ -47,7 +47,7 @@ public enum ErrorDeDorsal: Error, Equatable {
 // `throws`: esta función puede terminar lanzando un error en vez de devolver un
 // valor. Quien la llame TIENE que decidir qué hacer: `try` dentro de `do/catch`,
 // `try?` (nil si falla), `try!` (se detiene si falla) o volver a lanzarlo.
-// Frente a `Int?` (f50), que solo dice «no se pudo», aquí se sabe POR QUÉ.
+// Frente a un `Int?`, que solo dice «no se pudo», aquí se sabe POR QUÉ.
 public func dorsalValido(_ texto: String) throws -> Int {
     guard let numero = dorsalDesdeTexto(texto) else {
         throw ErrorDeDorsal.noEsUnNumero(texto)

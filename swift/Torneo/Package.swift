@@ -27,7 +27,7 @@ let package = Package(
         ),
     ],
     // Con `swift-tools-version: 6.2` el modo de lenguaje por defecto YA es Swift 6,
-    // con la concurrencia estricta activada. Hasta f64 se trabaja en modo Swift 5
-    // para poder aprender cada tema por separado; en f65 se quita esta línea.
+    // con la concurrencia estricta activada. Mientras se aprende cada tema por
+    // separado se trabaja en modo Swift 5; al llegar a Swift 6 se quita esta línea.
     swiftLanguageModes: [.v5]
 )

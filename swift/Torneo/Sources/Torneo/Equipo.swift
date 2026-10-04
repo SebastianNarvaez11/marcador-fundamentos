@@ -8,14 +8,10 @@ public final class Equipo {
     public let nombre: String
     public let plantilla: [Jugador]
 
-    // `private(set)`: cualquiera lee el capitán, pero solo esta clase lo cambia
-    // (el `private set` de Kotlin).
-    public private(set) var capitan: Jugador?
-
     // `init?` es un inicializador que puede FALLAR: devuelve `Equipo?`, nil si
     // los datos no valen. Es el `require` de Kotlin, pero sin excepción.
-    // (f57 cuenta cuándo conviene `throws`: para saber POR QUÉ falló. Aquí basta
-    // con `nil`, porque quien crea un equipo solo necesita saber si salió.)
+    // (Para saber POR QUÉ falló conviene `throws`. Aquí basta con `nil`,
+    // porque quien crea un equipo solo necesita saber si salió.)
     public init?(nombre: String, plantilla: [Jugador]) {
         guard !nombre.isEmpty else { return nil }
         let dorsales = plantilla.compactMap(\.dorsal)
@@ -24,8 +20,11 @@ public final class Equipo {
         // Los arrays son tipos de VALOR: esta asignación ya es una copia, y la
         // copia defensiva de Kotlin (`toList()`) aquí no hace falta.
         self.plantilla = plantilla
-        self.capitan = nil
     }
+
+    // `private(set)`: cualquiera lee el capitán, pero solo esta clase lo cambia
+    // (el `private set` de Kotlin). Un opcional `var` empieza en nil.
+    public private(set) var capitan: Jugador?
 
     // Devuelve `false` si el jugador no es de este equipo (en Kotlin, `require`).
     @discardableResult
@@ -41,16 +40,20 @@ public final class Equipo {
 // Una clase NO es Equatable por sí sola: `==` entre dos referencias no compila
 // hasta que se diga qué significa. Aquí, «el mismo equipo» = la misma referencia
 // (`===`), que es lo que hace Kotlin por defecto con `==` en una clase normal.
-extension Equipo: Equatable, Hashable {
+extension Equipo: Equatable {
     public static func == (izquierda: Equipo, derecha: Equipo) -> Bool {
         izquierda === derecha
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(self))
     }
 }
 
 extension Equipo: CustomStringConvertible {
     public var description: String { "\(nombre) (\(cantidadDeJugadores) jugadores)" }
+}
+
+// Hashable: permite usar un Equipo como clave de un diccionario o en un Set.
+// Como la igualdad es por identidad, el hash también: se calcula con el identificador del objeto.
+extension Equipo: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(self))
+    }
 }

@@ -35,10 +35,13 @@ extension Array where Element == Partido {
         // Dictionary<Equipo, [(equipo:, aFavor:, enContra:)]> (el `groupBy` de Kotlin).
         let porEquipo = Dictionary(grouping: apariciones, by: \.equipo)
 
-        // Un Set no admite repetidos: `insert` devuelve si de verdad se insertó.
-        // Así se unen los equipos dados y los que ya jugaron, sin repetir.
+        // Un Set no admite repetidos: `insert` dice con `inserted` si el elemento
+        // era nuevo. Así se unen los equipos dados y los que ya jugaron, sin repetir.
         var vistos = Set<Equipo>()
-        let todos = (equipos + porEquipo.keys).filter { vistos.insert($0).inserted }
+        var todos: [Equipo] = []
+        for equipo in equipos + porEquipo.keys {
+            if vistos.insert(equipo).inserted { todos.append(equipo) }
+        }
 
         let filas = todos.map { equipo in
             let marcadores = porEquipo[equipo] ?? []
