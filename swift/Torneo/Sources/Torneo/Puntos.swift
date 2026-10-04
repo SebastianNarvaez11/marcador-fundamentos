@@ -18,12 +18,6 @@ public func puntos(para golesAFavor: Int, contra golesEnContra: Int) -> Int {
     puntosPor(golesAFavor: golesAFavor, golesEnContra: golesEnContra)
 }
 
-// Parámetro con valor por defecto, como en Kotlin (`prefijo: String = "Jornada"`).
-// `de total` hace que la llamada lea «numero: 1, de: 3».
-public func encabezadoDeJornada(numero: Int, de total: Int, prefijo: String = "Jornada") -> String {
-    "\(prefijo) \(numero) de \(total)"
-}
-
 // Pattern matching con rangos, comodines (`_`) y `where`.
 // Devuelve una frase para el marcador de un partido.
 public func titular(golesLocal: Int, golesVisitante: Int) -> String {
@@ -43,6 +37,12 @@ public func titular(golesLocal: Int, golesVisitante: Int) -> String {
     default:
         "Gana el visitante"
     }
+}
+
+// Parámetro con valor por defecto, como en Kotlin (`prefijo: String = "Jornada"`).
+// `de total` hace que la llamada lea «numero: 1, de: 3».
+public func encabezadoDeJornada(numero: Int, de total: Int, prefijo: String = "Jornada") -> String {
+    "\(prefijo) \(numero) de \(total)"
 }
 
 // `inout`: el parámetro se pasa POR REFERENCIA temporal. La función lo puede
