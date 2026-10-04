@@ -62,14 +62,13 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 // se dibuja dentro.
 //
 // CenterAlignedTopAppBar es «experimental» en Material 3: hay que aceptarlo con
-// @OptIn, o el compilador se niega (ver diario).
+// @OptIn, o el compilador se niega.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
     // COMPOSABLE CON ESTADO (el «contenedor»): es el unico sitio que POSEE los
     // goles. No dibuja nada por su cuenta: crea el estado, lo pasa hacia abajo y
     // recoge los eventos que suben. Se le llama tambien «stateful».
-    // Aqui pasa de `remember` a `rememberSaveable`: ahora si sobrevive a rotar.
     val partido = Ejemplo.rayoContraToros
 
     // EL PARTIDO EN VIVO VIVE EN LA COMPOSICION, A PROPOSITO.
@@ -163,7 +162,7 @@ fun PantallaMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
         bottomBar = {
             // Otro slot: una barra inferior con un boton para ir a las demos de Android.
             Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.Center) {
-                Button(onClick = onVerDemos) { Text("Demos de F3") }
+                Button(onClick = onVerDemos) { Text("Pruebas de Android") }
             }
         },
     ) { paddingValues ->

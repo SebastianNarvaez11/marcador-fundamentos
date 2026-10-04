@@ -173,17 +173,17 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 // La pantalla de verdad vive en ui/. Los botones de demostracion de las
                 // lecciones de Android siguen ahi, detras de un boton, para no perderlos.
-                if (verDemosDeF3) DemosDeF3(tabla) else AppMarcador(onVerDemos = { verDemosDeF3 = true })
+                if (verPruebas) PantallaDePruebas(tabla) else AppMarcador(onVerDemos = { verPruebas = true })
             }
         }
     }
 
-    private var verDemosDeF3 by mutableStateOf(false)
+    private var verPruebas by mutableStateOf(false)
 
     @Composable
-    private fun DemosDeF3(tabla: List<FilaDePosicion>) {
+    private fun PantallaDePruebas(tabla: List<FilaDePosicion>) {
                 Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
-                    Button(onClick = { verDemosDeF3 = false }) { Text("Volver a la pantalla del marcador") }
+                    Button(onClick = { verPruebas = false }) { Text("Volver a la pantalla del marcador") }
                     Text("Marcador")
                     // Datos que solo conoce la compilacion (BuildConfig se genera).
                     Text("Modo: ${BuildConfig.MODO} · plan ${BuildConfig.PLAN} · ${BuildConfig.APPLICATION_ID}")
