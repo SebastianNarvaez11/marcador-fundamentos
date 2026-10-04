@@ -61,6 +61,6 @@ fun ComparacionDeEstado(modifier: Modifier = Modifier) {
         //  - Muerte del proceso: pulsa Home y ejecuta
         //            adb shell am kill com.sebastiannarvaez.marcador.debug
         //            luego reabre la app desde recientes -> igual: solo saveable sobrevive.
-        Text("Rota el movil o haz am kill: solo «saveable» conserva su valor")
+        Text("Rota el móvil o haz am kill: solo «saveable» conserva su valor")
     }
 }
