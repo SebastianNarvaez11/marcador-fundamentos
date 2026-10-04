@@ -1,7 +1,7 @@
 import Torneo
 @testable import MarcadorApp
 
-// f79 · DOBLES DE PRUEBA. Un ViewModel que recibe sus dependencias por el constructor se prueba
+// DOBLES DE PRUEBA. Un ViewModel que recibe sus dependencias por el constructor se prueba
 // dándole imitaciones que controlas tú. Nombres habituales (y no todo el mundo los usa igual):
 //   FALSO (fake)  una implementación simple que funciona de verdad pero sin el mundo real (aquí, sin disco).
 //   ESPÍA (spy)   anota qué le pidieron, para preguntarlo después.
@@ -31,7 +31,7 @@ final class RepositorioFalso: PartidosRepositorio {
     }
 }
 
-// El espía de notificaciones (f78, ahora en su sitio).
+// El espía de notificaciones (ahora en su sitio).
 final class NotificadorEspia: Notificador {
     var permitido = true
     private(set) var avisos: [(minuto: Int, jugador: String, equipo: String)] = []

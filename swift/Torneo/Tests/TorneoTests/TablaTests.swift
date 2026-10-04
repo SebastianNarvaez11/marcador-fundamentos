@@ -15,7 +15,7 @@ struct TablaTests {
         lobos = Equipo(nombre: "Lobos", plantilla: [pedro, Jugador(nombre: "Carla", dorsal: 5)])!
     }
 
-    // Los mismos tres partidos que la demo de Kotlin (f08).
+    // Los mismos tres partidos que la demo de Kotlin.
     private func copa() throws -> Torneo {
         let copa = Torneo(nombre: "Copa Barrio", equipos: [rayo, toros, lobos])
         try copa.registrar(local: rayo, visitante: toros, eventos: [

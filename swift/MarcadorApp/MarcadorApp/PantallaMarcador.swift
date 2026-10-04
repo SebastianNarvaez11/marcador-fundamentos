@@ -1,8 +1,8 @@
 import SwiftUI
 import Torneo
 
-// f69 · PRIMEROS PASOS CON SWIFTUI (gemelo de f32, Compose)
-// f70 · @State Y @Binding (gemelo de f33 y f34)
+// PRIMEROS PASOS CON SWIFTUI (gemelo de Compose)
+// @State Y @Binding (gemelo del estado y el state hoisting de Compose)
 //
 // UNA VISTA ES UN STRUCT que cumple `View`. Solo hay que dar una propiedad: `body`, que
 // describe la pantalla PARA LOS DATOS ACTUALES. Cuando los datos cambian, SwiftUI vuelve
@@ -12,7 +12,7 @@ import Torneo
 //   @Composable fun Pantalla()      struct Pantalla: View { var body: some View }
 //   Modifier                        modificadores (`.padding()`, `.font()`…)
 //   Column / Row / Box              VStack / HStack / ZStack
-//   Scaffold + slots                NavigationStack, toolbar… (llegan en f76)
+//   Scaffold + slots                NavigationStack, toolbar… (llegan después)
 //
 // `some View`: «un tipo concreto que es una vista, que el compilador conoce y yo no
 // quiero escribir». El tipo real de un body con stacks y modificadores es enorme
@@ -20,9 +20,9 @@ import Torneo
 //
 // Las vistas son BARATAS: son solo la descripción. SwiftUI las crea y las tira todo el rato.
 // Guardar cosas dentro de un struct de vista (una variable normal) no vale: se pierde en cuanto
-// se recrea. Para eso está `@State` (f70).
+// se recrea. Para eso está `@State`.
 //
-// f70 · @STATE: el estado que VIVE en la vista.
+// @STATE: el estado que VIVE en la vista.
 //
 // Un struct es un valor y `body` no puede modificarlo (`self` es inmutable): `var marcador = …`
 // a secas ni siquiera compila al cambiarlo. `@State` saca el valor del struct y lo guarda en un
@@ -58,9 +58,9 @@ struct PantallaMarcador: View {
     }
 }
 
-// f70 · @BINDING: una vista hija que puede CAMBIAR el estado de su padre.
+// @BINDING: una vista hija que puede CAMBIAR el estado de su padre.
 //
-// Compose (f34) lo resuelve con STATE HOISTING: la hija recibe el valor y una lambda
+// Compose lo resuelve con STATE HOISTING: la hija recibe el valor y una lambda
 //     BotonesDeGol(marcador: Marcador, onGol: (Lado) -> Unit)
 // y el padre decide qué hacer con cada gol. El estado baja, los eventos suben.
 //
@@ -70,7 +70,7 @@ struct PantallaMarcador: View {
 //   - para un control genérico (un Toggle, un Stepper, un campo de texto) es lo ideal;
 //   - para una acción con reglas de negocio (registrar un gol, avisar, guardar), es mejor
 //     pasar una closure `alGol: (Lado) -> Void`, que es el hoisting de Compose. Lo veremos
-//     en f75, cuando la lógica se mude a un ViewModel.
+//     cuando la lógica se mude a un ViewModel.
 struct BotonesDeGol: View {
     let partido: Partido
     @Binding var marcador: Marcador

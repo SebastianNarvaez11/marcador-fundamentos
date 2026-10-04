@@ -20,7 +20,7 @@ final class MarcadorAppUITests: XCTestCase {
         capturar(app, "f69-marcador")
     }
 
-    // f72: el partido NO se reinicia cuando el padre se redibuja (con @ObservedObject sí lo hacía).
+    // El partido NO se reinicia cuando el padre se redibuja (con @ObservedObject sí lo hacía).
     @MainActor
     func testElPartidoSobreviveAlRedibujadoDelPadre() throws {
         let app = XCUIApplication()
@@ -46,7 +46,7 @@ final class MarcadorAppUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(numeroDespues, numeroAntes, "El partido se reinició: antes «\(antes)», después «\(despues)»")
     }
 
-    // f74: al volver atrás se cancela el `.task` del partido (mira el registro: «partido CANCELADO»).
+    // Al volver atrás se cancela el `.task` del partido (mira el registro: «partido CANCELADO»).
     @MainActor
     func testAlSalirDelPartidoSeCancelaElTask() throws {
         let app = XCUIApplication()
@@ -61,7 +61,7 @@ final class MarcadorAppUITests: XCTestCase {
         XCTAssertTrue(app.buttons["partido-2"].waitForExistence(timeout: 5))
     }
 
-    // f74: `.task` frente a `.onAppear { Task }`: se abre y se cierra a los 2 s.
+    // `.task` frente a `.onAppear { Task }`: se abre y se cierra a los 2 s.
     @MainActor
     func testTaskFrenteAOnAppear() throws {
         let app = XCUIApplication()
@@ -79,7 +79,7 @@ final class MarcadorAppUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 4)
     }
 
-    // f79 (recuadro de accesibilidad): iOS 17+ trae una AUDITORÍA automática que busca contraste
+    // Accesibilidad: iOS 17+ trae una AUDITORÍA automática que busca contraste
     // insuficiente, zonas táctiles pequeñas, texto que no escala, etiquetas que faltan…
     @MainActor
     func testAuditoriaDeAccesibilidadDeLaLista() throws {
@@ -93,7 +93,7 @@ final class MarcadorAppUITests: XCTestCase {
         try app.performAccessibilityAudit(for: .all.subtracting(.contrast))
     }
 
-    // f78: pide el permiso de notificaciones (diálogo del sistema) y, con él, el gol del minuto 12 saca un banner.
+    // Pide el permiso de notificaciones (diálogo del sistema) y, con él, el gol del minuto 12 saca un banner.
     @MainActor
     func testUnGolSacaUnaNotificacion() throws {
         let app = XCUIApplication()
@@ -120,7 +120,7 @@ final class MarcadorAppUITests: XCTestCase {
         capturarPantalla("f78-notificacion")
     }
 
-    // f77: un gol a mano y la duración elegida sobreviven a cerrar la app (torneo.json y @AppStorage).
+    // Un gol a mano y la duración elegida sobreviven a cerrar la app (torneo.json y @AppStorage).
     @MainActor
     func testLosDatosSobrevivenAReiniciarLaApp() throws {
         let app = XCUIApplication()
@@ -151,7 +151,7 @@ final class MarcadorAppUITests: XCTestCase {
         capturar(otra, "f77-tras-reabrir")
     }
 
-    // f76: lista → partido → goleadores → atrás → atrás.
+    // Lista → partido → goleadores → atrás → atrás.
     @MainActor
     func testNavegaDeLaListaAlPartidoYALosGoleadores() throws {
         let app = XCUIApplication()
@@ -169,7 +169,7 @@ final class MarcadorAppUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Partidos"].waitForExistence(timeout: 5))
     }
 
-    // f76: volver de «Goleadores» NO reinicia el partido. Al apilar otra pantalla SwiftUI cancela el `.task` y
+    // Volver de «Goleadores» NO reinicia el partido. Al apilar otra pantalla SwiftUI cancela el `.task` y
     // lo relanza al volver; si `jugar` empezara de cero, el minuto volvería a 0 y el marcador a 0 - 0.
     @MainActor
     func testVolverDeGoleadoresNoReiniciaElPartido() throws {
@@ -212,7 +212,7 @@ final class MarcadorAppUITests: XCTestCase {
         capturar(app, "f76-tras-volver-de-goleadores")
     }
 
-    // f75: abre un partido y lo cierra; con `TEST_RUNNER_ESPERA` la app se queda viva para medir con `leaks`.
+    // Abre un partido y lo cierra; con `TEST_RUNNER_ESPERA` la app se queda viva para medir con `leaks`.
     // `TEST_RUNNER_CICLO=YES` reintroduce el ciclo del cronómetro (solo para la lección).
     @MainActor
     func testAbreYCierraUnPartidoParaMedirLaMemoria() throws {
@@ -230,7 +230,7 @@ final class MarcadorAppUITests: XCTestCase {
         }
     }
 
-    // f71: la lista de partidos muestra las filas con su marcador.
+    // La lista de partidos muestra las filas con su marcador.
     @MainActor
     func testLaListaMuestraLosPartidos() throws {
         let app = XCUIApplication()
@@ -241,7 +241,7 @@ final class MarcadorAppUITests: XCTestCase {
         capturar(app, "f71-lista")
     }
 
-    // f71: identidad por posición (A) frente a identidad por dato (B).
+    // Identidad por posición (A) frente a identidad por dato (B).
     @MainActor
     func testIdentidadPorPosicionFrenteAIdentidadPorDato() throws {
         let app = XCUIApplication()
@@ -263,7 +263,7 @@ final class MarcadorAppUITests: XCTestCase {
         capturar(app, "f71-identidad")
     }
 
-    // f70: cada botón cambia el @State y la tarjeta se redibuja.
+    // Cada botón cambia el @State y la tarjeta se redibuja.
     @MainActor
     func testLosBotonesDeGolCambianElMarcador() throws {
         let app = XCUIApplication()
@@ -292,7 +292,7 @@ final class MarcadorAppUITests: XCTestCase {
         XCTAssertGreaterThan(b.width, 0)
     }
 
-    // f68: abre la hoja con el UIViewController y la cierra arrastrándola hacia abajo.
+    // Abre la hoja con el UIViewController y la cierra arrastrándola hacia abajo.
     // Sirve de prueba y de «mano» para ver el registro del ciclo de vida.
     @MainActor
     func testAbreYCierraElControlador() throws {

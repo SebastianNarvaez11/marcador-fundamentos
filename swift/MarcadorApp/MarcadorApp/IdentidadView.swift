@@ -1,6 +1,6 @@
 import SwiftUI
 
-// f71 · LA MISMA LISTA, DOS IDENTIDADES
+// LA MISMA LISTA, DOS IDENTIDADES
 //
 // Cada fila tiene su propio `@State` (un «visto»). Se marca la primera fila de cada lista y se
 // pulsa «Insertar arriba», que mete un nombre nuevo al principio.

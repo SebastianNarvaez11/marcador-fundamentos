@@ -1,13 +1,13 @@
 import SwiftUI
 import Torneo
 
-// f72 · @StateObject FRENTE A @ObservedObject FRENTE A @EnvironmentObject (el bug de `@ObservedObject`)
-// f73 · @State, @Bindable Y @Environment (con `@Observable`)
-// f74 · `.task`: el partido arranca solo y se cancela al salir
-// f77 · la duración vive en `@AppStorage`
-// f75 · MVVM: la vista solo PINTA el `uiState` del ViewModel y le pasa los toques
+// @StateObject FRENTE A @ObservedObject FRENTE A @EnvironmentObject (el bug de `@ObservedObject`)
+// @State, @Bindable Y @Environment (con `@Observable`)
+// `.task`: el partido arranca solo y se cancela al salir
+// La duración vive en `@AppStorage`
+// MVVM: la vista solo PINTA el `uiState` del ViewModel y le pasa los toques
 //
-// (La historia del bug de f72 está en el diario: con `@ObservedObject var modelo = PartidoEnVivoModelo(…)`
+// (La historia del bug de `@ObservedObject`: con `@ObservedObject var modelo = PartidoEnVivoModelo(…)`
 // creado en el `init`, cada redibujado del padre fabricaba un modelo nuevo y el partido volvía al minuto 0.)
 //
 // MATIZ de `@State` con un objeto: `State(wrappedValue:)` NO es un autoclosure. Cada recreación de la
@@ -16,11 +16,11 @@ import Torneo
 struct PartidoEnDirectoView: View {
     @State private var viewModel: PartidoViewModel
 
-    // f77 · `@AppStorage`: una propiedad que LEE y ESCRIBE en `UserDefaults` (un diccionario clave-valor
+    // `@AppStorage`: una propiedad que LEE y ESCRIBE en `UserDefaults` (un diccionario clave-valor
     // guardado en `Library/Preferences/<bundle id>.plist` dentro del sandbox). Funciona como un `@State`
     // (cambiar el valor redibuja la vista) y además sobrevive a cerrar la app: es el DataStore de
-    // Android (f46) en una línea. Solo vale para cosas pequeñas y simples (Bool, Int, String, Double, URL).
-    // Sustituye al `AjustesModelo` de f72–f76.
+    // Android en una línea. Solo vale para cosas pequeñas y simples (Bool, Int, String, Double, URL).
+    // Sustituye al `AjustesModelo` de antes.
     @AppStorage(Ajustes.claveDuracion) private var duracion = Ajustes.duracionPorDefecto
     @Environment(\.dismiss) private var cerrar
 
@@ -28,7 +28,7 @@ struct PartidoEnDirectoView: View {
     @State private var pausas = 0
     @Environment(\.scenePhase) private var fase
 
-    // f78: el notificador (lo puso la raíz en el entorno) y su permiso, que se lee para pintar el botón.
+    // El notificador (lo puso la raíz en el entorno) y su permiso, que se lee para pintar el botón.
     @Environment(NotificadorDeSistema.self) private var notificador
 
     init(partidoId: Int, repositorio: any PartidosRepositorio, notificador: any Notificador) {
@@ -78,9 +78,9 @@ struct PartidoEnDirectoView: View {
                         .accessibilityIdentifier("estado")
                     Text("Último aviso (cada 15'): \(datos.ultimoAviso)")
                     Text("Veces que la pantalla pasó a segundo plano: \(pausas)")
-                    // f76: empuja OTRO valor en la pila (gemelo del botón que empuja `Goleadores` en Kotlin).
+                    // Empuja OTRO valor en la pila (gemelo del botón que empuja `Goleadores` en Kotlin).
                     NavigationLink("Ver goleadores", value: Destino.goleadores)
-                    // f78: pedir el permiso de notificaciones. La primera vez sale el diálogo del sistema.
+                    // Pedir el permiso de notificaciones. La primera vez sale el diálogo del sistema.
                     Button(notificador.permitido ? "Avisos de gol: activados" : "Activar avisos de gol") {
                         Task { await notificador.pedirPermiso() }
                     }
@@ -112,7 +112,7 @@ struct PartidoEnDirectoView: View {
 }
 
 // Los botones de gol con el HOISTING de Compose: reciben una closure y avisan de QUÉ ha pasado
-// (`alGol(lado)`), en vez de escribir en un @Binding (f70).
+// (`alGol(lado)`), en vez de escribir en un @Binding.
 struct BotonesDeGolConAccion: View {
     let partido: Partido
     let alGol: (Lado) -> Void
@@ -126,7 +126,7 @@ struct BotonesDeGolConAccion: View {
     }
 }
 
-// El PADRE que provocaba el bug de f72: tiene su propio estado y, al cambiarlo, recalcula su `body`,
+// El PADRE que provocaba el bug de `@ObservedObject`: tiene su propio estado y, al cambiarlo, recalcula su `body`,
 // con lo que RECREA el struct de `PartidoEnDirectoView`. El botón «Redibujar el padre» lo hace a propósito.
 struct PartidoContenedor: View {
     let id: Int

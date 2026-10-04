@@ -13,7 +13,7 @@ nonisolated enum Configuracion {
         return valor > 0 ? valor : 250
     }
 
-    // SOLO PARA LA LECCIÓN f75: `-cicloDelCronometro YES` vuelve a meter el ciclo de retención en
+    // SOLO PARA ESTUDIAR EL CICLO: `-cicloDelCronometro YES` vuelve a meter el ciclo de retención en
     // `PartidoViewModel` para verlo con `leaks` o en el Memory Graph Debugger. Por defecto, apagado.
     static var cicloDelCronometro: Bool {
         UserDefaults.standard.bool(forKey: "cicloDelCronometro")

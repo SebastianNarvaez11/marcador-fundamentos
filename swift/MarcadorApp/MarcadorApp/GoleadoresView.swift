@@ -1,7 +1,7 @@
 import SwiftUI
 import Torneo
 
-// f76 · Tercera pantalla de la pila: lista → partido → goleadores (gemelo de `PantallaGoleadores`).
+// Tercera pantalla de la pila: lista → partido → goleadores (gemelo de `PantallaGoleadores`).
 // Se calcula con el `Ranking` del paquete `Torneo`: la pantalla solo pinta.
 struct Goleador: Identifiable, Equatable {
     let jugador: String

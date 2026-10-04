@@ -1,4 +1,4 @@
-// f76 · LOS DESTINOS DE LA NAVEGACIÓN, como DATOS (gemelo de las `NavKey` de Navigation 3, f47).
+// LOS DESTINOS DE LA NAVEGACIÓN, como DATOS (gemelo de las `NavKey` de Navigation 3).
 //
 // En vez de decir «abre esta vista», se dice «ve a este VALOR» y una sola función
 // (`navigationDestination(for:)`) sabe qué pantalla toca. `Hashable` es obligatorio: la pila guarda

@@ -14,13 +14,13 @@ import Torneo
 struct MarcadorAppTests {
 
     // El asistente de Xcode genera un `example()` vacío. Éste comprueba lo mismo que
-    // enseña f67: que el paquete `Torneo` llega hasta el target de pruebas de la app.
+    // importa aquí: que el paquete `Torneo` llega hasta el target de pruebas de la app.
     @Test func elPaqueteTorneoLlegaALaApp() {
         let partido = Ejemplo.rayoContraToros
         #expect(partido.marcador() == Marcador(local: 2, visitante: 1))
     }
 
-    // f70: el `Lado` y el `Marcador` (del paquete) son valores: sumar un gol crea otro.
+    // El `Lado` y el `Marcador` (del paquete) son valores: sumar un gol crea otro.
     @Test func sumarUnGolCreaOtroMarcador() {
         let antes = Marcador(local: 0, visitante: 0)
         let despues = Marcador(local: antes.local + 1, visitante: antes.visitante)
@@ -28,7 +28,7 @@ struct MarcadorAppTests {
         #expect(despues.goles == 1)
     }
 
-    // f71: los datos de ejemplo son los mismos que en Android: 18 partidos con id único.
+    // Los datos de ejemplo son los mismos que en Android: 18 partidos con id único.
     @Test func losDatosDeEjemploTienenDieciochoPartidosConIdUnico() {
         let partidos = DatosDeEjemplo.partidos
         #expect(partidos.count == 18)
@@ -36,7 +36,7 @@ struct MarcadorAppTests {
         #expect(partidos.first?.id == 1)
     }
 
-    // f73: `@Observable` avisa cuando cambia lo que se LEYÓ dentro de `withObservationTracking`.
+    // `@Observable` avisa cuando cambia lo que se LEYÓ dentro de `withObservationTracking`.
     @Test func observableAvisaSoloDeLoQueSeLee() {
         let ajustes = Contador()
         // `Mutex`: el `onChange` es @Sendable y no puede mutar una `var` capturada.
@@ -51,7 +51,7 @@ struct MarcadorAppTests {
         #expect(ajustes.valor == 60)
     }
 
-    // f76: los goleadores se calculan de los partidos: la suma de sus goles es la de todos los partidos.
+    // Los goleadores se calculan de los partidos: la suma de sus goles es la de todos los partidos.
     @Test func losGoleadoresSumanLosGolesDeTodosLosPartidos() {
         let repositorio = RepositorioDePartidos()
         let golesTotales = repositorio.partidos.reduce(0) { $0 + $1.partido.golesLocal + $1.partido.golesVisitante }
@@ -62,7 +62,7 @@ struct MarcadorAppTests {
         #expect(goles == goles.sorted(by: >))
     }
 
-    // f77 · El torneo se guarda como JSON en un fichero y se vuelve a leer igual.
+    // El torneo se guarda como JSON en un fichero y se vuelve a leer igual.
     @Test func elTorneoSobreviveAGuardarseYCargarse() throws {
         let carpeta = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
         try FileManager.default.createDirectory(at: carpeta, withIntermediateDirectories: true)
