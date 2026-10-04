@@ -49,7 +49,7 @@ import kotlinx.coroutines.launch
 //
 // Reglas de la key: unica dentro de la lista, estable (el mismo dato, la misma key en
 // cada pasada) y, en Android, de un tipo que quepa en un Bundle (Int, Long, String,
-// enum...; NO una data class tuya). Ver diario: pasarle un `Jugador` de key falla.
+// enum...; NO una data class tuya). Pasarle un `Jugador` de key falla.
 //
 // `contentType` opcional: dice que filas son «del mismo tipo» para reutilizar mejor
 // su composicion (util cuando la lista mezcla cabeceras y filas).
@@ -61,9 +61,10 @@ fun PantallaPartidos(
     modifier: Modifier = Modifier,
 ) {
     // LazyListState es el estado del scroll. Se lee `firstVisibleItemIndex`, que
-    // cambia con CADA pixel de desplazamiento; si el `if` dependiera de el directamente,
-    // esta funcion se recompondria continuamente. derivedStateOf lo evita: calcula
-    // «¿ya bajo de la fila 3?» y solo avisa cuando ese BOOLEANO cambia (2 veces en total).
+    // cambia cada vez que otra fila pasa a ser la primera visible; si el `if` dependiera
+    // de el directamente, esta funcion se recompondria con cada una de esas filas.
+    // derivedStateOf lo evita: calcula «¿ya bajo de la fila 3?» y solo avisa cuando
+    // ese BOOLEANO cambia (2 veces en total).
     val estadoDeLista = rememberLazyListState()
     val mostrarBotonSubir by remember { derivedStateOf { estadoDeLista.firstVisibleItemIndex > 3 } }
 
