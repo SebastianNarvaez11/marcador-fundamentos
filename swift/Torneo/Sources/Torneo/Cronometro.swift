@@ -7,7 +7,7 @@ public protocol DelegadoDelCronometro: AnyObject {
 }
 
 // El cronómetro del partido. Es de la interfaz (marca los minutos que se ven en
-// pantalla), por eso `@MainActor` (f65).
+// pantalla), por eso `@MainActor`.
 //
 // Guarda una closure en una propiedad (`alTick`) que llama cada minuto. Ahí está el
 // riesgo de memoria de Swift: una closure GUARDADA en un objeto y que CAPTURA a ese
@@ -37,7 +37,7 @@ public final class Cronometro {
         delegado?.cronometro(self, llegoAlMinuto: minuto)
     }
 
-    // ASÍ NO VALE (f66, y el `leaks` de antes lo demostró):
+    // ASÍ NO VALE (el `leaks` de antes lo demostró):
     //
     //     alTick = { aviso(self.minuto) }
     //

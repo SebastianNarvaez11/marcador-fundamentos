@@ -30,8 +30,9 @@ let package = Package(
         ),
     ]
     // Sin `swiftLanguageModes`: con `swift-tools-version: 6.2` el modo de lenguaje por
-    // defecto es Swift 6, con la concurrencia estricta. Entre f54 y f64
-    // esta línea decía `swiftLanguageModes: [.v5]`; en f65 se quitó y se arregló todo
-    // lo que Swift 6 avisaba. Un proyecto de Xcode 26 añade, además, aislamiento a
-    // `MainActor` por defecto (aquí se probaría con `.defaultIsolation(MainActor.self)`).
+    // defecto es Swift 6, con la concurrencia estricta. Mientras se aprendía cada
+    // tema por separado esta línea decía `swiftLanguageModes: [.v5]`; al llegar a
+    // Swift 6 se quitó y se arregló todo lo que avisaba. Un proyecto de Xcode 26
+    // añade, además, aislamiento a `MainActor` por defecto (aquí se probaría con
+    // `.defaultIsolation(MainActor.self)`).
 )

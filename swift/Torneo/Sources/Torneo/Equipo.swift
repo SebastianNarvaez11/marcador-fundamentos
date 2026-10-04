@@ -10,18 +10,10 @@ public final class Equipo: Sendable {
     public let nombre: String
     public let plantilla: [Jugador]
 
-    // Cualquiera lee el capitán, pero solo esta clase lo cambia (el `private set`
-    // de Kotlin). Hasta f64 era un `private(set) var`; para que `Equipo` pueda ser
-    // `Sendable` (f65) el único dato que cambia vive dentro de un `Mutex`, un
-    // cerrojo: solo una tarea a la vez ejecuta el bloque de `withLock`.
-    private let capitanGuardado = Mutex<Jugador?>(nil)
-
-    public var capitan: Jugador? { capitanGuardado.withLock { $0 } }
-
     // `init?` es un inicializador que puede FALLAR: devuelve `Equipo?`, nil si
     // los datos no valen. Es el `require` de Kotlin, pero sin excepción.
-    // (f57 cuenta cuándo conviene `throws`: para saber POR QUÉ falló. Aquí basta
-    // con `nil`, porque quien crea un equipo solo necesita saber si salió.)
+    // (Para saber POR QUÉ falló conviene `throws`. Aquí basta con `nil`,
+    // porque quien crea un equipo solo necesita saber si salió.)
     public init?(nombre: String, plantilla: [Jugador]) {
         guard !nombre.isEmpty else { return nil }
         let dorsales = plantilla.compactMap(\.dorsal)
@@ -31,6 +23,14 @@ public final class Equipo: Sendable {
         // copia defensiva de Kotlin (`toList()`) aquí no hace falta.
         self.plantilla = plantilla
     }
+
+    // Cualquiera lee el capitán, pero solo esta clase lo cambia (el `private set`
+    // de Kotlin). Antes era un `private(set) var`; para que `Equipo` pueda ser
+    // `Sendable` el único dato que cambia vive dentro de un `Mutex`, un
+    // cerrojo: solo una tarea a la vez ejecuta el bloque de `withLock`.
+    private let capitanGuardado = Mutex<Jugador?>(nil)
+
+    public var capitan: Jugador? { capitanGuardado.withLock { $0 } }
 
     // Devuelve `false` si el jugador no es de este equipo (en Kotlin, `require`).
     @discardableResult
@@ -46,16 +46,20 @@ public final class Equipo: Sendable {
 // Una clase NO es Equatable por sí sola: `==` entre dos referencias no compila
 // hasta que se diga qué significa. Aquí, «el mismo equipo» = la misma referencia
 // (`===`), que es lo que hace Kotlin por defecto con `==` en una clase normal.
-extension Equipo: Equatable, Hashable {
+extension Equipo: Equatable {
     public static func == (izquierda: Equipo, derecha: Equipo) -> Bool {
         izquierda === derecha
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(self))
     }
 }
 
 extension Equipo: CustomStringConvertible {
     public var description: String { "\(nombre) (\(cantidadDeJugadores) jugadores)" }
+}
+
+// Hashable: permite usar un Equipo como clave de un diccionario o en un Set.
+// Como la igualdad es por identidad, el hash también: se calcula con el identificador del objeto.
+extension Equipo: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(self))
+    }
 }
