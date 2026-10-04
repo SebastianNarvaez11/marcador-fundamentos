@@ -55,7 +55,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
             ) { interior -> PantallaPartidos(DatosDeEjemplo.partidos, Modifier.padding(interior)) }
             3 -> Scaffold(
                 Modifier.padding(paddingValues),
-                topBar = { CenterAlignedTopAppBar(title = { Text("Recomposicion") }) },
+                topBar = { CenterAlignedTopAppBar(title = { Text("Recomposición") }) },
                 contentWindowInsets = WindowInsets(0),
             ) { interior -> PantallaRecomposicion(torneo, Modifier.padding(interior)) }
             else -> Scaffold(

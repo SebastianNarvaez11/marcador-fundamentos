@@ -241,7 +241,7 @@ fun OrdenDeLosModifiers() {
                 .padding(16.dp)
                 .background(MaterialTheme.colorScheme.primaryContainer),
         )
-        Text("B) background y luego padding: el color SI incluye el margen")
+        Text("B) background y luego padding: el color SÍ incluye el margen")
         Text(
             "Rayo FC",
             Modifier

@@ -113,7 +113,7 @@ class MainActivity : ComponentActivity() {
             val p = runBlocking { probabilidadDeVictoria(Ejemplo.rayoContraToros, SIMULACIONES) }
             resultadoDelCalculo = "victoria local: ${"%.1f".format(p * 100)}%"
         }
-        anotar("calculo bloqueante: $ms ms")
+        anotar("cálculo bloqueante: $ms ms")
     }
 
     // EL ARREGLO: `lifecycleScope` es un alcance atado a la Activity: se cancela
@@ -188,7 +188,7 @@ class MainActivity : ComponentActivity() {
                     // Datos que solo conoce la compilacion (BuildConfig se genera).
                     Text("Modo: ${BuildConfig.MODO} · plan ${BuildConfig.PLAN} · ${BuildConfig.APPLICATION_ID}")
                     // Intents. El primero es EXPLICITO (nombras la clase destino).
-                    Button(onClick = { abrirDetalle() }) { Text("Ver detalle (intent explicito)") }
+                    Button(onClick = { abrirDetalle() }) { Text("Ver detalle (intent explícito)") }
                     Button(onClick = { compartir(Ejemplo.rayoContraToros.resumen()) }) {
                         Text("Compartir resultado (ACTION_SEND)")
                     }

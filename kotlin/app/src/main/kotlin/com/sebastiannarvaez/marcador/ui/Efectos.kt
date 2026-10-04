@@ -115,7 +115,7 @@ fun TituloDeLaActividad(marcador: Marcador) {
     val actividad = LocalActivity.current
     SideEffect {
         actividad?.title = "Marcador $marcador"
-        Log.d(ETIQUETA, "titulo publicado: Marcador $marcador")
+        Log.d(ETIQUETA, "título publicado: Marcador $marcador")
     }
 }
 
@@ -136,7 +136,7 @@ fun PanelDelCronometro(
         Button(onClick = onEmpezar, enabled = !corriendo && minuto == 0) {
             Text(if (minuto >= MINUTOS_DEL_PARTIDO) "Partido terminado" else if (corriendo) "En juego" else "Empezar partido")
         }
-        Text("Ultimo aviso (cada 15'): $ultimoAviso")
-        Text("Veces que la pantalla paso a segundo plano: $pausas")
+        Text("Último aviso (cada 15'): $ultimoAviso")
+        Text("Veces que la pantalla pasó a segundo plano: $pausas")
     }
 }
