@@ -56,7 +56,7 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 // se dibuja dentro.
 //
 // CenterAlignedTopAppBar es «experimental» en Material 3: hay que aceptarlo con
-// @OptIn, o el compilador se niega (ver diario).
+// @OptIn, o el compilador se niega.
 // LA PANTALLA CON ESTADO («stateful»): la fina capa que conecta con el ViewModel.
 // Recoge UN StateFlow y pasa el estado hacia abajo y los eventos hacia arriba.
 @Composable

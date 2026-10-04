@@ -110,7 +110,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                         topBar = {
                             CenterAlignedTopAppBar(
                                 title = { Text("Partidos") },
-                                actions = { TextButton(onClick = onVerDemos) { Text("Demos F3") } },
+                                actions = { TextButton(onClick = onVerDemos) { Text("Pruebas de Android") } },
                             )
                         },
                         contentWindowInsets = WindowInsets(0),
