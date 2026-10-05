@@ -1,4 +1,4 @@
-// Datos de ejemplo para la consola y las pruebas de F7: equipos, jugadores y dos
+// Datos de ejemplo para la consola y las pruebas: equipos, jugadores y dos
 // «guiones» de partido (la lista de cosas que pasan y en qué minuto). Son los
 // mismos datos que `Ejemplo.kt`. `enum` sin casos = un espacio de nombres que
 // no se puede instanciar (en Kotlin, `object Ejemplo`).
