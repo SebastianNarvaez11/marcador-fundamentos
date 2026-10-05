@@ -3,7 +3,7 @@ import XCTest
 final class MarcadorAppUITestsLaunchTests: XCTestCase {
 
     // El asistente genera `true` (repite la prueba con cada apariencia: clara, oscura, y con cada
-    // orientación; en este Mac eran cuatro arranques y minutos de espera). Aquí `false`.
+    // orientación: cuatro arranques y minutos de espera). Aquí `false`.
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         false
     }
