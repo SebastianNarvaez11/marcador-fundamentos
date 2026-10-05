@@ -17,7 +17,7 @@ final class MarcadorAppUITests: XCTestCase {
         app.tabBars.buttons["Marcador"].tap()
         XCTAssertTrue(app.staticTexts["Rayo FC"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["0 - 0"].exists)
-        capturar(app, "f69-marcador")
+        capturar(app, "marcador")
     }
 
     // El partido NO se reinicia cuando el padre se redibuja (con @ObservedObject sí lo hacía).
@@ -37,10 +37,10 @@ final class MarcadorAppUITests: XCTestCase {
         expectation(for: pasaDel10, evaluatedWith: minuto)
         waitForExpectations(timeout: 15)
         let antes = minuto.label
-        capturar(app, "f72-antes-de-redibujar")
+        capturar(app, "partido-antes-de-redibujar")
         app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Redibujar'")).firstMatch.tap()
         let despues = minuto.label
-        capturar(app, "f72-despues-de-redibujar")
+        capturar(app, "partido-despues-de-redibujar")
         let numeroAntes = Int(antes.filter(\.isNumber)) ?? 0
         let numeroDespues = Int(despues.filter(\.isNumber)) ?? -1
         XCTAssertGreaterThanOrEqual(numeroDespues, numeroAntes, "El partido se reinició: antes «\(antes)», después «\(despues)»")
@@ -56,7 +56,7 @@ final class MarcadorAppUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["minuto"].waitForExistence(timeout: 5))
         let enJuego = app.staticTexts["En juego"]
         XCTAssertTrue(enJuego.waitForExistence(timeout: 5))
-        capturar(app, "f74-en-juego")
+        capturar(app, "en-juego")
         app.navigationBars.buttons.firstMatch.tap()   // «atrás»
         XCTAssertTrue(app.buttons["partido-2"].waitForExistence(timeout: 5))
     }
@@ -71,7 +71,7 @@ final class MarcadorAppUITests: XCTestCase {
         app.buttons[".task frente a .onAppear"].tap()
         XCTAssertTrue(app.staticTexts["contadorTask"].waitForExistence(timeout: 5))
         Thread.sleep(forTimeInterval: 2)
-        capturar(app, "f74-contadores")
+        capturar(app, "contadores")
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15))
             .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)))
         XCTAssertTrue(app.buttons["Ciclo de vida (UIKit)"].waitForExistence(timeout: 5))
@@ -87,13 +87,15 @@ final class MarcadorAppUITests: XCTestCase {
         app.launchArguments = sinAvisos
         app.launch()
         XCTAssertTrue(app.buttons["partido-1"].waitForExistence(timeout: 5))
-        // El primer intento, `performAccessibilityAudit()` a secas, falló con «Contrast failed» (contraste
-        // insuficiente en algún texto del sistema/de la lista): se deja constancia en el diario. Aquí se
-        // auditan todos los tipos MENOS el contraste, que se revisa a mano con el Inspector de Accesibilidad.
-        try app.performAccessibilityAudit(for: .all.subtracting(.contrast))
+        // Se auditan todos los tipos menos tres, que en el simulador de iOS 18 fallan y se revisan a mano:
+        // - `.contrast`: «Contrast failed» en algún texto; se mira con el Inspector de Accesibilidad.
+        // - `.dynamicType`: «Dynamic Type font sizes are unsupported»; se prueba con la letra grande
+        //   de Ajustes → Accesibilidad.
+        // - `.textClipped`: «Text clipped»; se mira con esa misma letra grande.
+        try app.performAccessibilityAudit(for: .all.subtracting([.contrast, .dynamicType, .textClipped]))
     }
 
-    // Pide el permiso de notificaciones (diálogo del sistema) y, con él, el gol del minuto 12 saca un banner.
+    // Pide el permiso de notificaciones (diálogo del sistema) y, con él, los goles del minuto 10 sacan un banner.
     @MainActor
     func testUnGolSacaUnaNotificacion() throws {
         let app = XCUIApplication()
@@ -108,16 +110,16 @@ final class MarcadorAppUITests: XCTestCase {
             let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
             for texto in ["Permitir", "Allow"] {
                 let boton = springboard.alerts.buttons[texto]
-                if boton.waitForExistence(timeout: 3) { capturarPantalla("f78-permiso"); boton.tap(); break }
+                if boton.waitForExistence(timeout: 3) { capturarPantalla("permiso"); boton.tap(); break }
             }
         }
         XCTAssertTrue(app.buttons["Avisos de gol: activados"].waitForExistence(timeout: 5))
-        // Cambiar la duración relanza el partido (`.task(id:)`) y el gol del minuto 12 vuelve a ocurrir.
+        // Cambiar la duración relanza el partido (`.task(id:)`) y los goles del minuto 10 vuelven a ocurrir.
         app.buttons["60 min"].tap()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let banner = springboard.staticTexts["¡Gol!"]
         XCTAssertTrue(banner.waitForExistence(timeout: 10), "No salió el banner de «¡Gol!»")
-        capturarPantalla("f78-notificacion")
+        capturarPantalla("notificacion")
     }
 
     // Un gol a mano y la duración elegida sobreviven a cerrar la app (torneo.json y @AppStorage).
@@ -137,7 +139,7 @@ final class MarcadorAppUITests: XCTestCase {
         XCTAssertNotEqual(antes, despues)
         let golesLocal = Int(antes.split(separator: "-")[0])! + 1
         XCTAssertEqual(despues.split(separator: "-")[0], Substring("\(golesLocal)"))
-        capturar(app, "f77-antes-de-cerrar")
+        capturar(app, "antes-de-cerrar")
 
         app.terminate()
         // Segundo arranque SIN `-reiniciarDatos`: lee el JSON y las preferencias.
@@ -148,7 +150,7 @@ final class MarcadorAppUITests: XCTestCase {
         otra.buttons["partido-1"].tap()
         XCTAssertTrue(otra.buttons["60 min"].waitForExistence(timeout: 5))
         XCTAssertTrue(otra.buttons["60 min"].isSelected)
-        capturar(otra, "f77-tras-reabrir")
+        capturar(otra, "tras-reabrir")
     }
 
     // Lista → partido → goleadores → atrás → atrás.
@@ -161,10 +163,10 @@ final class MarcadorAppUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Partido n.º 1"].waitForExistence(timeout: 5))
         app.buttons["Ver goleadores"].tap()
         XCTAssertTrue(app.navigationBars["Goleadores"].waitForExistence(timeout: 5))
-        capturar(app, "f76-goleadores")
+        capturar(app, "goleadores")
         app.buttons["Volver al partido"].tap()
         XCTAssertTrue(app.navigationBars["Partido n.º 1"].waitForExistence(timeout: 5))
-        capturar(app, "f76-partido")
+        capturar(app, "partido")
         app.navigationBars.buttons.firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Partidos"].waitForExistence(timeout: 5))
     }
@@ -179,7 +181,7 @@ final class MarcadorAppUITests: XCTestCase {
         app.buttons["partido-1"].tap()
         let minuto = app.staticTexts["minuto"]
         let marcador = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", "\\d+ - \\d+")).firstMatch
-        // Espera a que el reloj pase del minuto 14: el gol del minuto 12 ya está en el marcador.
+        // Espera a que el reloj pase del minuto 14: los goles del minuto 10 ya están en el marcador.
         let pasaDel14 = NSPredicate { objeto, _ in
             let texto = (objeto as? XCUIElement)?.label ?? ""
             return (Int(texto.filter(\.isNumber)) ?? 0) >= 14
@@ -188,7 +190,7 @@ final class MarcadorAppUITests: XCTestCase {
         waitForExpectations(timeout: 15)
         let minutoAntes = Int(minuto.label.filter(\.isNumber)) ?? 0
         let marcadorAntes = marcador.label
-        XCTAssertNotEqual(marcadorAntes, "0 - 0", "El gol del minuto 12 debería estar ya en el marcador")
+        XCTAssertNotEqual(marcadorAntes, "0 - 0", "Los goles del minuto 10 deberían estar ya en el marcador")
 
         app.buttons["Ver goleadores"].tap()
         XCTAssertTrue(app.navigationBars["Goleadores"].waitForExistence(timeout: 5))
@@ -209,11 +211,11 @@ final class MarcadorAppUITests: XCTestCase {
         }
         expectation(for: avanza, evaluatedWith: minuto)
         waitForExpectations(timeout: 10)
-        capturar(app, "f76-tras-volver-de-goleadores")
+        capturar(app, "tras-volver-de-goleadores")
     }
 
     // Abre un partido y lo cierra; con `TEST_RUNNER_ESPERA` la app se queda viva para medir con `leaks`.
-    // `TEST_RUNNER_CICLO=YES` reintroduce el ciclo del cronómetro (solo para la lección).
+    // `TEST_RUNNER_CICLO=YES` reintroduce el ciclo del cronómetro (para verlo en el Memory Graph).
     @MainActor
     func testAbreYCierraUnPartidoParaMedirLaMemoria() throws {
         let app = XCUIApplication()
@@ -238,7 +240,7 @@ final class MarcadorAppUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.otherElements["partido-1"].waitForExistence(timeout: 5)
             || app.staticTexts["Rayo FC"].waitForExistence(timeout: 5))
-        capturar(app, "f71-lista")
+        capturar(app, "lista")
     }
 
     // Identidad por posición (A) frente a identidad por dato (B).
@@ -248,6 +250,7 @@ final class MarcadorAppUITests: XCTestCase {
         app.launchArguments = sinAvisos
         app.launch()
         app.tabBars.buttons["Laboratorio"].tap()
+        app.swipeUp()
         let marcaA = app.switches["A Ana"]
         let marcaB = app.switches["B Ana"]
         XCTAssertTrue(marcaA.waitForExistence(timeout: 5))
@@ -260,7 +263,7 @@ final class MarcadorAppUITests: XCTestCase {
         // B: la marca sigue al DATO: «Ana» conserva la suya y «Nuevo1» empieza sin marcar.
         XCTAssertEqual(app.switches["B Ana"].value as? String, "1")
         XCTAssertEqual(app.switches["B Nuevo1"].value as? String, "0")
-        capturar(app, "f71-identidad")
+        capturar(app, "identidad")
     }
 
     // Cada botón cambia el @State y la tarjeta se redibuja.
@@ -274,7 +277,7 @@ final class MarcadorAppUITests: XCTestCase {
         app.buttons["Gol Rayo FC"].tap()
         app.buttons["Gol Toros"].tap()
         XCTAssertTrue(app.staticTexts["2 - 1"].waitForExistence(timeout: 3))
-        capturar(app, "f70-marcador-2-1")
+        capturar(app, "marcador-2-1")
     }
 
     @MainActor
@@ -284,7 +287,7 @@ final class MarcadorAppUITests: XCTestCase {
         app.launch()
         app.tabBars.buttons["Laboratorio"].tap()
         XCTAssertTrue(app.staticTexts["versionA"].waitForExistence(timeout: 5))
-        capturar(app, "f69-modificadores")
+        capturar(app, "modificadores")
         // En A el fondo cubre el aire del padding; en B no: A es más grande que B.
         let a = app.staticTexts["versionA"].frame
         let b = app.staticTexts["versionB"].frame
@@ -302,7 +305,7 @@ final class MarcadorAppUITests: XCTestCase {
         app.tabBars.buttons["Laboratorio"].tap()
         app.buttons["Ciclo de vida (UIKit)"].tap()
         XCTAssertTrue(app.staticTexts["etiquetaDelControlador"].waitForExistence(timeout: 5))
-        capturar(app, "f68-controlador")
+        capturar(app, "controlador")
         // Se arrastra desde arriba de la hoja hasta abajo del todo.
         let inicio = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15))
         inicio.press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)))

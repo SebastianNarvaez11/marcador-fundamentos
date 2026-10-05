@@ -9,7 +9,7 @@ import SwiftUI
 struct MarcadorApp: App {
     // `@Environment(\.scenePhase)` lee en qué fase está la ESCENA: `.active` (delante y
     // recibiendo toques), `.inactive` (visible pero sin interacción: llamada, selector de
-    // apps) y `.background` (fuera de la vista). Es el `onStart/onStop` de F3, pero de
+    // apps) y `.background` (fuera de la vista). Es el `onStart/onStop` de Android, pero de
     // la escena y no de una pantalla.
     @Environment(\.scenePhase) private var fase
 

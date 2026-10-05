@@ -20,12 +20,16 @@ struct MarcadorAppTests {
         #expect(partido.marcador() == Marcador(local: 2, visitante: 1))
     }
 
-    // El `Lado` y el `Marcador` (del paquete) son valores: sumar un gol crea otro.
+    // Un gol no modifica el marcador de antes: devuelve otro, y el de antes sigue igual.
     @Test func sumarUnGolCreaOtroMarcador() {
+        let partido = Ejemplo.rayoContraToros
         let antes = Marcador(local: 0, visitante: 0)
-        let despues = Marcador(local: antes.local + 1, visitante: antes.visitante)
-        #expect(antes == Marcador(local: 0, visitante: 0))
-        #expect(despues.goles == 1)
+        // Un gol del Rayo FC (el local) en el minuto 12.
+        let gol = EventoDePartido.gol(minuto: 12, jugador: Ejemplo.ana, equipo: partido.local)
+        let despues = antes.despuesDe(gol, en: partido)
+        #expect(antes == Marcador(local: 0, visitante: 0))     // el de antes no cambió
+        #expect(despues == Marcador(local: 1, visitante: 0))   // el nuevo lleva el gol
+        #expect(despues != antes)                              // y son dos marcadores distintos
     }
 
     // Los datos de ejemplo son los mismos que en Android: 18 partidos con id único.

@@ -18,5 +18,8 @@ struct ContentView: View {
 }
 
 #Preview {
+    // La lista y el partido leen el repositorio y el notificador del entorno: aquí se los da la vista previa.
     ContentView()
+        .environment(RepositorioDePartidos())
+        .environment(NotificadorDeSistema())
 }
