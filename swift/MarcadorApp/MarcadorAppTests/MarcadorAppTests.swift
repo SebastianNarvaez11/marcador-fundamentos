@@ -42,17 +42,17 @@ struct MarcadorAppTests {
 
     // `@Observable` avisa cuando cambia lo que se LEYÓ dentro de `withObservationTracking`.
     @Test func observableAvisaSoloDeLoQueSeLee() {
-        let ajustes = Contador()
+        let contador = Contador()
         // `Mutex`: el `onChange` es @Sendable y no puede mutar una `var` capturada.
         let avisos = Mutex(0)
         withObservationTracking {
-            _ = ajustes.valor
+            _ = contador.valor
         } onChange: {
             avisos.withLock { $0 += 1 }
         }
-        ajustes.valor = 60
+        contador.valor = 60
         #expect(avisos.withLock { $0 } == 1)
-        #expect(ajustes.valor == 60)
+        #expect(contador.valor == 60)
     }
 
     // Los goleadores se calculan de los partidos: la suma de sus goles es la de todos los partidos.
