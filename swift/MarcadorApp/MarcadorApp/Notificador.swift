@@ -59,8 +59,9 @@ final class NotificadorDeSistema: NSObject, Notificador, UNUserNotificationCente
         contenido.body = "\(jugador) (\(equipo)), minuto \(minuto)"
         contenido.sound = .default
         // El identificador distingue notificaciones: con el mismo id, la nueva sustituye a la anterior.
+        // Lleva el minuto y el jugador para que dos goles del mismo minuto no se pisen.
         // `trigger: nil` = entregarla ya (también existen los disparadores por hora o por lugar).
-        let peticion = UNNotificationRequest(identifier: "gol-\(minuto)", content: contenido, trigger: nil)
+        let peticion = UNNotificationRequest(identifier: "gol-\(minuto)-\(jugador)", content: contenido, trigger: nil)
         centro.add(peticion) { error in
             if let error { Registro.anotar("no se pudo publicar la notificación: \(error)") }
         }

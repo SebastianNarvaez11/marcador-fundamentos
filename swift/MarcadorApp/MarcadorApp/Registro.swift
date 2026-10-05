@@ -7,7 +7,7 @@ import os
 // mientras la app está lanzada desde ahí. `Logger` escribe en el registro unificado del
 // sistema (el «Logcat» de iOS): se puede leer después, con la app ya cerrada, con
 //   xcrun simctl spawn <udid> log show --predicate 'subsystem == "com.sebastiannarvaez.marcador"'
-// Es el equivalente de `Log.d("Ciclo", …)` de Android (F3).
+// Es el equivalente de `Log.d("Ciclo", …)` de Android.
 // `nonisolated`: con el aislamiento a MainActor por defecto (ajuste del proyecto), sin esto solo
 // se podría llamar desde el hilo principal; un `deinit` o una tarea de fondo no podrían.
 nonisolated enum Registro {
