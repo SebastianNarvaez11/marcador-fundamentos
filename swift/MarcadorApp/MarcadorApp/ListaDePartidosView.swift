@@ -74,4 +74,5 @@ struct FilaDePartido: View {
 #Preview {
     ListaDePartidosView()
         .environment(RepositorioDePartidos())
+        .environment(NotificadorDeSistema())   // lo lee el partido al navegar
 }

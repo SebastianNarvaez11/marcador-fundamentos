@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		A10000000000000000000001 /* Torneo in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000002 /* Torneo */; };
-		A10000000000000000000003 /* Torneo in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000004 /* Torneo */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,7 +64,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A10000000000000000000003 /* Torneo in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -143,7 +141,6 @@
 			);
 			name = MarcadorAppTests;
 			packageProductDependencies = (
-				A10000000000000000000004 /* Torneo */,
 			);
 			productName = MarcadorAppTests;
 			productReference = A10000000000000000000041 /* MarcadorAppTests.xctest */;
@@ -593,11 +590,6 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		A10000000000000000000002 /* Torneo */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A10000000000000000000100 /* XCLocalSwiftPackageReference "../Torneo" */;
-			productName = Torneo;
-		};
-		A10000000000000000000004 /* Torneo */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A10000000000000000000100 /* XCLocalSwiftPackageReference "../Torneo" */;
 			productName = Torneo;

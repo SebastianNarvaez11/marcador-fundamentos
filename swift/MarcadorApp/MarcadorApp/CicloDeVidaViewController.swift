@@ -6,7 +6,7 @@ import UIKit
 // Antes de SwiftUI, cada pantalla de iOS era un `UIViewController`. Sigue siendo la base
 // (SwiftUI se apoya en UIKit por debajo) y todavía hay código y librerías que lo usan.
 //
-// Comparado con la Activity de Android (F3):
+// Comparado con la Activity de Android:
 //
 //   Activity                    UIViewController
 //   onCreate                    viewDidLoad          (la vista se crea; una sola vez)
