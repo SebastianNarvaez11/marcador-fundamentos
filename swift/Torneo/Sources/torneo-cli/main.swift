@@ -220,99 +220,163 @@ do {
 }
 print("...y ya no hay nada que narrar.")
 
-// async/await: un partido suspendido. `main.swift` permite `await` al nivel superior.
-print("== f61: un partido suspendido ==")
+// Un título para separar esta parte de la salida anterior.
+print("== un partido suspendido ==")
+// Un reloj para medir cuánto dura el partido.
 let reloj = ContinuousClock()
+// El instante en que empieza.
 let inicioDelPartido = reloj.now
+// `main.swift` permite `await` al nivel superior, sin una función alrededor.
 do {
-    let final = try await jugarPartido(Ejemplo.rayoContraToros)
-    print("Final: \(final.golesLocal)-\(final.golesVisitante) con \(final.eventos.count) eventos")
+    // Juega el partido entero: `try` por si falla, `await` porque se pausa.
+    let jugado = try await jugarPartido(Ejemplo.rayoContraToros)
+    print("Final: \(jugado.golesLocal)-\(jugado.golesVisitante) con \(jugado.eventos.count) eventos")
 } catch {
+    // Solo llega aquí si `jugarPartido` lanza un error.
     print("El partido no terminó: \(error)")
 }
+// Cuánto pasó desde el inicio, en milisegundos.
 print("Duró \(milisegundos(inicioDelPartido.duration(to: reloj.now))) ms")
 
-print("== f61: cancelar un partido ==")
+print("== cancelar un partido ==")
+// Lanza el partido en una `Task` y sigue sin esperarlo.
 let tarea = Task { try await jugarPartido(Ejemplo.rayoContraToros) }
+// Espera 100 ms (el partido sigue jugándose mientras tanto)…
 try? await Task.sleep(for: .milliseconds(100))
+// …y entonces lo cancela: solo lo marca como cancelado.
 tarea.cancel()
+// `result` espera a que la tarea termine y la entrega como `Result`.
 switch await tarea.result {
-case .success: print("Terminó (no debía)")
-case let .failure(error): print("Cancelado: \(error is CancellationError ? "CancellationError" : "\(error)")")
+case .success:
+    print("Terminó (no debía)")
+case let .failure(error):
+    // `is` contesta si el error es de ese tipo.
+    let nombre = error is CancellationError ? "CancellationError" : "\(error)"
+    print("Cancelado: \(nombre)")
 }
 
-print("== f62: dos partidos a la vez con async let ==")
+// Un título para separar esta parte de la salida anterior.
+print("== dos partidos a la vez con async let ==")
+// El instante de salida, con el `reloj` que ya tienes.
 let inicioJornada = reloj.now
 do {
+    // Juega los dos partidos a la vez y recoge los dos resultados en una tupla.
     let (uno, otro) = try await jugarJornada(Ejemplo.rayoContraToros, Ejemplo.lobosContraAguilas)
+    // Un «pitido final» por partido: equipos y goles.
     print("Pitido final: \(uno.local.nombre) \(uno.golesLocal)-\(uno.golesVisitante) \(uno.visitante.nombre)")
     print("Pitido final: \(otro.local.nombre) \(otro.golesLocal)-\(otro.golesVisitante) \(otro.visitante.nombre)")
-    print("Los dos partidos duraron \(milisegundos(inicioJornada.duration(to: reloj.now))) ms (uno solo dura unos 1100 ms)")
-    let inicioEstadisticas = reloj.now
-    print(try await estadisticasDe(uno))
-    print("Estadísticas en \(milisegundos(inicioEstadisticas.duration(to: reloj.now))) ms (tres consultas de 50 ms a la vez)")
+    // Lo que tardó todo.
+    print("Los dos partidos duraron \(milisegundos(inicioJornada.duration(to: reloj.now))) ms")
 } catch {
+    // Solo llega aquí si un partido lanza un error.
     print("Falló la jornada: \(error)")
 }
 
-print("== f62: una jornada con TaskGroup ==")
+// Un título para separar esta parte.
+print("== tres consultas a la vez ==")
 do {
+    // El instante de salida.
+    let inicioEstadisticas = reloj.now
+    // Pide las tres consultas a la vez e imprime las estadísticas.
+    print(try await estadisticasDe(Ejemplo.rayoContraToros))
+    // Tiene que salir cerca de 50 ms, no de 150.
+    print("Estadísticas en \(milisegundos(inicioEstadisticas.duration(to: reloj.now))) ms (tres consultas de 50 ms a la vez)")
+} catch {
+    print("Falló la consulta: \(error)")
+}
+
+// Un título para separar esta parte.
+print("== una jornada con TaskGroup ==")
+do {
+    // Una lista de dos partidos, jugados muy rápido (2 ms por minuto).
     let jugados = try await jugarJornada([Ejemplo.rayoContraToros, Ejemplo.lobosContraAguilas], msPorMinuto: 2)
+    // Un texto «goles local-goles visitante» por cada partido, en su orden original.
     print(jugados.map { "\($0.golesLocal)-\($0.golesVisitante)" })
 } catch {
     print("Falló la jornada: \(error)")
 }
 
-print("== f62: un partido que falla no tumba al otro ==")
+// Convierte un error en una frase para la consola.
+func textoDelFallo(_ error: any Error) -> String {
+    // Si es el apagón, dice en qué minuto ocurrió.
+    if let apagon = error as? SuspendidoPorApagon {
+        return "se fue la luz en el minuto \(apagon.minuto)"
+    }
+    // Cualquier otro error se imprime tal cual.
+    return "\(error)"
+}
+
+// Un título para separar esta parte.
+print("== un partido que falla no tumba al otro ==")
+// La jornada supervisada; el closure final dice cómo se juega cada partido.
 let supervisados = try await jugarJornadaSupervisada([Ejemplo.rayoContraToros, Ejemplo.lobosContraAguilas]) { partido in
     if partido.local == Ejemplo.lobos {
+        // Los Lobos se quedan sin luz en el minuto 30…
         try await jugarConApagon(partido, minutoDelApagon: 30)
     } else {
+        // …y el otro partido se juega entero.
         try await jugarPartido(partido, msPorMinuto: 2)
     }
 }
+// Cada resultado es un `Result`: o terminó, o falló.
 for resultado in supervisados {
     switch resultado {
-    case let .success(partido): print("Terminó \(partido.local.nombre)-\(partido.visitante.nombre): \(partido.golesLocal)-\(partido.golesVisitante)")
-    case let .failure(error): print("Falló: \((error as? SuspendidoPorApagon).map { "se fue la luz en el minuto \($0.minuto)" } ?? "\(error)")")
+    case let .success(partido):
+        print("Terminó \(partido.local.nombre)-\(partido.visitante.nombre): \(partido.golesLocal)-\(partido.golesVisitante)")
+    case let .failure(error):
+        print("Falló: \(textoDelFallo(error))")
     }
 }
 
-print("== f63: un AsyncStream frío, la narración del partido ==")
+// Un título para separar esta parte de la salida anterior.
+print("== Un AsyncStream frío: la narración del partido ==")
+// Un partido en vivo muy rápido: 2 ms por minuto de juego.
 let enVivoRapido = PartidoEnVivo(guion: Ejemplo.rayoContraToros, msPorMinuto: 2)
-// Aún no ha pasado nada: pedir el stream no arranca el partido.
+// La narración es una secuencia asíncrona de frases; aún no ha corrido nada.
 let narracion = enVivoRapido.narracion
-print("Stream creado; nada ha corrido todavía")
+// `for await` recorre la narración y se pausa entre una frase y la siguiente.
 for await linea in narracion { print("  \(linea)") }
 
 // Cada recorrido es un partido nuevo: el frío se repite entero.
+// Un contador de eventos…
 var cuantos = 0
+// …que suma uno por cada evento del segundo partido.
 for await _ in enVivoRapido.eventos { cuantos += 1 }
 print("Segundo recorrido: otro partido completo (\(cuantos) eventos)")
 
+// `primerGol()` devuelve el primer gol y cancela el resto del partido.
 if let gol = await enVivoRapido.primerGol() {
     print("Primer gol: \(describir(gol)) (el resto del partido se canceló)")
 }
 
+// `terminator: ""` imprime sin salto de línea: los marcadores salen en una línea.
 print("Marcadores: ", terminator: "")
+// Un marcador por cada gol, empezando en 0-0.
 for await marcador in enVivoRapido.marcadores { print(marcador, terminator: " ") }
+// Un salto de línea para cerrar la línea de marcadores.
 print()
 
-print("== f64: dos goles a la vez ya no se pisan ==")
+// Un título para separar esta parte de la salida anterior.
+print("== dos goles a la vez ya no se pisan ==")
+// Un marcador protegido por un actor.
 let seguro = MarcadorSeguro()
+// Un grupo de tareas, como en la lección de `TaskGroup`.
 await withTaskGroup(of: Void.self) { grupo in
     for _ in 0..<1_000 {
+        // Una tarea suma un gol local y otra uno visitante, todas a la vez.
+        // `await` porque desde fuera hay que esperar el turno del actor.
         grupo.addTask { await seguro.golLocal() }
         grupo.addTask { await seguro.golVisitante() }
     }
 }
+// Tiene que salir 1000-1000: ningún gol se pierde.
 print("Marcador tras 1000 goles de cada equipo a la vez: \(await seguro.marcador)")
+// Un partido en vivo rápido (2 ms por minuto de juego).
 let enDirecto = PartidoEnVivo(guion: Ejemplo.rayoContraToros, msPorMinuto: 2)
+// `jugar()` lo juega entero, anotando cada evento en el actor, y devuelve el marcador final.
 print("Marcador final del partido en vivo: \(await enDirecto.jugar())")
 
-print("== f65: el estado de pantalla vive en el actor principal ==")
-// El código de nivel superior de `main.swift` ya corre en el actor principal en
-// Swift 6, así que puede usar una clase `@MainActor` sin `await` en cada línea.
+print("== El estado de pantalla vive en el actor principal ==")
 let seguimiento = SeguimientoEnPantalla()
 seguimiento.seguir(PartidoEnVivo(guion: Ejemplo.rayoContraToros, msPorMinuto: 2))
 await seguimiento.esperarAlFinal()
