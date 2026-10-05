@@ -1,7 +1,7 @@
 // `@MainActor`: esta clase entera vive en el ACTOR PRINCIPAL, que es el hilo de la
 // interfaz. Todo lo que toca (propiedades y métodos) solo se puede usar desde
 // allí, y el compilador lo comprueba. Es la forma de decir «esto es estado de
-// pantalla»: en la app de iOS (F8) será lo que lee SwiftUI. En Android (F5) el
+// pantalla»: en la app de iOS será lo que lee SwiftUI. En Android el
 // papel lo hacía `Dispatchers.Main` + `viewModelScope`.
 //
 // Aquí no hay pantalla: la clase solo guarda lo que una pantalla mostraría

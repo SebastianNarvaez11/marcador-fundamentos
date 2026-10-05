@@ -20,7 +20,7 @@ struct ActoresTests {
     static let goles = 10_000
 
     // El data race. Con 10 000 goles a la vez, la clase pierde algunos: el resultado
-    // suele ser algo como 9950 en vez de 10 000, y CAMBIA en cada ejecución. No se
+    // suele ser algo como 9800 en vez de 10 000, y CAMBIA en cada ejecución. No se
     // afirma que sea distinto (podría salir bien por casualidad y la prueba sería
     // inestable): se afirma lo único seguro, que nunca sobra ninguno, y se imprime.
     @Test func laClaseCompartidaSePisa() async {
