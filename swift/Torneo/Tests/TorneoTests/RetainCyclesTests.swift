@@ -4,7 +4,7 @@ import Testing
 // ASÍ NO VALE: el cronómetro con el error. La closure guardada en `alTick` captura
 // `self` con una referencia fuerte y `self` retiene la closure: ciclo. Es el mismo
 // código que tuvo `Cronometro.avisarCadaMinuto` antes de arreglar el ciclo, y el que `leaks`
-// detectó como `ROOT CYCLE: <Cronometro>` (ver el diario).
+// detectó como `ROOT CYCLE: <Cronometro>`.
 private final class CronometroConCiclo {
     var minuto = 0
     var alTick: (() -> Void)?
