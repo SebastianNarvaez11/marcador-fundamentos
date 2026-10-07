@@ -9,6 +9,7 @@ import com.sebastiannarvaez.marcador.data.room.ArbitroDao
 import com.sebastiannarvaez.marcador.data.room.ArbitroEntity
 import com.sebastiannarvaez.marcador.domain.Arbitro
 import com.sebastiannarvaez.marcador.domain.ArbitrosRepository
+import com.sebastiannarvaez.marcador.domain.CronicasRepository
 import com.sebastiannarvaez.marcador.domain.Goleador
 import com.sebastiannarvaez.marcador.domain.PartidoDeLista
 import com.sebastiannarvaez.marcador.domain.PartidosRepository
@@ -122,5 +123,16 @@ class FakeLigaApi(
         fallo?.let { throw it }
         enviadas += cronica
         return CronicaPublicadaDto(id = 101)
+    }
+}
+
+// El repositorio de cronicas, de mentira: apunta lo publicado y responde con el 101.
+class FakeCronicasRepository(var fallo: Exception? = null) : CronicasRepository {
+    val publicadas = mutableListOf<Pair<String, String>>()
+
+    override suspend fun publicar(titulo: String, texto: String): Result<Int> {
+        fallo?.let { return Result.failure(it) }
+        publicadas += titulo to texto
+        return Result.success(101)
     }
 }
