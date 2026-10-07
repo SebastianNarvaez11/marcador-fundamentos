@@ -18,8 +18,11 @@ struct ContentView: View {
 }
 
 #Preview {
-    // La lista y el partido leen el repositorio y el notificador del entorno: aquí se los da la vista previa.
+    // La lista y el partido leen el contenedor, el repositorio y el notificador del entorno: aquí se los
+    // da la vista previa, con un contenedor sin almacenes (no toca el disco).
+    let contenedor = ContenedorDeLaApp(servicio: ServicioJSONPlaceholder(), almacenDelTorneo: nil, almacenDeArbitros: nil)
     ContentView()
-        .environment(RepositorioDePartidos())
-        .environment(NotificadorDeSistema())
+        .environment(contenedor)
+        .environment(contenedor.partidos)
+        .environment(contenedor.notificador)
 }

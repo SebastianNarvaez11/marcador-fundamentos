@@ -13,28 +13,32 @@ struct MarcadorApp: App {
     // la escena y no de una pantalla.
     @Environment(\.scenePhase) private var fase
 
-    // El repositorio, creado una vez y repartido a las pantallas por el entorno.
-    // Con el torneo guardado en `Documents/torneo.json` (`-reiniciarDatos YES` lo borra al arrancar,
-    // y también los árbitros guardados en `Documents/arbitros.json`).
-    @State private var repositorio: RepositorioDePartidos = {
+    // EL CONTENEDOR, creado UNA vez al arrancar: crea el servicio, los repositorios, el caso de uso y
+    // el notificador, y se reparte a las pantallas por el entorno.
+    // Con el torneo guardado en `Documents/torneo.json` y los árbitros en `Documents/arbitros.json`
+    // (`-reiniciarDatos YES` borra los dos al arrancar).
+    @State private var contenedor: ContenedorDeLaApp = {
         if Configuracion.reiniciarDatos {
             AlmacenDelTorneo.predeterminado.borrar()
             AlmacenDeArbitros.predeterminado.borrar()
             UserDefaults.standard.removeObject(forKey: Ajustes.claveDuracion)
         }
-        return RepositorioDePartidos(almacen: .predeterminado)
+        return ContenedorDeLaApp(
+            servicio: ServicioJSONPlaceholder(),
+            almacenDelTorneo: .predeterminado,
+            almacenDeArbitros: .predeterminado
+        )
     }()
-
-    // El notificador se crea UNA vez al arrancar la app (registra su delegado en el centro de notificaciones)
-    // y se reparte por el entorno.
-    @State private var notificador = NotificadorDeSistema()
 
     var body: some Scene {
         // `WindowGroup` es la escena normal de una app de iOS: una ventana con esta vista raíz.
         WindowGroup {
             ContentView()
-                .environment(repositorio)
-                .environment(notificador)
+                .environment(contenedor)
+                // Las vistas que ya leían el repositorio de partidos o el notificador los siguen
+                // encontrando en el entorno: son las mismas piezas, sacadas del contenedor.
+                .environment(contenedor.partidos)
+                .environment(contenedor.notificador)
         }
         // `onChange(of:)` con dos parámetros (antiguo, nuevo) es la forma de iOS 17+.
         .onChange(of: fase) { antigua, nueva in
