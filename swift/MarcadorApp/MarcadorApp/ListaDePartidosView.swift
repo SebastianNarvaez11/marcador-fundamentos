@@ -58,6 +58,13 @@ struct ListaDePartidosView: View {
                     ArbitrosView(viewModel: ArbitrosViewModel(
                         repositorio: RepositorioDeArbitrosEnRed(servicio: ServicioJSONPlaceholder())
                     ))
+                case let .cronica(id):
+                    // También a escondidas: el servicio y el repositorio de crónicas nacen aquí.
+                    CronicaView(viewModel: CronicaViewModel(
+                        partidoId: id,
+                        partidos: repositorio,
+                        cronicas: RepositorioDeCronicasEnRed(servicio: ServicioJSONPlaceholder())
+                    ))
                 }
             }
         }

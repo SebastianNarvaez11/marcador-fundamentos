@@ -56,3 +56,21 @@ final class ArbitrosRepositorioFalso: ArbitrosRepositorio {
         return try respuesta.get()
     }
 }
+
+// El servicio falso: responde lo que le digas, sin red, y anota las crónicas que le enviaron.
+final class ServicioFalso: ServicioDelTorneo {
+    var arbitrosQueDevuelve: Result<[ArbitroDTO], ErrorDeRed> = .success([])
+    var idQueAsigna = 101
+    var falloAlPublicar: ErrorDeRed?
+    private(set) var publicadas: [CronicaNuevaDTO] = []
+
+    func arbitros() async throws -> [ArbitroDTO] {
+        try arbitrosQueDevuelve.get()
+    }
+
+    func publicarCronica(_ cronica: CronicaNuevaDTO) async throws -> CronicaPublicadaDTO {
+        if let falloAlPublicar { throw falloAlPublicar }
+        publicadas.append(cronica)
+        return CronicaPublicadaDTO(id: idQueAsigna, title: cronica.title)
+    }
+}
