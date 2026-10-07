@@ -20,6 +20,9 @@ room = "3.0.3"
 navigation3 = "1.1.7"
 datastore = "1.2.1"
 ksp = "2.3.12"
+# Inyeccion de dependencias: Hilt (Dagger Hilt) y su enlace con los ViewModel de Compose.
+hilt = "2.60.1"
+androidxHilt = "1.4.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -46,6 +49,9 @@ androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecy
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { module = "junit:junit", version.ref = "junit" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
+androidx-hilt-lifecycle-viewmodel-compose = { module = "androidx.hilt:hilt-lifecycle-viewmodel-compose", version.ref = "androidxHilt" }
 
 # Un bundle agrupa librerias que siempre van juntas: en build.gradle.kts basta
 # `implementation(libs.bundles.compose)`.
@@ -60,3 +66,4 @@ kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room3", version.ref = "room" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }

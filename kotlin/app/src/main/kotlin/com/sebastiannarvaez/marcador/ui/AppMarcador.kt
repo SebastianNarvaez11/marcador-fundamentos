@@ -16,7 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -102,7 +102,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
             ),
             entryProvider = entryProvider {
                 entry<ListaKey> {
-                    val vm: ListaViewModel = viewModel(factory = Fabricas.lista)
+                    val vm: ListaViewModel = hiltViewModel()
                     val partidos by vm.partidos.collectAsStateWithLifecycle()
                     Scaffold(
                         // Las demos de Android (ciclo de vida, intents, permisos...) ya no cuelgan de la
@@ -119,7 +119,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                     }
                 }
                 entry<TablasKey> {
-                    val vm: ListaViewModel = viewModel(factory = Fabricas.lista)
+                    val vm: ListaViewModel = hiltViewModel()
                     val torneo by vm.torneo.collectAsStateWithLifecycle()
                     Scaffold(
                         topBar = { CenterAlignedTopAppBar(title = { Text("Tablas") }) },
@@ -129,7 +129,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                     }
                 }
                 entry<RecomposicionKey> {
-                    val vm: ListaViewModel = viewModel(factory = Fabricas.lista)
+                    val vm: ListaViewModel = hiltViewModel()
                     val torneo by vm.torneo.collectAsStateWithLifecycle()
                     Scaffold(
                         topBar = { CenterAlignedTopAppBar(title = { Text("Recomposición") }) },
@@ -140,7 +140,11 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                 entry<PartidoKey> { clave ->
                     // Sin `key`: cada entrada tiene su propio almacen de ViewModel (el decorador de
                     // arriba), asi que hay un ViewModel por partido abierto sin mas.
-                    val vm: PartidoViewModel = viewModel(factory = Fabricas.partido(clave.partidoId))
+                    // Inyeccion asistida: Hilt pone las dependencias y esta lambda (creationCallback)
+                    // pone el id del partido, que sale de la clave.
+                    val vm = hiltViewModel<PartidoViewModel, PartidoViewModel.Fabrica> { fabrica ->
+                        fabrica.crear(clave.partidoId)
+                    }
                     PantallaMarcador(
                         onVerGoleadores = { pila.add(GoleadoresKey) },
                         onVolver = { pila.removeAt(pila.lastIndex) },
@@ -148,7 +152,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                     )
                 }
                 entry<GoleadoresKey> {
-                    val vm: GoleadoresViewModel = viewModel(factory = Fabricas.goleadores)
+                    val vm: GoleadoresViewModel = hiltViewModel()
                     val goleadores by vm.goleadores.collectAsStateWithLifecycle()
                     PantallaGoleadores(goleadores, alVolver = { pila.removeAt(pila.lastIndex) })
                 }

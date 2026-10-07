@@ -2,6 +2,7 @@ package com.sebastiannarvaez.marcador.domain
 
 import com.sebastiannarvaez.marcador.torneo.Gol
 import com.sebastiannarvaez.marcador.torneo.intentar
+import javax.inject.Inject
 
 // CASO DE USO: una accion del usuario con sentido para el negocio.
 //
@@ -15,7 +16,10 @@ import com.sebastiannarvaez.marcador.torneo.intentar
 // `Result`, no como excepcion. Se atrapan con `intentar` (Cronometro.kt): como
 // `runCatching`, pero RELANZA la CancellationException. Esta funcion es `suspend`: si la
 // tragara, un gol de una pantalla ya cerrada se seguiria registrando como si nada.
-class RegistrarGol(private val repositorio: PartidosRepository) {
+//
+// @Inject constructor: le dice a Hilt «asi se construye esta clase; dame lo que pide entre
+// parentesis». Hilt busca un PartidosRepository en sus modulos y se lo pasa.
+class RegistrarGol @Inject constructor(private val repositorio: PartidosRepository) {
 
     suspend operator fun invoke(partidoId: Int, lado: Lado, minuto: Int): Result<Gol> = intentar {
         val partido = repositorio.partido(partidoId) ?: error("No existe el partido $partidoId")
