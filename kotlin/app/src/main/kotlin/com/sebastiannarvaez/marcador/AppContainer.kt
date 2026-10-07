@@ -4,8 +4,12 @@ import android.content.Context
 import com.sebastiannarvaez.marcador.data.ArbitrosRepositoryDosFuentes
 import com.sebastiannarvaez.marcador.data.PreferenciasDataStore
 import com.sebastiannarvaez.marcador.data.red.CronicasRepositoryRed
+import com.sebastiannarvaez.marcador.data.red.LigaApi
+import com.sebastiannarvaez.marcador.data.red.URL_LIGA
 import com.sebastiannarvaez.marcador.data.red.crearLigaApi
 import com.sebastiannarvaez.marcador.data.red.crearOkHttp
+import com.sebastiannarvaez.marcador.data.room.ArbitroDao
+import com.sebastiannarvaez.marcador.data.room.PartidoDao
 import com.sebastiannarvaez.marcador.data.room.PartidosRepositoryRoom
 import com.sebastiannarvaez.marcador.data.room.crearBaseDeDatos
 import com.sebastiannarvaez.marcador.domain.ArbitrosRepository
@@ -17,50 +21,64 @@ import com.sebastiannarvaez.marcador.domain.RegistrarGol
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import okhttp3.OkHttpClient
 
-// INYECCION DE DEPENDENCIAS, A MANO
+// INYECCION DE DEPENDENCIAS, A MANO, POR CAPAS
 //
-// «Dependencia» = algo que una clase necesita para funcionar (un repositorio). Hay dos
-// maneras de conseguirla:
-//   - ir a buscarla uno mismo (`Repositorios.partidos`, o `PartidosRepositoryEnMemoria()`
-//     dentro del ViewModel): la clase queda atada a UNA implementacion concreta y no se
-//     puede probar con otra;
-//   - que se la DEN de fuera, por el constructor: eso es inyectarla. La clase pide
-//     `PartidosRepository` (la interfaz) y no sabe ni le importa cual le llega.
+// «Dependencia» = algo que una clase necesita para funcionar (un repositorio). La clase
+// no la construye: se la DAN por el constructor (eso es inyectarla). Alguien tiene que
+// construir las piezas y entregarlas: el CONTENEDOR. Cada pieza es una propiedad `lazy`
+// (se crea la primera vez que se pide y se reutiliza). El contenedor vive en la
+// Application, que dura lo que el proceso: cada pieza existe UNA vez en toda la app.
 //
-// Alguien tiene que construir las piezas y entregarlas: el CONTENEDOR. Este es el mas
-// simple posible: una clase con las dependencias como propiedades `lazy` (se crean la
-// primera vez que se piden y se reutilizan: singletons). Vive en la Application, que dura
-// lo que el proceso, asi que el repositorio es el mismo en todas las pantallas.
+// Con red, base de datos, repositorios y casos de uso, el contenedor se ordena POR CAPAS,
+// de abajo arriba; cada capa solo usa la de debajo:
+//   red          -> OkHttpClient y LigaApi                 (ContenedorDeRed)
+//   datos        -> la base, sus DAO y DataStore           (ContenedorDeDatos)
+//   repositorios -> juntan red y datos, y traducen a dominio
+//   casos de uso -> juntan repositorios con una regla
+//   ViewModel    -> NO vive aqui: uno por pantalla, lo crea la fabrica (Fabricas.kt)
+//
+// ALCANCES: lo que esta en el contenedor dura lo que el PROCESO; un ViewModel dura lo que
+// su entrada de la pila (la PANTALLA); una peticion, lo que la LLAMADA.
+//
+// `private` = lo que no debe salir de su capa (el cliente HTTP, la base, los DAO). Fuera
+// solo se ven repositorios y casos de uso, con los nombres de siempre: Fabricas.kt no cambia.
 //
 // Koin o Hilt hacen lo mismo con menos codigo escrito (Hilt lo genera con KSP; Koin lo
 // declara con un DSL). Hacerlo a mano una vez ensena que NO hay magia: es un `new` en un
 // solo sitio. En proyectos pequenos, a mano basta.
-class AppContainer(private val contexto: Context) {
+
+// CAPA DE RED. UN solo OkHttpClient para toda la app: guarda las conexiones abiertas y sus
+// hilos, y los reutiliza en cada llamada. Uno por peticion los desperdiciaria.
+class ContenedorDeRed(url: String = URL_LIGA) {
+    private val okHttp: OkHttpClient by lazy { crearOkHttp() }
+    val ligaApi: LigaApi by lazy { crearLigaApi(okHttp, url) }
+}
+
+// CAPA DE DATOS LOCALES. UNA sola base: abrir dos sobre el mismo fichero es un error clasico.
+class ContenedorDeDatos(contexto: Context) {
+    private val baseDeDatos by lazy { crearBaseDeDatos(contexto) }
+    val partidoDao: PartidoDao by lazy { baseDeDatos.partidoDao() }
+    val arbitroDao: ArbitroDao by lazy { baseDeDatos.arbitroDao() }
+    val preferencias: PreferenciasRepository by lazy { PreferenciasDataStore(contexto) }
+}
+
+class AppContainer(contexto: Context) {
     // Un alcance que dura lo que el proceso: para trabajo que no es de ninguna pantalla
     // (sembrar la base). Se le da un SupervisorJob para que un fallo no cancele el resto.
     private val alcance = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    // La base de datos se abre la primera vez que alguien la pide. UNA sola instancia:
-    // abrir dos bases sobre el mismo fichero es un error clasico.
-    private val baseDeDatos by lazy { crearBaseDeDatos(contexto) }
+    private val red = ContenedorDeRed()
+    private val datos = ContenedorDeDatos(contexto)
 
-    // Antes `PartidosRepositoryEnMemoria()`. Cambia UNA linea y nada mas.
-    val partidosRepository: PartidosRepository by lazy { PartidosRepositoryRoom(baseDeDatos.partidoDao(), alcance) }
+    // REPOSITORIOS
+    val partidosRepository: PartidosRepository by lazy { PartidosRepositoryRoom(datos.partidoDao, alcance) }
+    val preferenciasRepository: PreferenciasRepository get() = datos.preferencias
+    val arbitrosRepository: ArbitrosRepository by lazy { ArbitrosRepositoryDosFuentes(red.ligaApi, datos.arbitroDao) }
+    val cronicasRepository: CronicasRepository by lazy { CronicasRepositoryRed(red.ligaApi) }
 
-    // Los ajustes, en DataStore.
-    val preferenciasRepository: PreferenciasRepository by lazy { PreferenciasDataStore(contexto) }
-
+    // CASOS DE USO
     val registrarGol: RegistrarGol by lazy { RegistrarGol(partidosRepository) }
-
-    // La red: UN cliente HTTP y UNA api para toda la app, como la base de datos.
-    private val okHttp by lazy { crearOkHttp() }
-    private val ligaApi by lazy { crearLigaApi(okHttp) }
-
-    // Dos fuentes: la red y la MISMA base de datos de los partidos (otra tabla, otro DAO).
-    val arbitrosRepository: ArbitrosRepository by lazy { ArbitrosRepositoryDosFuentes(ligaApi, baseDeDatos.arbitroDao()) }
-
-    val cronicasRepository: CronicasRepository by lazy { CronicasRepositoryRed(ligaApi) }
-
     val publicarCronica: PublicarCronica by lazy { PublicarCronica(partidosRepository, cronicasRepository) }
 }
