@@ -20,6 +20,10 @@ room = "3.0.3"
 navigation3 = "1.1.7"
 datastore = "1.2.1"
 ksp = "2.3.12"
+# Red: Retrofit (la API como una interfaz) sobre OkHttp (el motor HTTP). OkHttp, la misma
+# que la Pokedex lleva debajo de Ktor.
+retrofit = "3.0.0"
+okhttp = "5.3.2"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -46,6 +50,9 @@ androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecy
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { module = "junit:junit", version.ref = "junit" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+retrofit-converter-kotlinx-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofit" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 
 # Un bundle agrupa librerias que siempre van juntas: en build.gradle.kts basta
 # `implementation(libs.bundles.compose)`.
