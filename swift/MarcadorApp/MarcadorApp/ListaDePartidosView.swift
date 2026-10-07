@@ -41,6 +41,10 @@ struct ListaDePartidosView: View {
             }
             .listStyle(.plain)
             .navigationTitle("Partidos")
+            // Un botón en la barra de arriba que empuja la pantalla de árbitros.
+            .toolbar {
+                NavigationLink("Árbitros", value: Destino.arbitros)
+            }
             // UN solo sitio decide qué pantalla corresponde a cada destino.
             .navigationDestination(for: Destino.self) { destino in
                 switch destino {
@@ -48,6 +52,12 @@ struct ListaDePartidosView: View {
                     PartidoContenedor(id: id)
                 case .goleadores:
                     GoleadoresView()
+                case .arbitros:
+                    // OJO: la pantalla crea aquí, a escondidas, el servicio y el repositorio. Funciona,
+                    // pero cada vez que se abre nace un repositorio nuevo. Se arregla con la inyección.
+                    ArbitrosView(viewModel: ArbitrosViewModel(
+                        repositorio: RepositorioDeArbitrosEnRed(servicio: ServicioJSONPlaceholder())
+                    ))
                 }
             }
         }
