@@ -1,6 +1,11 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
+    // KSP (Kotlin Symbol Processing) es el motor que ejecuta procesadores: al compilar lee
+    // las anotaciones (@Inject, @Module...) y ESCRIBE codigo nuevo. El de Hilt lo necesita.
+    alias(libs.plugins.ksp)
+    // Hilt (Dagger Hilt): genera el contenedor de dependencias de la app al compilar.
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -69,6 +74,10 @@ kotlin {
 }
 
 dependencies {
+    // Hilt: la libreria viaja en la app; el procesador (`ksp`) solo corre al compilar y
+    // escribe las clases Hilt_... y el componente.
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
     // El modulo de dominio: Partido, Torneo, PartidoEnVivo...
     implementation(project(":torneo"))
     implementation(libs.androidx.activity.compose)
