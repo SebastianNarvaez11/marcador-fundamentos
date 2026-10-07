@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
+    // Las claves de Navigation 3 son @Serializable (la pila sobrevive a am kill).
+    alias(libs.plugins.kotlinxSerialization)
     // KSP (Kotlin Symbol Processing) es el motor que ejecuta procesadores: al compilar lee
     // las anotaciones (@Inject, @Module...) y ESCRIBE codigo nuevo. El de Hilt lo necesita.
     alias(libs.plugins.ksp)
@@ -82,6 +84,12 @@ room3 {
 }
 
 dependencies {
+    // Navigation 3, la misma que la Pokedex. `runtime` = NavKey y la pila; `ui` = NavDisplay;
+    // `viewmodel-navigation3` = un almacen de ViewModel POR ENTRADA de la pila.
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.kotlinx.serialization.json)
     // DataStore Preferences: pares clave-valor pequenos, asincronos, con Flow.
     implementation(libs.androidx.datastore.preferences)
     // Hilt: la libreria viaja en la app; el procesador (`ksp`) solo corre al compilar y

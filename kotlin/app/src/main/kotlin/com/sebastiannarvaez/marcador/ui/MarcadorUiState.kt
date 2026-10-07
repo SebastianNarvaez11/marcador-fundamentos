@@ -4,7 +4,7 @@ import com.sebastiannarvaez.marcador.domain.Lado
 import com.sebastiannarvaez.marcador.torneo.Marcador
 import com.sebastiannarvaez.marcador.torneo.Partido
 
-// f41 · MODELAR EL UiState
+// MODELAR EL UiState
 //
 // La pantalla no debe armar su estado a partir de cinco flujos sueltos: pueden llegar
 // desincronizados (¿minuto nuevo con marcador viejo?) y admiten combinaciones que no
@@ -42,6 +42,5 @@ sealed interface MarcadorUiState {
 sealed interface MarcadorEvento {
     data object Empezar : MarcadorEvento
     data class Gol(val lado: Lado) : MarcadorEvento
-    data class Elegir(val partidoId: Int) : MarcadorEvento
     data class CambiarDuracion(val minutos: Int) : MarcadorEvento
 }

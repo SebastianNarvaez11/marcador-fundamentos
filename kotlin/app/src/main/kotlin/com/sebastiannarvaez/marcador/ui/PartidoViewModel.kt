@@ -7,8 +7,10 @@ import com.sebastiannarvaez.marcador.domain.RegistrarGol
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -22,7 +24,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// f39 · VIEWMODEL
+// VIEWMODEL
 //
 // Un ViewModel es un objeto que Android guarda EN UN ALMACEN (ViewModelStore) que
 // pertenece a la Activity, no a la composicion. Al rotar, la Activity se destruye y se
@@ -30,25 +32,25 @@ import kotlinx.coroutines.launch
 //
 //   sobrevive a  -> recomposiciones, rotacion, cambios de tema/idioma/tamano de ventana
 //   NO sobrevive -> a que el usuario cierre la pantalla (back, finish()) ni a la MUERTE
-//                   DEL PROCESO (am kill, Android necesita memoria). Eso es f40.
+//                   DEL PROCESO (am kill, Android necesita memoria). Eso lo cubre SavedStateHandle.
 //
 // `onCleared()` es el ultimo aviso: el almacen se vacia porque la Activity se va para
 // siempre. Es donde se liberan recursos que NO son corrutinas (un listener, un fichero
 // abierto). Aqui no hay ninguno, asi que no se sobrescribe. NO se escribe en Logcat desde
-// el ViewModel: un `Log.d` en un ViewModel rompe sus tests en la JVM (f48) o obliga a
+// el ViewModel: un `Log.d` en un ViewModel rompe sus tests en la JVM o obliga a
 // parchearlos; lo que necesita verse (que sobrevive a rotar) se ve en pantalla.
 //
 // viewModelScope es un CoroutineScope (SupervisorJob + Dispatchers.Main.immediate) que
-// el propio ViewModel cancela justo antes de onCleared. Es el scope de F2 (f17) con la
+// el propio ViewModel cancela justo antes de onCleared. Es el alcance de las corrutinas con la
 // vida del ViewModel: lo que se lanza aqui sigue vivo al rotar y muere al irse la pantalla.
 // Por eso NO se usa GlobalScope: no lo cancela nadie, y una corrutina que sostiene
-// `this` en un proceso que dura horas es una fuga (f27).
+// `this` en un proceso que dura horas es una fuga.
 //
-// f40 · SAVEDSTATEHANDLE. El ViewModel sobrevive a rotar pero NO a la muerte del
+// SAVEDSTATEHANDLE. El ViewModel sobrevive a rotar pero NO a la muerte del
 // proceso: si Android mata la app en segundo plano para ganar memoria, al volver el
 // ViewModel es nuevo y su estado, cero. Para lo pequeno que DEBE sobrevivir, Android da
 // un `SavedStateHandle`: un mapa clave-valor que se guarda en el mismo Bundle de
-// onSaveInstanceState (f25) y que el sistema conserva FUERA del proceso. Se pide como
+// onSaveInstanceState y que el sistema conserva FUERA del proceso. Se pide como
 // parametro del constructor y la fabrica por defecto de `viewModel()` lo entiende.
 //
 // Regla: en el handle va lo POCO y BARATO que hace falta para reconstruir la pantalla
@@ -56,21 +58,32 @@ import kotlinx.coroutines.launch
 // Aqui: el id del partido seleccionado. El minuto, el marcador en vivo y los goles de
 // los botones se pierden con `am kill`, y esta bien: se reconstruye el partido, no el directo.
 //
-// HILT. @HiltViewModel: Hilt sabe crear este ViewModel. @Inject constructor: le pasa todo
-// lo que hay entre parentesis. El SavedStateHandle tambien lo da Hilt, sin receta: es una
-// pieza que trae de serie para cada ViewModel.
-@HiltViewModel
-class PartidoViewModel @Inject constructor(
+// HILT, CON INYECCION ASISTIDA. Hilt sabe dar el repositorio, el caso de uso, las
+// preferencias y el SavedStateHandle, pero NO sabe que partido abrio el usuario: ese numero
+// sale de la PartidoKey de la pantalla. Por eso el constructor es MIXTO:
+//   @AssistedInject  -> constructor con piezas de Hilt y piezas que pone quien lo crea;
+//   @Assisted        -> esta la pone quien lo crea (la pantalla), no Hilt;
+//   @AssistedFactory -> la fabrica: tu declaras la funcion, Hilt escribe el codigo.
+// @HiltViewModel(assistedFactory = ...) une el ViewModel con su fabrica.
+@HiltViewModel(assistedFactory = PartidoViewModel.Fabrica::class)
+class PartidoViewModel @AssistedInject constructor(
     private val estadoGuardado: SavedStateHandle,
     private val repositorio: PartidosRepository,
     private val registrarGol: RegistrarGol,
     private val preferencias: PreferenciasRepository,
+    @Assisted partidoInicial: Int,
 ) : ViewModel() {
+
+    // La pantalla la usa asi: hiltViewModel<PartidoViewModel, PartidoViewModel.Fabrica> { it.crear(id) }
+    @AssistedFactory
+    interface Fabrica {
+        fun crear(partidoInicial: Int): PartidoViewModel
+    }
 
     // Las dependencias LLEGAN por el constructor (antes salian de un singleton
     // oculto). Este ViewModel no sabe si el repositorio es de memoria, de Room o de mentira.
     // Un StateFlow LEIDO DEL HANDLE: cada vez que se escribe `estadoGuardado[CLAVE]`, cambia.
-    val partidoId: StateFlow<Int> = estadoGuardado.getStateFlow(CLAVE_PARTIDO, 1)
+    val partidoId: StateFlow<Int> = estadoGuardado.getStateFlow(CLAVE_PARTIDO, partidoInicial)
 
     // Los pasos de la carga. PRIVADO: la pantalla solo ve MarcadorUiState.
     private sealed interface Carga {
@@ -82,8 +95,8 @@ class PartidoViewModel @Inject constructor(
     private val carga = MutableStateFlow<Carga>(Carga.EnCurso)
     private var trabajos: List<Job> = emptyList()
 
-    // f41 · EL ESTADO QUE VE LA PANTALLA, en un solo StateFlow.
-    // f42 · Ya no calcula nada: traduce el `Directo` (dominio) a un MarcadorUiState.
+    // EL ESTADO QUE VE LA PANTALLA, en un solo StateFlow.
+    // Ya no calcula nada: traduce el `Directo` (dominio) a un MarcadorUiState.
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<MarcadorUiState> = carga.flatMapLatest { paso ->
         when (paso) {
@@ -120,7 +133,6 @@ class PartidoViewModel @Inject constructor(
             }
             Unit
         } ?: Unit
-        is MarcadorEvento.Elegir -> cargar(evento.partidoId)
         // Se guarda en DataStore y se recarga el partido: el reloj y el guion cambian.
         is MarcadorEvento.CambiarDuracion -> {
             viewModelScope.launch {
@@ -131,8 +143,10 @@ class PartidoViewModel @Inject constructor(
         }
     }
 
-    // Elegir un partido: para el directo, y pasa por `Cargando`.
-    // La lectura va al repositorio: es `suspend`, asi que ya puede tardar (con Room, f45).
+    // Cargar el partido `id`: para el directo, y pasa por `Cargando`. Ahora el id llega en la
+    // NavKey de la pantalla y solo se pide aqui (al crear y al cambiar la duracion): nadie lo cambia
+    // desde dentro, asi que el handle y la clave no pueden discrepar.
+    // La lectura va al repositorio: es `suspend`, asi que ya puede tardar (con Room).
     private fun cargar(id: Int) {
         trabajos.forEach { it.cancel() }
         trabajos = emptyList()
