@@ -5,6 +5,8 @@ import com.sebastiannarvaez.marcador.data.red.CronicaDto
 import com.sebastiannarvaez.marcador.data.red.CronicaPublicadaDto
 import com.sebastiannarvaez.marcador.data.red.DireccionDto
 import com.sebastiannarvaez.marcador.data.red.LigaApi
+import com.sebastiannarvaez.marcador.data.room.ArbitroDao
+import com.sebastiannarvaez.marcador.data.room.ArbitroEntity
 import com.sebastiannarvaez.marcador.domain.Arbitro
 import com.sebastiannarvaez.marcador.domain.ArbitrosRepository
 import com.sebastiannarvaez.marcador.domain.Goleador
@@ -72,14 +74,33 @@ class FakePreferencias(inicial: Int = 90) : PreferenciasRepository {
     }
 }
 
-// La red, de mentira: devuelve la lista o lanza el fallo que el test le ponga.
+// Las dos fuentes, de mentira: `guardados` hace de base y `deLaRed` de servidor.
+// `refrescar` copia la red en la base, o falla con lo que el test le ponga.
 class FakeArbitrosRepository(
-    var arbitros: List<Arbitro> = listOf(Arbitro(1, "Leanne Graham", "Gwenborough")),
+    guardados: List<Arbitro> = emptyList(),
+    var deLaRed: List<Arbitro> = listOf(Arbitro(1, "Leanne Graham", "Gwenborough")),
     var fallo: Exception? = null,
 ) : ArbitrosRepository {
-    override suspend fun arbitros(): List<Arbitro> {
-        fallo?.let { throw it }
-        return arbitros
+    private val base = MutableStateFlow(guardados)
+
+    override fun observarArbitros(): Flow<List<Arbitro>> = base
+
+    override suspend fun refrescar(): Result<Unit> {
+        fallo?.let { return Result.failure(it) }
+        base.value = deLaRed
+        return Result.success(Unit)
+    }
+}
+
+// La tabla `arbitro`, en memoria: mismo orden y mismo upsert que la de verdad.
+class FakeArbitroDao(guardados: List<ArbitroEntity> = emptyList()) : ArbitroDao {
+    private val filas = MutableStateFlow(guardados)
+
+    override fun observarArbitros(): Flow<List<ArbitroEntity>> = filas.map { it.sortedBy(ArbitroEntity::nombre) }
+
+    override suspend fun guardar(arbitros: List<ArbitroEntity>) {
+        val nuevos = arbitros.associateBy { it.id }
+        filas.value = filas.value.filterNot { it.id in nuevos } + arbitros
     }
 }
 

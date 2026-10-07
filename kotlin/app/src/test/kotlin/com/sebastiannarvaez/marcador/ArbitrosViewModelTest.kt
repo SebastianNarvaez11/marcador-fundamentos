@@ -30,27 +30,25 @@ class ArbitrosViewModelTest {
     @AfterTest
     fun despues() = Dispatchers.resetMain()
 
+    private val leanne = Arbitro(1, "Leanne Graham", "Gwenborough")
+
     @Test
-    fun pasaDeCargandoAExito() = runTest {
+    fun alAbrirRefrescaYPintaLoDeLaRed() = runTest {
         val viewModel = ArbitrosViewModel(FakeArbitrosRepository())
         viewModel.uiState.test {
-            assertEquals(ArbitrosUiState.Cargando, awaitItem())
-            assertEquals(ArbitrosUiState.Exito(listOf(Arbitro(1, "Leanne Graham", "Gwenborough"))), awaitItem())
+            assertEquals(ArbitrosUiState(refrescando = true), awaitItem())
+            assertEquals(ArbitrosUiState(arbitros = listOf(leanne)), awaitItem())
         }
     }
 
     @Test
-    fun sinRedSaleElErrorYReintentarVuelveACargar() = runTest {
-        val repositorio = FakeArbitrosRepository(fallo = FalloDeRed(ErrorDeRed.SinConexion))
+    fun sinRedConservaLoGuardadoYAvisa() = runTest {
+        val repositorio = FakeArbitrosRepository(guardados = listOf(leanne), fallo = FalloDeRed(ErrorDeRed.SinConexion))
         val viewModel = ArbitrosViewModel(repositorio)
         viewModel.uiState.test {
-            assertEquals(ArbitrosUiState.Cargando, awaitItem())
-            assertEquals(ArbitrosUiState.Error("No hay conexión"), awaitItem())
-
-            repositorio.fallo = null // vuelve la red
-            viewModel.reintentar()
-            assertEquals(ArbitrosUiState.Cargando, awaitItem())
-            assertEquals(ArbitrosUiState.Exito(listOf(Arbitro(1, "Leanne Graham", "Gwenborough"))), awaitItem())
+            assertEquals(ArbitrosUiState(refrescando = true), awaitItem())
+            // La lista NO se vacia: lo guardado sigue y el error va al lado.
+            assertEquals(ArbitrosUiState(arbitros = listOf(leanne), error = "No hay conexión"), awaitItem())
         }
     }
 }

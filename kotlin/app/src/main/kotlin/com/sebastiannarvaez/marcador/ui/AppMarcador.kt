@@ -165,7 +165,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                 entry<ArbitrosKey> {
                     val vm: ArbitrosViewModel = viewModel(factory = Fabricas.arbitros)
                     val estado by vm.uiState.collectAsStateWithLifecycle()
-                    PantallaArbitros(estado, onReintentar = vm::reintentar)
+                    PantallaArbitros(estado, onActualizar = vm::actualizar)
                 }
                 entry<CronicaKey> { clave ->
                     val vm: CronicaViewModel = viewModel(factory = Fabricas.cronica(clave.partidoId))
