@@ -31,8 +31,10 @@ struct PartidoEnDirectoView: View {
     // El notificador (lo puso la raíz en el entorno) y su permiso, que se lee para pintar el botón.
     @Environment(NotificadorDeSistema.self) private var notificador
 
-    init(partidoId: Int, repositorio: any PartidosRepositorio, notificador: any Notificador) {
-        _viewModel = State(wrappedValue: PartidoViewModel(partidoId: partidoId, repositorio: repositorio, notificador: notificador))
+    // La vista RECIBE su ViewModel ya montado (lo fabrica el contenedor): no sabe con qué repositorio
+    // ni con qué notificador se creó.
+    init(viewModel: PartidoViewModel) {
+        _viewModel = State(wrappedValue: viewModel)
     }
 
     var body: some View {
@@ -132,8 +134,7 @@ struct BotonesDeGolConAccion: View {
 // con lo que RECREA el struct de `PartidoEnDirectoView`. El botón «Redibujar el padre» lo hace a propósito.
 struct PartidoContenedor: View {
     let id: Int
-    @Environment(RepositorioDePartidos.self) private var repositorio
-    @Environment(NotificadorDeSistema.self) private var notificador
+    @Environment(ContenedorDeLaApp.self) private var contenedor
     @State private var redibujados = 0
 
     var body: some View {
@@ -145,7 +146,7 @@ struct PartidoContenedor: View {
             }
             .padding([.horizontal, .top], 16)
 
-            PartidoEnDirectoView(partidoId: id, repositorio: repositorio, notificador: notificador)
+            PartidoEnDirectoView(viewModel: contenedor.partidoViewModel(id: id))
         }
         .navigationTitle("Partido n.º \(id)")
         .navigationBarTitleDisplayMode(.inline)

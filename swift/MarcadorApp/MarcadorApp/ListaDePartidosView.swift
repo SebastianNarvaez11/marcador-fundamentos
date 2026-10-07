@@ -23,6 +23,8 @@ import Torneo
 struct ListaDePartidosView: View {
     // La lista LEE los partidos del repositorio (`@Observable`): al registrar un gol, la fila cambia sola.
     @Environment(RepositorioDePartidos.self) private var repositorio
+    // El contenedor fabrica los ViewModels de las pantallas que se apilan.
+    @Environment(ContenedorDeLaApp.self) private var contenedor
 
     // La pila entera es un array de destinos, en un `@State`: se puede inspeccionar y manipular.
     @State private var ruta: [Destino] = []
@@ -53,20 +55,9 @@ struct ListaDePartidosView: View {
                 case .goleadores:
                     GoleadoresView()
                 case .arbitros:
-                    // OJO: la pantalla crea aquí, a escondidas, el servicio y el repositorio. Funciona,
-                    // pero cada vez que se abre nace un repositorio nuevo. Se arregla con la inyección.
-                    ArbitrosView(viewModel: ArbitrosViewModel(
-                        repositorio: RepositorioDeArbitros(servicio: ServicioJSONPlaceholder(), almacen: .predeterminado)
-                    ))
+                    ArbitrosView(viewModel: contenedor.arbitrosViewModel())
                 case let .cronica(id):
-                    // También a escondidas: el servicio y el repositorio de crónicas nacen aquí.
-                    CronicaView(viewModel: CronicaViewModel(
-                        partidoId: id,
-                        publicarCronica: PublicarCronica(
-                            partidos: repositorio,
-                            cronicas: RepositorioDeCronicasEnRed(servicio: ServicioJSONPlaceholder())
-                        )
-                    ))
+                    CronicaView(viewModel: contenedor.cronicaViewModel(id: id))
                 }
             }
         }
@@ -91,7 +82,10 @@ struct FilaDePartido: View {
 }
 
 #Preview {
+    // Un contenedor sin almacenes: la vista previa no lee ni escribe en el disco.
+    let contenedor = ContenedorDeLaApp(servicio: ServicioJSONPlaceholder(), almacenDelTorneo: nil, almacenDeArbitros: nil)
     ListaDePartidosView()
-        .environment(RepositorioDePartidos())
-        .environment(NotificadorDeSistema())   // lo lee el partido al navegar
+        .environment(contenedor)
+        .environment(contenedor.partidos)
+        .environment(contenedor.notificador)   // lo lee el partido al navegar
 }
