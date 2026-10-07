@@ -16,6 +16,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,6 +33,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sebastiannarvaez.marcador.domain.PreferenciasRepository
 import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Marcador
 import com.sebastiannarvaez.marcador.torneo.Partido
@@ -123,7 +125,19 @@ fun PantallaMarcadorContenido(
                         PanelDelCronometro(
                             estado.minuto, estado.corriendo, estado.ultimoAviso, pausas,
                             onEmpezar = { onEvento(MarcadorEvento.Empezar) },
+                            duracion = estado.duracion,
                         )
+                        // La preferencia, guardada en DataStore: sobrevive a cerrar la app.
+                        Text("Duracion del partido (preferencia guardada)")
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PreferenciasRepository.DURACIONES.forEach { minutos ->
+                                FilterChip(
+                                    selected = estado.duracion == minutos,
+                                    onClick = { onEvento(MarcadorEvento.CambiarDuracion(minutos)) },
+                                    label = { Text("$minutos min") },
+                                )
+                            }
+                        }
                         // Para VER la variante Error: pide un partido que no existe.
                         Button(onClick = { onEvento(MarcadorEvento.Elegir(99)) }) { Text("Provocar error (partido 99)") }
                         ComparacionDeEstado()

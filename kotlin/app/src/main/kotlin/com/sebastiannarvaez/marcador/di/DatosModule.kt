@@ -1,11 +1,13 @@
 package com.sebastiannarvaez.marcador.di
 
 import android.content.Context
+import com.sebastiannarvaez.marcador.data.PreferenciasDataStore
 import com.sebastiannarvaez.marcador.data.room.MarcadorDatabase
 import com.sebastiannarvaez.marcador.data.room.PartidoDao
 import com.sebastiannarvaez.marcador.data.room.PartidosRepositoryRoom
 import com.sebastiannarvaez.marcador.data.room.crearBaseDeDatos
 import com.sebastiannarvaez.marcador.domain.PartidosRepository
+import com.sebastiannarvaez.marcador.domain.PreferenciasRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,6 +33,12 @@ object DatosModule {
     // Sin @Singleton: el DAO lo guarda la propia base; pedirlo dos veces es barato.
     @Provides
     fun partidoDao(base: MarcadorDatabase): PartidoDao = base.partidoDao()
+
+    // Los ajustes, en DataStore. @Singleton: DataStore exige UNA instancia por fichero.
+    // PreferenciasDataStore tiene dos constructores; la receta usa el del Context.
+    @Provides
+    @Singleton
+    fun preferencias(@ApplicationContext contexto: Context): PreferenciasRepository = PreferenciasDataStore(contexto)
 
     // Un alcance que dura lo que el proceso: para trabajo que no es de ninguna pantalla
     // (sembrar la base). SupervisorJob: un fallo no cancela el resto.

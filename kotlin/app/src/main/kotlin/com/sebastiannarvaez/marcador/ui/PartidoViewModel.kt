@@ -2,6 +2,7 @@ package com.sebastiannarvaez.marcador.ui
 
 import com.sebastiannarvaez.marcador.domain.Directo
 import com.sebastiannarvaez.marcador.domain.PartidosRepository
+import com.sebastiannarvaez.marcador.domain.PreferenciasRepository
 import com.sebastiannarvaez.marcador.domain.RegistrarGol
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -62,6 +64,7 @@ class PartidoViewModel @Inject constructor(
     private val estadoGuardado: SavedStateHandle,
     private val repositorio: PartidosRepository,
     private val registrarGol: RegistrarGol,
+    private val preferencias: PreferenciasRepository,
 ) : ViewModel() {
 
     // Las dependencias LLEGAN por el constructor (antes salian de un singleton
@@ -94,6 +97,7 @@ class PartidoViewModel @Inject constructor(
                     minuto = instante.minuto,
                     corriendo = instante.corriendo,
                     ultimoAviso = instante.ultimoAviso,
+                    duracion = paso.directo.minutosDelPartido,
                 )
             }
         }
@@ -117,6 +121,14 @@ class PartidoViewModel @Inject constructor(
             Unit
         } ?: Unit
         is MarcadorEvento.Elegir -> cargar(evento.partidoId)
+        // Se guarda en DataStore y se recarga el partido: el reloj y el guion cambian.
+        is MarcadorEvento.CambiarDuracion -> {
+            viewModelScope.launch {
+                preferencias.cambiarDuracion(evento.minutos)
+                cargar(partidoId.value)
+            }
+            Unit
+        }
     }
 
     // Elegir un partido: para el directo, y pasa por `Cargando`.
@@ -133,7 +145,7 @@ class PartidoViewModel @Inject constructor(
                 // Solo se guarda el id si es valido: un id malo en el handle
                 // rompería la app tambien tras un am kill.
                 estadoGuardado[CLAVE_PARTIDO] = id
-                carga.value = Carga.Lista(Directo(id, elegido, MS_POR_MINUTO))
+                carga.value = Carga.Lista(Directo(id, elegido, MS_POR_MINUTO, preferencias.duracionDelPartido.first()))
             }
         }
     }

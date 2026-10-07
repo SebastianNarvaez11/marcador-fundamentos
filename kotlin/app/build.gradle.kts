@@ -82,6 +82,8 @@ room3 {
 }
 
 dependencies {
+    // DataStore Preferences: pares clave-valor pequenos, asincronos, con Flow.
+    implementation(libs.androidx.datastore.preferences)
     // Hilt: la libreria viaja en la app; el procesador (`ksp`) solo corre al compilar y
     // escribe las clases Hilt_... y el componente.
     implementation(libs.hilt.android)

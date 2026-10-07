@@ -13,7 +13,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -22,7 +21,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.sebastiannarvaez.marcador.torneo.Marcador
 import kotlinx.coroutines.delay
 
-// f37 · EFECTOS
+// EFECTOS
 //
 // Un composable debe ser una funcion pura del estado: se puede ejecutar muchas veces,
 // en cualquier orden y hasta descartarse a medias. Todo lo que NO es «dibujar»
@@ -116,12 +115,12 @@ fun TituloDeLaActividad(marcador: Marcador) {
     val actividad = LocalActivity.current
     SideEffect {
         actividad?.title = "Marcador $marcador"
-        Log.d(ETIQUETA, "titulo publicado: Marcador $marcador")
+        Log.d(ETIQUETA, "título publicado: Marcador $marcador")
     }
 }
 
 // La parte visible del cronometro (sin estado: recibe todo y avisa con lambdas).
-// En f38 desaparecen Pausa y Reiniciar: el partido en vivo solo corre hacia delante
+// Sin Pausa ni Reiniciar: el partido en vivo solo corre hacia delante
 // (no se pausa ni se reinicia) y el boton se deshabilita al empezar.
 @Composable
 fun PanelDelCronometro(
@@ -130,14 +129,15 @@ fun PanelDelCronometro(
     ultimoAviso: String,
     pausas: Int,
     onEmpezar: () -> Unit,
+    duracion: Int = MINUTOS_DEL_PARTIDO,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Minuto $minuto'", style = MaterialTheme.typography.headlineMedium)
         Button(onClick = onEmpezar, enabled = !corriendo && minuto == 0) {
-            Text(if (minuto >= MINUTOS_DEL_PARTIDO) "Partido terminado" else if (corriendo) "En juego" else "Empezar partido")
+            Text(if (minuto >= duracion) "Partido terminado" else if (corriendo) "En juego" else "Empezar partido")
         }
-        Text("Ultimo aviso (cada 15'): $ultimoAviso")
-        Text("Veces que la pantalla paso a segundo plano: $pausas")
+        Text("Último aviso (cada 15'): $ultimoAviso")
+        Text("Veces que la pantalla pasó a segundo plano: $pausas")
     }
 }
