@@ -62,8 +62,10 @@ struct ListaDePartidosView: View {
                     // También a escondidas: el servicio y el repositorio de crónicas nacen aquí.
                     CronicaView(viewModel: CronicaViewModel(
                         partidoId: id,
-                        partidos: repositorio,
-                        cronicas: RepositorioDeCronicasEnRed(servicio: ServicioJSONPlaceholder())
+                        publicarCronica: PublicarCronica(
+                            partidos: repositorio,
+                            cronicas: RepositorioDeCronicasEnRed(servicio: ServicioJSONPlaceholder())
+                        )
                     ))
                 }
             }

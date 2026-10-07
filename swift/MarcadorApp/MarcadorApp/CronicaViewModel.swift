@@ -1,6 +1,5 @@
 import Foundation
 import Observation
-import Torneo
 
 // LO QUE VE LA PANTALLA DE LA CRÓNICA.
 struct CronicaUiState: Equatable {
@@ -9,49 +8,36 @@ struct CronicaUiState: Equatable {
     var mensaje: String?         // «Crónica publicada con el n.º 101», o el error
 }
 
-// OJO: este ViewModel hace DEMASIADO, a propósito. Lee el partido de un repositorio, decide cómo se
-// escribe la crónica y la publica con otro. Más adelante esa regla se irá a un caso de uso.
+// Ahora el ViewModel solo hace lo suyo: enseñar la crónica y avisar al caso de uso.
+// Cómo se escribe y con qué repositorios se publica lo sabe `PublicarCronica`.
 @MainActor
 @Observable
 final class CronicaViewModel {
     private(set) var uiState: CronicaUiState
 
-    @ObservationIgnored private let cronicas: any CronicasRepositorio
+    @ObservationIgnored private let partidoId: Int
+    @ObservationIgnored private let publicarCronica: PublicarCronica
 
-    init(partidoId: Int, partidos: any PartidosRepositorio, cronicas: any CronicasRepositorio) {
-        self.cronicas = cronicas
-        if let partido = partidos.partido(id: partidoId) {
-            uiState = CronicaUiState(cronica: Self.redactar(partido))
+    init(partidoId: Int, publicarCronica: PublicarCronica) {
+        self.partidoId = partidoId
+        self.publicarCronica = publicarCronica
+        if let cronica = publicarCronica.redactar(partidoId: partidoId) {
+            uiState = CronicaUiState(cronica: cronica)
         } else {
             uiState = CronicaUiState(mensaje: "No existe el partido \(partidoId)")
         }
     }
 
-    // La regla: el título es el resultado y el texto, una línea por gol («12' Ana (Rayo FC)»).
-    private static func redactar(_ partido: Partido) -> Cronica {
-        var lineas: [String] = []
-        for evento in partido.eventos {
-            if case let .gol(minuto, jugador, equipo) = evento {
-                lineas.append("\(minuto)' \(jugador.nombre) (\(equipo.nombre))")
-            }
-        }
-        return Cronica(
-            titulo: "\(partido.local.nombre) \(partido.marcador()) \(partido.visitante.nombre)",
-            texto: lineas.isEmpty ? "Sin goles" : lineas.joined(separator: "\n")
-        )
-    }
-
     // El botón «Publicar».
     func publicar() async {
-        guard let cronica = uiState.cronica else { return }
+        guard uiState.cronica != nil else { return }
         uiState.publicando = true
         uiState.mensaje = nil
-        do {
-            let id = try await cronicas.publicar(titulo: cronica.titulo, texto: cronica.texto)
+        switch await publicarCronica(partidoId: partidoId) {
+        case let .success(id):
             uiState.mensaje = "Crónica publicada con el n.º \(id)"
-        } catch {
-            // `ErrorDeRed` es `LocalizedError`: aquí sale «No hay conexión» o «El servidor respondió…».
-            uiState.mensaje = error.localizedDescription
+        case let .failure(fallo):
+            uiState.mensaje = fallo.localizedDescription
         }
         uiState.publicando = false
         Registro.anotar("crónica: \(uiState.mensaje ?? "")")
