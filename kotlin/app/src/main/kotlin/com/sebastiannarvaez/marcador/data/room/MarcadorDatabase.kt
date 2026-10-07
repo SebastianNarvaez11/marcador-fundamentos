@@ -13,14 +13,19 @@ import androidx.sqlite.driver.AndroidSQLiteDriver
 // SOLO ANDROID: en un modulo KMP (la Pokedex) hace falta ademas un `expect object ...Constructor`
 // con @ConstructedBy; en un modulo `com.android.application` NO (el compilador da
 // «'expect' and 'actual' declarations can be used only in multiplatform projects»).
+//
+// Version 3: la tabla nueva `arbitro`. Una tabla nueva es el caso facil de una migracion
+// automatica: Room compara 2.json con 3.json y escribe el CREATE TABLE. Los partidos y los
+// goles de la version 2 se quedan como estaban.
 @Database(
-    entities = [PartidoEntity::class, GolEntity::class],
-    version = 2,
+    entities = [PartidoEntity::class, GolEntity::class, ArbitroEntity::class],
+    version = 3,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
 )
 abstract class MarcadorDatabase : RoomDatabase() {
     abstract fun partidoDao(): PartidoDao
+    abstract fun arbitroDao(): ArbitroDao
 }
 
 // Room 3 OBLIGA a elegir un DRIVER de SQLite (Room 2 usaba el del sistema sin preguntar).
