@@ -9,11 +9,12 @@ import com.sebastiannarvaez.marcador.domain.ArbitrosRepository
 import com.sebastiannarvaez.marcador.torneo.intentar
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 // El repositorio con DOS fuentes: Room (la local) y la red. Room MANDA: es la fuente de
 // verdad. La red solo sirve para ponerla al dia. Vive en data/ y no en data/red/ ni en
 // data/room/ porque conoce a las dos.
-class ArbitrosRepositoryDosFuentes(
+class ArbitrosRepositoryDosFuentes @Inject constructor(
     private val api: LigaApi,
     private val dao: ArbitroDao,
 ) : ArbitrosRepository {
