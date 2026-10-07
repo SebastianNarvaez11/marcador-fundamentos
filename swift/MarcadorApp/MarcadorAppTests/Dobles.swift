@@ -1,3 +1,4 @@
+import Foundation
 import Torneo
 @testable import MarcadorApp
 
@@ -38,5 +39,20 @@ final class NotificadorEspia: Notificador {
 
     func notificarGol(minuto: Int, jugador: String, equipo: String) {
         avisos.append((minuto, jugador, equipo))
+    }
+}
+
+// El repositorio de árbitros falso: devuelve lo que le digas (una lista o un fallo) y cuenta las llamadas.
+final class ArbitrosRepositorioFalso: ArbitrosRepositorio {
+    var respuesta: Result<[Arbitro], URLError>
+    private(set) var llamadas = 0
+
+    init(respuesta: Result<[Arbitro], URLError>) {
+        self.respuesta = respuesta
+    }
+
+    func arbitros() async throws -> [Arbitro] {
+        llamadas += 1
+        return try respuesta.get()
     }
 }
