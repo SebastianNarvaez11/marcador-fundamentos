@@ -37,6 +37,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlin.system.measureTimeMillis
+import dagger.hilt.android.AndroidEntryPoint
 
 // Una Activity es UNA pantalla que el sistema crea, pausa y destruye cuando
 // quiere. No la construyes tu con `MainActivity()`: la crea Android, y te avisa
@@ -45,6 +46,10 @@ import kotlin.system.measureTimeMillis
 // Aqui cada callback deja una linea en Logcat con el tag `Ciclo`. Para verlas:
 //   adb logcat -s Ciclo
 // o en Android Studio: Logcat, y filtra por `tag:Ciclo`.
+//
+// @AndroidEntryPoint: esta Activity puede recibir piezas de Hilt (y los ViewModel que
+// pida con hiltViewModel()). Sin ella, Hilt no la conoce.
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     // Dos contadores, dos destinos distintos al girar la pantalla.
