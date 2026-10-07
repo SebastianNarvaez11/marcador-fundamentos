@@ -1,5 +1,6 @@
 package com.sebastiannarvaez.marcador.data
 
+import com.sebastiannarvaez.marcador.domain.Goleador
 import com.sebastiannarvaez.marcador.domain.PartidoDeLista
 import com.sebastiannarvaez.marcador.domain.PartidosRepository
 import com.sebastiannarvaez.marcador.torneo.Equipo
@@ -8,6 +9,7 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
 // La implementacion de datos: una lista en memoria dentro de un StateFlow.
@@ -28,5 +30,12 @@ class PartidosRepositoryEnMemoria(
         lista.update { partidos ->
             partidos.map { if (it.id == partidoId) it.copy(partido = it.partido.registrar(gol)) else it }
         }
+    }
+
+    override fun observarGoleadores(): Flow<List<Goleador>> = lista.map { partidos ->
+        partidos.flatMap { it.partido.eventos.filterIsInstance<Gol>() }
+            .groupingBy { it.jugador.nombre }.eachCount()
+            .map { Goleador(it.key, it.value) }
+            .sortedWith(compareByDescending<Goleador> { it.goles }.thenBy { it.jugador })
     }
 }
