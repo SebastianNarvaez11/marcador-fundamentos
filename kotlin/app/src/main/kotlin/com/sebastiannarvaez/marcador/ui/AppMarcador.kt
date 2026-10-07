@@ -51,6 +51,9 @@ data class PartidoKey(val partidoId: Int) : NavKey
 @Serializable
 data object GoleadoresKey : NavKey
 
+@Serializable
+data object ArbitrosKey : NavKey
+
 // Las pestanas de primer nivel, que nunca se apilan entre si (la barra solo sale en ellas).
 private val PESTANAS: List<NavKey> = listOf(ListaKey, TablasKey, RecomposicionKey)
 
@@ -110,7 +113,10 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                         topBar = {
                             CenterAlignedTopAppBar(
                                 title = { Text("Partidos") },
-                                actions = { TextButton(onClick = onVerDemos) { Text("Pruebas de Android") } },
+                                actions = {
+                                    TextButton(onClick = { pila.add(ArbitrosKey) }) { Text("Árbitros") }
+                                    TextButton(onClick = onVerDemos) { Text("Pruebas de Android") }
+                                },
                             )
                         },
                         contentWindowInsets = WindowInsets(0),
@@ -151,6 +157,11 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                     val vm: GoleadoresViewModel = viewModel(factory = Fabricas.goleadores)
                     val goleadores by vm.goleadores.collectAsStateWithLifecycle()
                     PantallaGoleadores(goleadores, alVolver = { pila.removeAt(pila.lastIndex) })
+                }
+                entry<ArbitrosKey> {
+                    val vm: ArbitrosViewModel = viewModel(factory = Fabricas.arbitros)
+                    val estado by vm.uiState.collectAsStateWithLifecycle()
+                    PantallaArbitros(estado, onReintentar = vm::reintentar)
                 }
             },
         )
