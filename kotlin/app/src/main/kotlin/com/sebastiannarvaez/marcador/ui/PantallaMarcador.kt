@@ -62,6 +62,7 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 @Composable
 fun PantallaMarcador(
     onVerGoleadores: () -> Unit,
+    onVerCronica: () -> Unit,
     onVolver: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PartidoViewModel,
@@ -73,7 +74,7 @@ fun PantallaMarcador(
     var pausas by rememberSaveable { mutableIntStateOf(0) }
     ObservadorDelCiclo(alPararse = { pausas++ })
 
-    PantallaMarcadorContenido(estado, pausas, viewModel::alEvento, onVerGoleadores, onVolver, modifier)
+    PantallaMarcadorContenido(estado, pausas, viewModel::alEvento, onVerGoleadores, onVerCronica, onVolver, modifier)
 }
 
 // SIN ESTADO: recibe el UiState y una lambda de eventos. Se puede previsualizar con
@@ -85,6 +86,7 @@ fun PantallaMarcadorContenido(
     pausas: Int,
     onEvento: (MarcadorEvento) -> Unit,
     onVerGoleadores: () -> Unit,
+    onVerCronica: () -> Unit,
     onVolver: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -119,8 +121,11 @@ fun PantallaMarcadorContenido(
                     // Un slot: lo que sobra de la pantalla se inyecta desde fuera.
                     extras = {
                         Text("Partido n.º ${estado.partidoId} (elegido en la lista de partidos)")
-                        // Empuja otra clave en la pila de Navigation 3.
-                        Button(onClick = onVerGoleadores) { Text("Ver goleadores") }
+                        // Empujan otra clave en la pila de Navigation 3.
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(onClick = onVerGoleadores) { Text("Ver goleadores") }
+                            Button(onClick = onVerCronica) { Text("Crónica") }
+                        }
                         PanelDelCronometro(
                             estado.minuto, estado.corriendo, estado.ultimoAviso, pausas,
                             onEmpezar = { onEvento(MarcadorEvento.Empezar) },
@@ -234,7 +239,7 @@ private fun PantallaMarcadorPreview() {
     MaterialTheme {
         PantallaMarcadorContenido(
             MarcadorUiState.Exito(1, Ejemplo.rayoContraToros, Marcador(2, 1), 45, true, "minuto 30 con 1-1"),
-            pausas = 0, onEvento = {}, onVerGoleadores = {}, onVolver = {},
+            pausas = 0, onEvento = {}, onVerGoleadores = {}, onVerCronica = {}, onVolver = {},
         )
     }
 }
