@@ -56,7 +56,7 @@ struct ListaDePartidosView: View {
                     // OJO: la pantalla crea aquí, a escondidas, el servicio y el repositorio. Funciona,
                     // pero cada vez que se abre nace un repositorio nuevo. Se arregla con la inyección.
                     ArbitrosView(viewModel: ArbitrosViewModel(
-                        repositorio: RepositorioDeArbitrosEnRed(servicio: ServicioJSONPlaceholder())
+                        repositorio: RepositorioDeArbitros(servicio: ServicioJSONPlaceholder(), almacen: .predeterminado)
                     ))
                 case let .cronica(id):
                     // También a escondidas: el servicio y el repositorio de crónicas nacen aquí.

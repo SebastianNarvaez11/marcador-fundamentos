@@ -1,6 +1,6 @@
 import SwiftUI
 
-// La pantalla de los árbitros: pinta el `uiState` del ViewModel, como la del partido.
+// La pantalla de los árbitros: pinta lo GUARDADO y, encima, el aviso si la red falló.
 struct ArbitrosView: View {
     @State private var viewModel: ArbitrosViewModel
 
@@ -9,33 +9,51 @@ struct ArbitrosView: View {
     }
 
     var body: some View {
-        Group {
-            switch viewModel.uiState {
-            case .cargando:
-                ProgressView("Buscando árbitros…")
-            case let .error(mensaje):
-                // `ContentUnavailableView`: la pantalla vacía de iOS, con icono, texto y acciones.
-                ContentUnavailableView {
-                    Label(mensaje, systemImage: "wifi.slash")
-                } description: {
-                    Text("Comprueba la conexión y vuelve a intentarlo.")
-                } actions: {
-                    Button("Reintentar") {
-                        Task { await viewModel.reintentar() }
+        let estado = viewModel.uiState
+        List {
+            if let error = estado.error, !estado.arbitros.isEmpty {
+                // Hay datos guardados, pero no se pudieron renovar: se avisa sin vaciar la lista.
+                Label(error, systemImage: "exclamationmark.triangle")
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+            }
+            ForEach(estado.arbitros) { arbitro in
+                // «Leanne Graham · Gwenborough»
+                Text("\(arbitro.nombre) · \(arbitro.ciudad)")
+            }
+        }
+        .listStyle(.plain)
+        // Si no hay nada guardado, en lugar de una lista vacía: la ruedecita o el error.
+        .overlay {
+            if estado.arbitros.isEmpty {
+                if let error = estado.error {
+                    // `ContentUnavailableView`: la pantalla vacía de iOS, con icono, texto y acciones.
+                    ContentUnavailableView {
+                        Label(error, systemImage: "wifi.slash")
+                    } description: {
+                        Text("Comprueba la conexión y vuelve a intentarlo.")
+                    } actions: {
+                        Button("Reintentar") {
+                            Task { await viewModel.refrescar() }
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
-                    .buttonStyle(.borderedProminent)
+                } else {
+                    ProgressView("Buscando árbitros…")
                 }
-            case let .exito(arbitros):
-                List(arbitros) { arbitro in
-                    // «Leanne Graham · Gwenborough»
-                    Text("\(arbitro.nombre) · \(arbitro.ciudad)")
-                }
-                .listStyle(.plain)
             }
         }
         .navigationTitle("Árbitros")
         .navigationBarTitleDisplayMode(.inline)
-        // Arranca al aparecer la pantalla y se cancela si se va antes de terminar.
-        .task { await viewModel.cargar() }
+        .toolbar {
+            Button("Actualizar") {
+                Task { await viewModel.refrescar() }
+            }
+            .disabled(estado.refrescando)
+        }
+        // Tirar de la lista hacia abajo también refresca.
+        .refreshable { await viewModel.refrescar() }
+        // Al aparecer: se ve lo guardado al instante y la red refresca por detrás.
+        .task { await viewModel.refrescar() }
     }
 }

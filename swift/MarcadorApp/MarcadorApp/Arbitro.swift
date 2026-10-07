@@ -1,7 +1,8 @@
 // EL MODELO: lo que la app entiende por «árbitro», con nombres en español y solo lo que usa.
 // La pantalla pinta `Arbitro`, nunca el DTO: si mañana el servidor cambia un nombre, solo cambia
 // la traducción de abajo.
-struct Arbitro: Identifiable, Equatable {
+// `Codable`: además se guarda en el disco (`arbitros.json`) y se vuelve a leer.
+struct Arbitro: Identifiable, Codable, Equatable {
     let id: Int
     let nombre: String
     let ciudad: String
@@ -14,7 +15,10 @@ extension Arbitro {
     }
 }
 
-// EL REPOSITORIO de los árbitros: la puerta por la que el ViewModel los pide, sin saber de dónde salen.
+// EL REPOSITORIO de los árbitros, con DOS FUENTES: el disco y el servidor.
+//   - `arbitros`: lo guardado. Se lee al instante, también sin red.
+//   - `refrescar()`: pide la lista al servidor, la guarda y entonces cambia `arbitros`.
 protocol ArbitrosRepositorio: AnyObject {
-    func arbitros() async throws -> [Arbitro]
+    var arbitros: [Arbitro] { get }
+    func refrescar() async throws
 }

@@ -14,10 +14,12 @@ struct MarcadorApp: App {
     @Environment(\.scenePhase) private var fase
 
     // El repositorio, creado una vez y repartido a las pantallas por el entorno.
-    // Con el torneo guardado en `Documents/torneo.json` (`-reiniciarDatos YES` lo borra al arrancar).
+    // Con el torneo guardado en `Documents/torneo.json` (`-reiniciarDatos YES` lo borra al arrancar,
+    // y también los árbitros guardados en `Documents/arbitros.json`).
     @State private var repositorio: RepositorioDePartidos = {
         if Configuracion.reiniciarDatos {
             AlmacenDelTorneo.predeterminado.borrar()
+            AlmacenDeArbitros.predeterminado.borrar()
             UserDefaults.standard.removeObject(forKey: Ajustes.claveDuracion)
         }
         return RepositorioDePartidos(almacen: .predeterminado)
