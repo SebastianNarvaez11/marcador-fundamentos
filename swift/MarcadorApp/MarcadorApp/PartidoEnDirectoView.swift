@@ -80,6 +80,8 @@ struct PartidoEnDirectoView: View {
                     Text("Veces que la pantalla pasó a segundo plano: \(pausas)")
                     // Empuja OTRO valor en la pila (gemelo del botón que empuja `Goleadores` en Kotlin).
                     NavigationLink("Ver goleadores", value: Destino.goleadores)
+                    // La crónica de ESTE partido: el id viaja en el destino.
+                    NavigationLink("Crónica", value: Destino.cronica(datos.partidoId))
                     // Pedir el permiso de notificaciones. La primera vez sale el diálogo del sistema.
                     Button(notificador.permitido ? "Avisos de gol: activados" : "Activar avisos de gol") {
                         Task { await notificador.pedirPermiso() }

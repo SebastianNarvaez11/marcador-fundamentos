@@ -11,4 +11,5 @@ enum Destino: Hashable {
     case partido(Int)   // el id del partido (viaja en la clave, en un solo sitio)
     case goleadores
     case arbitros       // la lista de árbitros (botón «Árbitros» de la barra de Partidos)
+    case cronica(Int)   // la crónica del partido con ese id (botón «Crónica» del partido)
 }

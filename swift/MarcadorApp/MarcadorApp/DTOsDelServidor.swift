@@ -18,3 +18,17 @@ struct ArbitroDTO: Decodable {
         let city: String
     }
 }
+
+// Lo que se ENVÍA en el POST de la crónica: sin id, porque lo pone el servidor.
+// `Encodable`: `JSONEncoder` sabe convertirlo en JSON.
+struct CronicaNuevaDTO: Encodable {
+    let userId: Int
+    let title: String
+    let body: String
+}
+
+// Lo que el servidor DEVUELVE al crearla: lo que se envió, con el id que le ha dado.
+struct CronicaPublicadaDTO: Decodable {
+    let id: Int
+    let title: String
+}
