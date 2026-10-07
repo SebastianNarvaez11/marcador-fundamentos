@@ -3,34 +3,37 @@ package com.sebastiannarvaez.marcador.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sebastiannarvaez.marcador.domain.ArbitrosRepository
-import com.sebastiannarvaez.marcador.torneo.intentar
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// Pide los arbitros al abrirse la pantalla (init) y otra vez con «Reintentar».
-// `intentar` (de :torneo) atrapa el fallo como Result y RELANZA la cancelacion: si la
-// pantalla se cierra a mitad de la peticion, la corrutina se cancela de verdad.
+// La lista sale de lo guardado (observarArbitros) y se refresca al abrir y con
+// «Actualizar». Tres flujos -> un UiState con `combine`.
 class ArbitrosViewModel(private val repositorio: ArbitrosRepository) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<ArbitrosUiState>(ArbitrosUiState.Cargando)
-    val uiState: StateFlow<ArbitrosUiState> = _uiState.asStateFlow()
+    private val refrescando = MutableStateFlow(false)
+    private val error = MutableStateFlow<String?>(null)
+
+    val uiState: StateFlow<ArbitrosUiState> =
+        combine(repositorio.observarArbitros(), refrescando, error) { arbitros, cargando, fallo ->
+            ArbitrosUiState(arbitros, cargando, fallo)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ArbitrosUiState(refrescando = true))
 
     init {
-        cargar()
+        actualizar()
     }
 
-    fun reintentar() = cargar()
-
-    private fun cargar() {
-        _uiState.value = ArbitrosUiState.Cargando
+    fun actualizar() {
+        if (refrescando.value) return
+        refrescando.value = true
+        error.value = null
         viewModelScope.launch {
-            _uiState.value = intentar { repositorio.arbitros() }.fold(
-                onSuccess = { ArbitrosUiState.Exito(it) },
-                // El repositorio ya tradujo el fallo a FalloDeRed; aqui solo se pone en palabras.
-                onFailure = { ArbitrosUiState.Error(it.mensajeParaElUsuario()) },
-            )
+            // `refrescar` ya devuelve Result (no lanza): solo hay que mirar si fallo.
+            repositorio.refrescar().onFailure { error.value = it.mensajeParaElUsuario() }
+            refrescando.value = false
         }
     }
 }
