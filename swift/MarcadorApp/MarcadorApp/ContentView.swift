@@ -5,7 +5,7 @@ struct ContentView: View {
     var body: some View {
         TabView {
             Tab("Partidos", systemImage: "list.bullet") {
-                ListaDePartidosView()
+                ListaDePartidosView(partidos: DatosDeEjemplo.partidos)
             }
             Tab("Marcador", systemImage: "sportscourt") {
                 PantallaMarcador()
@@ -18,8 +18,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    // La lista y el partido leen el repositorio y el notificador del entorno: aquí se los da la vista previa.
     ContentView()
-        .environment(RepositorioDePartidos())
-        .environment(NotificadorDeSistema())
 }

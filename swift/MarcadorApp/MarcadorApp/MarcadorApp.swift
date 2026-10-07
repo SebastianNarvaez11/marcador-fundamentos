@@ -13,26 +13,16 @@ struct MarcadorApp: App {
     // la escena y no de una pantalla.
     @Environment(\.scenePhase) private var fase
 
-    // El repositorio, creado una vez y repartido a las pantallas por el entorno.
-    // Con el torneo guardado en `Documents/torneo.json` (`-reiniciarDatos YES` lo borra al arrancar).
-    @State private var repositorio: RepositorioDePartidos = {
-        if Configuracion.reiniciarDatos {
-            AlmacenDelTorneo.predeterminado.borrar()
-            UserDefaults.standard.removeObject(forKey: Ajustes.claveDuracion)
-        }
-        return RepositorioDePartidos(almacen: .predeterminado)
-    }()
-
-    // El notificador se crea UNA vez al arrancar la app (registra su delegado en el centro de notificaciones)
-    // y se reparte por el entorno.
-    @State private var notificador = NotificadorDeSistema()
+    // La app es la dueña de los ajustes (nacen una vez y viven mientras viva la app). Con
+    // `@Observable` se guardan en `@State` (antes, `@StateObject`) y se reparten con
+    // `.environment(ajustes)` (antes, `.environmentObject`).
+    @State private var ajustes = AjustesModelo()
 
     var body: some Scene {
         // `WindowGroup` es la escena normal de una app de iOS: una ventana con esta vista raíz.
         WindowGroup {
             ContentView()
-                .environment(repositorio)
-                .environment(notificador)
+                .environment(ajustes)
         }
         // `onChange(of:)` con dos parámetros (antiguo, nuevo) es la forma de iOS 17+.
         .onChange(of: fase) { antigua, nueva in

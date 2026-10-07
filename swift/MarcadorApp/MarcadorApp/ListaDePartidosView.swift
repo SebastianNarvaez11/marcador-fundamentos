@@ -1,7 +1,7 @@
 import SwiftUI
 import Torneo
 
-// LISTAS E IDENTIDAD (gemelo de LazyColumn con `key`)
+// LISTAS E IDENTIDAD (gemelo de LazyColumn con `key` en Compose)
 //
 // `List` es la lista de iOS: filas con separadores, se desplaza y RECICLA las filas que no se
 // ven (como LazyColumn: solo se crean las visibles). `ForEach` es la pieza que convierte una
@@ -14,42 +14,32 @@ import Torneo
 //   - ESTRUCTURAL: si no hay id, SwiftUI usa la POSICIÓN en el código (la vista que va
 //     primero, la segunda…). Sirve para vistas fijas (`VStack { A; B }`) y falla en listas que
 //     cambian: el estado se queda pegado a la posición. Es lo que pasa en Compose sin `key`.
-// NAVEGACIÓN POR VALOR (gemelo de Navigation 3)
-//
-// `NavigationStack` es la pila de pantallas de iOS. Cada fila es un `NavigationLink(value:)`: al
-// tocarla se EMPUJA un valor (`Destino`) a la pila, y `.navigationDestination(for:)` traduce cada
-// valor en una pantalla. La barra de arriba con el botón «atrás» la pone SwiftUI. Sustituye a las
-// hojas modales de antes, que no eran navegación (tapaban la lista, no la «apilaban»).
 struct ListaDePartidosView: View {
-    // La lista LEE los partidos del repositorio (`@Observable`): al registrar un gol, la fila cambia sola.
-    @Environment(RepositorioDePartidos.self) private var repositorio
+    let partidos: [PartidoDeLista]
 
-    // La pila entera es un array de destinos, en un `@State`: se puede inspeccionar y manipular.
-    @State private var ruta: [Destino] = []
+    // El partido tocado se abre en una hoja modal (la navegación de verdad llega después).
+    // `sheet(item:)` se abre cuando el valor deja de ser nil, y necesita `Identifiable`.
+    @State private var elegido: PartidoDeLista?
 
     var body: some View {
-        NavigationStack(path: $ruta) {
-            List(repositorio.partidos) { item in
-                NavigationLink(value: Destino.partido(item.id)) {
-                    FilaDePartido(
-                        local: item.partido.local.nombre,
-                        visitante: item.partido.visitante.nombre,
-                        resultado: item.partido.marcador().description
-                    )
-                }
-                .accessibilityIdentifier("partido-\(item.id)")
+        // `PartidoDeLista` es `Identifiable`, así que basta pasarle la colección.
+        // Equivale a `List(partidos, id: \.id)`.
+        List(partidos) { item in
+            Button {
+                elegido = item
+            } label: {
+                FilaDePartido(
+                    local: item.partido.local.nombre,
+                    visitante: item.partido.visitante.nombre,
+                    resultado: item.partido.marcador().description
+                )
             }
-            .listStyle(.plain)
-            .navigationTitle("Partidos")
-            // UN solo sitio decide qué pantalla corresponde a cada destino.
-            .navigationDestination(for: Destino.self) { destino in
-                switch destino {
-                case let .partido(id):
-                    PartidoContenedor(id: id)
-                case .goleadores:
-                    GoleadoresView()
-                }
-            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("partido-\(item.id)")
+        }
+        .listStyle(.plain)
+        .sheet(item: $elegido) { item in
+            PartidoContenedor(item: item)
         }
     }
 }
@@ -63,7 +53,7 @@ struct FilaDePartido: View {
     var body: some View {
         HStack {
             Text(local).frame(maxWidth: .infinity, alignment: .leading)
-            Text(resultado).bold().monospacedDigit().accessibilityIdentifier("resultado")
+            Text(resultado).bold().monospacedDigit()
             Text(visitante).frame(maxWidth: .infinity, alignment: .trailing)
         }
         // Que toda la fila (no solo el texto) sea tocable. Sin esto, tocar el hueco entre textos no cuenta.
@@ -72,7 +62,5 @@ struct FilaDePartido: View {
 }
 
 #Preview {
-    ListaDePartidosView()
-        .environment(RepositorioDePartidos())
-        .environment(NotificadorDeSistema())   // lo lee el partido al navegar
+    ListaDePartidosView(partidos: DatosDeEjemplo.partidos)
 }

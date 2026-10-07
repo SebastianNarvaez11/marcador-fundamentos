@@ -1,12 +1,8 @@
-import Foundation
 import Observation
 import Synchronization
 import Testing
 import Torneo
 @testable import MarcadorApp
-
-// Un objeto `@Observable` mínimo para la prueba de observación.
-@Observable final class Contador { var valor = 0 }
 
 // El modelo es de la app y la app aísla todo a MainActor por defecto; el target de pruebas NO:
 // hay que decirlo a mano.
@@ -42,55 +38,62 @@ struct MarcadorAppTests {
 
     // `@Observable` avisa cuando cambia lo que se LEYÓ dentro de `withObservationTracking`.
     @Test func observableAvisaSoloDeLoQueSeLee() {
-        let contador = Contador()
+        let ajustes = AjustesModelo()
         // `Mutex`: el `onChange` es @Sendable y no puede mutar una `var` capturada.
         let avisos = Mutex(0)
         withObservationTracking {
-            _ = contador.valor
+            _ = ajustes.duracion
         } onChange: {
             avisos.withLock { $0 += 1 }
         }
-        contador.valor = 60
+        ajustes.duracion = 60
         #expect(avisos.withLock { $0 } == 1)
-        #expect(contador.valor == 60)
+        #expect(ajustes.duracion == 60)
     }
 
-    // Los goleadores se calculan de los partidos: la suma de sus goles es la de todos los partidos.
-    @Test func losGoleadoresSumanLosGolesDeTodosLosPartidos() {
-        let repositorio = RepositorioDePartidos()
-        let golesTotales = repositorio.partidos.reduce(0) { $0 + $1.partido.golesLocal + $1.partido.golesVisitante }
-        let golesDeGoleadores = repositorio.goleadores().reduce(0) { $0 + $1.goles }
-        #expect(golesDeGoleadores == golesTotales)
-        // Ordenados de más a menos goles.
-        let goles = repositorio.goleadores().map(\.goles)
-        #expect(goles == goles.sorted(by: >))
+    @Test func unModeloSinArrancarSeLibera() {
+        weak var referencia: PartidoEnVivoModelo?
+        do {
+            let modelo = PartidoEnVivoModelo(partido: Ejemplo.rayoContraToros, msPorMinuto: 1)
+            referencia = modelo
+            #expect(referencia != nil)
+        }
+        #expect(referencia == nil)
     }
 
-    // El torneo se guarda como JSON en un fichero y se vuelve a leer igual.
-    @Test func elTorneoSobreviveAGuardarseYCargarse() throws {
-        let carpeta = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
-        try FileManager.default.createDirectory(at: carpeta, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: carpeta) }
-        let almacen = AlmacenDelTorneo(url: carpeta.appending(path: "torneo.json"))
-        #expect(!almacen.existe)
-
-        let repositorio = RepositorioDePartidos(almacen: almacen)
-        repositorio.registrarGol(partidoId: 1, gol: .gol(minuto: 5, jugador: Ejemplo.ana, equipo: Ejemplo.rayo))
-        #expect(almacen.existe)
-        let esperado = repositorio.partido(id: 1)?.marcador()
-
-        // Otro repositorio, que arranca leyendo el fichero: mismo partido, mismo marcador.
-        let recargado = RepositorioDePartidos(almacen: almacen)
-        #expect(recargado.partidos.count == 18)
-        #expect(recargado.partido(id: 1)?.marcador() == esperado)
+    // El partido ENTERO con un minuto de 0 ms: los goles del guion suben el marcador.
+    @Test func jugarAplicaLosGolesDelGuion() async {
+        let modelo = PartidoEnVivoModelo(partido: Ejemplo.rayoContraToros, msPorMinuto: 0)
+        await modelo.jugar(duracion: 90)
+        #expect(modelo.minuto == 90)
+        #expect(modelo.marcador == Marcador(local: 2, visitante: 1))
+        #expect(!modelo.corriendo)
+        #expect(modelo.ultimoAviso == "minuto 90 con 2-1")
     }
 
-    // Un JSON roto no impide arrancar: se usan los datos de ejemplo.
-    @Test func unJsonRotoNoImpideArrancar() throws {
-        let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).json")
-        try Data("esto no es json".utf8).write(to: url)
-        defer { try? FileManager.default.removeItem(at: url) }
-        let repositorio = RepositorioDePartidos(almacen: AlmacenDelTorneo(url: url))
-        #expect(repositorio.partidos.count == 18)
+    // Un partido de 60 minutos ignora el gol del minuto 80.
+    @Test func unPartidoDeSesentaMinutosIgnoraLosGolesPosteriores() async {
+        let modelo = PartidoEnVivoModelo(partido: Ejemplo.rayoContraToros, msPorMinuto: 0)
+        await modelo.jugar(duracion: 60)
+        #expect(modelo.marcador == Marcador(local: 1, visitante: 1))
+    }
+
+    @Test func losGolesAManoSeSumanAlDelGuion() async {
+        let modelo = PartidoEnVivoModelo(partido: Ejemplo.rayoContraToros, msPorMinuto: 0)
+        modelo.golAMano(.local)
+        modelo.golAMano(.visitante)
+        modelo.golAMano(.visitante)
+        #expect(modelo.marcador == Marcador(local: 1, visitante: 2))
+    }
+
+    // Cancelar la tarea detiene el bucle: es lo que hace SwiftUI con `.task` al irse la vista.
+    @Test func cancelarLaTareaDetieneElPartido() async {
+        let modelo = PartidoEnVivoModelo(partido: Ejemplo.rayoContraToros, msPorMinuto: 20)
+        let tarea = Task { await modelo.jugar(duracion: 90) }
+        try? await Task.sleep(for: .milliseconds(150))
+        tarea.cancel()
+        await tarea.value
+        #expect(modelo.minuto < 90)
+        #expect(!modelo.corriendo)
     }
 }

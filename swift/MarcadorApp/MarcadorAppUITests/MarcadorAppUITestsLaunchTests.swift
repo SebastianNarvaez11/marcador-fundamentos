@@ -15,13 +15,13 @@ final class MarcadorAppUITestsLaunchTests: XCTestCase {
     @MainActor
     func testLaunch() throws {
         let app = XCUIApplication()
-        app.launchArguments = sinAvisos
         app.launch()
 
         // Aquí se pueden añadir pasos antes de la captura, como iniciar sesión.
-        let captura = XCTAttachment(screenshot: app.screenshot())
-        captura.name = "Pantalla de arranque"
-        captura.lifetime = .keepAlways
-        add(captura)
+        // Como lo genera el asistente: una captura de la pantalla de arranque, adjunta al resultado.
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "Launch Screen"
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 }
