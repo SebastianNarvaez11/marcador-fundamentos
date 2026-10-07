@@ -6,7 +6,9 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import java.util.concurrent.TimeUnit
 
 // LA API DE LA LIGA, CON RETROFIT
@@ -24,6 +26,14 @@ data class ArbitroDto(val id: Int, val name: String, val address: DireccionDto)
 @Serializable
 data class DireccionDto(val city: String)
 
+// Lo que se ENVIA en el POST: un «post» de JSONPlaceholder (titulo, cuerpo y autor).
+@Serializable
+data class CronicaDto(val title: String, val body: String, val userId: Int)
+
+// Lo que RESPONDE: lo enviado mas el `id` nuevo. Solo interesa el id.
+@Serializable
+data class CronicaPublicadaDto(val id: Int)
+
 // La interfaz: cada funcion es UNA peticion. Retrofit escribe la clase que la cumple.
 // `suspend`: la llamada espera fuera del hilo principal (OkHttp tiene sus propios hilos),
 // asi que no hace falta `withContext(Dispatchers.IO)`.
@@ -31,6 +41,12 @@ interface LigaApi {
     // GET https://jsonplaceholder.typicode.com/users
     @GET("users")
     suspend fun arbitros(): List<ArbitroDto>
+
+    // POST https://jsonplaceholder.typicode.com/posts con el DTO como cuerpo JSON.
+    // Responde 201 («creado») y el id 101. Es un servicio de pruebas: no guarda nada, asi
+    // que el id es SIEMPRE 101 aunque publiques dos veces.
+    @POST("posts")
+    suspend fun publicarCronica(@Body cronica: CronicaDto): CronicaPublicadaDto
 }
 
 // La URL base termina en «/»: Retrofit le pega la ruta de cada funcion («users»).

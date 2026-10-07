@@ -44,4 +44,8 @@ object Fabricas {
     val arbitros = viewModelFactory {
         initializer { ArbitrosViewModel(contenedor.arbitrosRepository) }
     }
+
+    fun cronica(partidoId: Int) = viewModelFactory {
+        initializer { CronicaViewModel(contenedor.partidosRepository, contenedor.cronicasRepository, partidoId) }
+    }
 }

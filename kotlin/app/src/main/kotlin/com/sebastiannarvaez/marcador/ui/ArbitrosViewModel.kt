@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.io.IOException
 
 // Pide los arbitros al abrirse la pantalla (init) y otra vez con «Reintentar».
 // `intentar` (de :torneo) atrapa el fallo como Result y RELANZA la cancelacion: si la
@@ -29,10 +28,8 @@ class ArbitrosViewModel(private val repositorio: ArbitrosRepository) : ViewModel
         viewModelScope.launch {
             _uiState.value = intentar { repositorio.arbitros() }.fold(
                 onSuccess = { ArbitrosUiState.Exito(it) },
-                // IOException = no hubo respuesta: sin red, servidor caido o timeout.
-                onFailure = { error ->
-                    ArbitrosUiState.Error(if (error is IOException) "No hay conexión" else "No se pudieron cargar los árbitros")
-                },
+                // El repositorio ya tradujo el fallo a FalloDeRed; aqui solo se pone en palabras.
+                onFailure = { ArbitrosUiState.Error(it.mensajeParaElUsuario()) },
             )
         }
     }
