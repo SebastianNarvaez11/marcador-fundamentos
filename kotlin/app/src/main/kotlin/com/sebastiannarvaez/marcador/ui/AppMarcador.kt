@@ -54,6 +54,9 @@ data object GoleadoresKey : NavKey
 @Serializable
 data object ArbitrosKey : NavKey
 
+@Serializable
+data class CronicaKey(val partidoId: Int) : NavKey
+
 // Las pestanas de primer nivel, que nunca se apilan entre si (la barra solo sale en ellas).
 private val PESTANAS: List<NavKey> = listOf(ListaKey, TablasKey, RecomposicionKey)
 
@@ -149,6 +152,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                     val vm: PartidoViewModel = viewModel(factory = Fabricas.partido(clave.partidoId))
                     PantallaMarcador(
                         onVerGoleadores = { pila.add(GoleadoresKey) },
+                        onVerCronica = { pila.add(CronicaKey(clave.partidoId)) },
                         onVolver = { pila.removeAt(pila.lastIndex) },
                         viewModel = vm,
                     )
@@ -162,6 +166,11 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                     val vm: ArbitrosViewModel = viewModel(factory = Fabricas.arbitros)
                     val estado by vm.uiState.collectAsStateWithLifecycle()
                     PantallaArbitros(estado, onReintentar = vm::reintentar)
+                }
+                entry<CronicaKey> { clave ->
+                    val vm: CronicaViewModel = viewModel(factory = Fabricas.cronica(clave.partidoId))
+                    val estado by vm.uiState.collectAsStateWithLifecycle()
+                    PantallaCronica(estado, onPublicar = vm::publicar)
                 }
             },
         )

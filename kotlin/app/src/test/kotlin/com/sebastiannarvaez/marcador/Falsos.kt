@@ -1,5 +1,10 @@
 package com.sebastiannarvaez.marcador
 
+import com.sebastiannarvaez.marcador.data.red.ArbitroDto
+import com.sebastiannarvaez.marcador.data.red.CronicaDto
+import com.sebastiannarvaez.marcador.data.red.CronicaPublicadaDto
+import com.sebastiannarvaez.marcador.data.red.DireccionDto
+import com.sebastiannarvaez.marcador.data.red.LigaApi
 import com.sebastiannarvaez.marcador.domain.Arbitro
 import com.sebastiannarvaez.marcador.domain.ArbitrosRepository
 import com.sebastiannarvaez.marcador.domain.Goleador
@@ -75,5 +80,26 @@ class FakeArbitrosRepository(
     override suspend fun arbitros(): List<Arbitro> {
         fallo?.let { throw it }
         return arbitros
+    }
+}
+
+// Una API de Retrofit cumplida A MANO: ni servidor, ni OkHttp (construir un OkHttpClient
+// en la JVM escribe un error de `android.util.Log` en la salida). Guarda lo que le envian
+// y lanza el fallo que el test le ponga.
+class FakeLigaApi(
+    var arbitros: List<ArbitroDto> = listOf(ArbitroDto(1, "Leanne Graham", DireccionDto("Gwenborough"))),
+    var fallo: Exception? = null,
+) : LigaApi {
+    val enviadas = mutableListOf<CronicaDto>()
+
+    override suspend fun arbitros(): List<ArbitroDto> {
+        fallo?.let { throw it }
+        return arbitros
+    }
+
+    override suspend fun publicarCronica(cronica: CronicaDto): CronicaPublicadaDto {
+        fallo?.let { throw it }
+        enviadas += cronica
+        return CronicaPublicadaDto(id = 101)
     }
 }

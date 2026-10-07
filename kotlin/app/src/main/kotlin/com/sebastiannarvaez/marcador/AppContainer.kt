@@ -3,11 +3,13 @@ package com.sebastiannarvaez.marcador
 import android.content.Context
 import com.sebastiannarvaez.marcador.data.PreferenciasDataStore
 import com.sebastiannarvaez.marcador.data.red.ArbitrosRepositoryRed
+import com.sebastiannarvaez.marcador.data.red.CronicasRepositoryRed
 import com.sebastiannarvaez.marcador.data.red.crearLigaApi
 import com.sebastiannarvaez.marcador.data.red.crearOkHttp
 import com.sebastiannarvaez.marcador.data.room.PartidosRepositoryRoom
 import com.sebastiannarvaez.marcador.data.room.crearBaseDeDatos
 import com.sebastiannarvaez.marcador.domain.ArbitrosRepository
+import com.sebastiannarvaez.marcador.domain.CronicasRepository
 import com.sebastiannarvaez.marcador.domain.PartidosRepository
 import com.sebastiannarvaez.marcador.domain.PreferenciasRepository
 import com.sebastiannarvaez.marcador.domain.RegistrarGol
@@ -55,4 +57,6 @@ class AppContainer(private val contexto: Context) {
     private val ligaApi by lazy { crearLigaApi(okHttp) }
 
     val arbitrosRepository: ArbitrosRepository by lazy { ArbitrosRepositoryRed(ligaApi) }
+
+    val cronicasRepository: CronicasRepository by lazy { CronicasRepositoryRed(ligaApi) }
 }
