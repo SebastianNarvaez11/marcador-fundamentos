@@ -78,6 +78,8 @@ dependencies {
     // escribe las clases Hilt_... y el componente.
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    // hiltViewModel(): pide a Hilt un ViewModel desde una funcion @Composable.
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     // El modulo de dominio: Partido, Torneo, PartidoEnVivo...
     implementation(project(":torneo"))
     implementation(libs.androidx.activity.compose)

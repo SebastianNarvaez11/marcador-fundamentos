@@ -15,7 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 // f35 · RAIZ DE LA APP: tres pestañas. No es navegacion de verdad (Navigation 3 llega
 // en F5): es un `Int` con rememberSaveable y un `when`. Vale para llegar a las listas.
@@ -32,8 +32,8 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
     val titulos = listOf("Marcador", "Partidos", "Tablas", "Recomp.")
     // El ViewModel se pide AQUI, en la raiz, y se pasa hacia abajo: la lista de partidos
     // elige y la pantalla del marcador muestra, los dos con la MISMA instancia.
-    val viewModel: PartidoViewModel = viewModel()
-    val listaViewModel: ListaViewModel = viewModel()
+    val viewModel: PartidoViewModel = hiltViewModel()
+    val listaViewModel: ListaViewModel = hiltViewModel()
     val partidos by listaViewModel.partidos.collectAsStateWithLifecycle()
     val torneo by listaViewModel.torneo.collectAsStateWithLifecycle()
 

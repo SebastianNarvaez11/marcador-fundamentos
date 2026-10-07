@@ -1,11 +1,13 @@
 package com.sebastiannarvaez.marcador.ui
 
-import com.sebastiannarvaez.marcador.data.Repositorios
 import com.sebastiannarvaez.marcador.domain.Directo
+import com.sebastiannarvaez.marcador.domain.PartidosRepository
 import com.sebastiannarvaez.marcador.domain.RegistrarGol
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -51,13 +53,19 @@ import kotlinx.coroutines.launch
 // (un identificador), no el objeto entero (un partido entero no cabe en un Bundle).
 // Aqui: el id del partido seleccionado. El minuto, el marcador en vivo y los goles de
 // los botones se pierden con `am kill`, y esta bien: se reconstruye el partido, no el directo.
-class PartidoViewModel(private val estadoGuardado: SavedStateHandle) : ViewModel() {
+//
+// HILT. @HiltViewModel: Hilt sabe crear este ViewModel. @Inject constructor: le pasa todo
+// lo que hay entre parentesis. El SavedStateHandle tambien lo da Hilt, sin receta: es una
+// pieza que trae de serie para cada ViewModel.
+@HiltViewModel
+class PartidoViewModel @Inject constructor(
+    private val estadoGuardado: SavedStateHandle,
+    private val repositorio: PartidosRepository,
+    private val registrarGol: RegistrarGol,
+) : ViewModel() {
 
-    // f43: por ahora el repositorio se saca del singleton (ver Repositorios). Es una
-    // dependencia OCULTA; f44 la convierte en un parametro.
-    private val repositorio = Repositorios.partidos
-    private val registrarGol = RegistrarGol(repositorio)
-
+    // Las dependencias LLEGAN por el constructor (antes salian de un singleton
+    // oculto). Este ViewModel no sabe si el repositorio es de memoria, de Room o de mentira.
     // Un StateFlow LEIDO DEL HANDLE: cada vez que se escribe `estadoGuardado[CLAVE]`, cambia.
     val partidoId: StateFlow<Int> = estadoGuardado.getStateFlow(CLAVE_PARTIDO, 1)
 

@@ -10,9 +10,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-// f43 · La implementacion de datos: una lista en memoria dentro de un StateFlow.
+// La implementacion de datos: una lista en memoria dentro de un StateFlow.
 // El StateFlow ES la fuente de la verdad; `observarPartidos` la ofrece de solo lectura.
-// Se pierde al morir el proceso: f45 la sustituye por Room sin tocar la interfaz.
+// Se pierde al morir el proceso: Room la sustituye sin tocar la interfaz.
 class PartidosRepositoryEnMemoria(
     override val equipos: List<Equipo> = DatosDeEjemplo.torneo.equipos,
     inicial: List<PartidoDeLista> = DatosDeEjemplo.partidos,
@@ -29,11 +29,4 @@ class PartidosRepositoryEnMemoria(
             partidos.map { if (it.id == partidoId) it.copy(partido = it.partido.registrar(gol)) else it }
         }
     }
-}
-
-// PROVISIONAL, y a proposito feo: un singleton global que cualquiera alcanza. Funciona,
-// pero los ViewModels quedan atados a esta instancia y no se pueden probar con otra
-// (f48). f44 lo quita con un contenedor de dependencias.
-object Repositorios {
-    val partidos: PartidosRepositoryEnMemoria = PartidosRepositoryEnMemoria()
 }
