@@ -6,6 +6,11 @@
          sistema deniega siempre. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Permiso NORMAL: se concede al instalar, sin dialogo. OkHttp 5 ya lo declara en su
+         propio manifiesto (pestana Merged Manifest), pero se escribe igual: la app no
+         debe depender de lo que traiga una libreria. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".MarcadorApplication"
         android:allowBackup="true"
