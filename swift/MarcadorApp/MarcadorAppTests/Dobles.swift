@@ -1,4 +1,3 @@
-import Foundation
 import Torneo
 @testable import MarcadorApp
 
@@ -42,18 +41,18 @@ final class NotificadorEspia: Notificador {
     }
 }
 
-// El repositorio de árbitros falso: devuelve lo que le digas (una lista o un fallo) y cuenta las llamadas.
+// El repositorio de árbitros falso: empieza con lo «guardado» que le des y, al refrescar,
+// devuelve la lista nueva o falla, a la carta.
 final class ArbitrosRepositorioFalso: ArbitrosRepositorio {
-    var respuesta: Result<[Arbitro], URLError>
-    private(set) var llamadas = 0
+    private(set) var arbitros: [Arbitro]
+    var alRefrescar: Result<[Arbitro], ErrorDeRed> = .success([])
 
-    init(respuesta: Result<[Arbitro], URLError>) {
-        self.respuesta = respuesta
+    init(guardados: [Arbitro] = []) {
+        self.arbitros = guardados
     }
 
-    func arbitros() async throws -> [Arbitro] {
-        llamadas += 1
-        return try respuesta.get()
+    func refrescar() async throws {
+        arbitros = try alRefrescar.get()
     }
 }
 

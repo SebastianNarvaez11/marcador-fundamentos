@@ -1,29 +1,27 @@
-import Foundation
 import Testing
 @testable import MarcadorApp
 
-// El ViewModel de los árbitros con un repositorio FALSO: sin red, sin esperas y sin servidor.
+// El ViewModel de los árbitros con un repositorio FALSO: sin red, sin disco y sin servidor.
 @MainActor
 struct ArbitrosViewModelTests {
     private let leanne = Arbitro(id: 1, nombre: "Leanne Graham", ciudad: "Gwenborough")
+    private let ervin = Arbitro(id: 2, nombre: "Ervin Howell", ciudad: "Wisokyburgh")
 
-    @Test func pasaDeCargandoAExito() async {
-        let repositorio = ArbitrosRepositorioFalso(respuesta: .success([leanne]))
+    @Test func pintaLoGuardadoYAlRefrescarLoNuevo() async {
+        let repositorio = ArbitrosRepositorioFalso(guardados: [leanne])
+        repositorio.alRefrescar = .success([leanne, ervin])
         let viewModel = ArbitrosViewModel(repositorio: repositorio)
-        #expect(viewModel.uiState == .cargando)
-        await viewModel.cargar()
-        #expect(viewModel.uiState == .exito([leanne]))
+        // Antes de ir a la red ya se ve lo guardado.
+        #expect(viewModel.uiState == ArbitrosUiState(arbitros: [leanne]))
+        await viewModel.refrescar()
+        #expect(viewModel.uiState == ArbitrosUiState(arbitros: [leanne, ervin]))
     }
 
-    @Test func sinRedSaleElErrorYReintentarVuelveACargar() async {
-        let repositorio = ArbitrosRepositorioFalso(respuesta: .failure(URLError(.notConnectedToInternet)))
+    @Test func sinRedConservaLaListaYMuestraElAviso() async {
+        let repositorio = ArbitrosRepositorioFalso(guardados: [leanne])
+        repositorio.alRefrescar = .failure(.sinConexion)
         let viewModel = ArbitrosViewModel(repositorio: repositorio)
-        await viewModel.cargar()
-        #expect(viewModel.uiState == .error("No hay conexión"))
-        // Vuelve la red: «Reintentar» pide otra vez la lista.
-        repositorio.respuesta = .success([leanne])
-        await viewModel.reintentar()
-        #expect(viewModel.uiState == .exito([leanne]))
-        #expect(repositorio.llamadas == 2)
+        await viewModel.refrescar()
+        #expect(viewModel.uiState == ArbitrosUiState(arbitros: [leanne], refrescando: false, error: "No hay conexión"))
     }
 }
