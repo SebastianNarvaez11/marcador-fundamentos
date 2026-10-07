@@ -1,5 +1,6 @@
 package com.sebastiannarvaez.marcador.data.room
 
+import androidx.room3.ColumnInfo
 import androidx.room3.Entity
 import androidx.room3.ForeignKey
 import androidx.room3.Index
@@ -41,6 +42,11 @@ data class GolEntity(
     val minuto: Int,
     val jugador: String,
     val equipo: String,
+    // Llego en la VERSION 2 del esquema: los goles que se registran con los botones (los del
+    // guion de ejemplo son `false`). `defaultValue` no es opcional: sin el, Room no sabe que
+    // poner en las filas que YA existen y la migracion automatica no se puede generar.
+    @ColumnInfo(defaultValue = "0")
+    val aMano: Boolean = false,
 )
 
 // El resultado de una consulta con GROUP BY no es una tabla: es una clase con las columnas

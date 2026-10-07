@@ -1,6 +1,7 @@
 package com.sebastiannarvaez.marcador.data.room
 
 import android.content.Context
+import androidx.room3.AutoMigration
 import androidx.room3.Database
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
@@ -14,8 +15,9 @@ import androidx.sqlite.driver.AndroidSQLiteDriver
 // «'expect' and 'actual' declarations can be used only in multiplatform projects»).
 @Database(
     entities = [PartidoEntity::class, GolEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
 )
 abstract class MarcadorDatabase : RoomDatabase() {
     abstract fun partidoDao(): PartidoDao

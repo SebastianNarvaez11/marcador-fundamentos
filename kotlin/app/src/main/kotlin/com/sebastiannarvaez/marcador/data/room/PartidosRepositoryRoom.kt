@@ -54,7 +54,7 @@ class PartidosRepositoryRoom(
 
     override suspend fun registrarGol(partidoId: Int, gol: Gol) {
         sembrado.join()
-        dao.insertarGol(GolEntity(partidoId = partidoId, minuto = gol.minuto, jugador = gol.jugador.nombre, equipo = gol.equipo.nombre))
+        dao.insertarGol(GolEntity(partidoId = partidoId, minuto = gol.minuto, jugador = gol.jugador.nombre, equipo = gol.equipo.nombre, aMano = true))
     }
 
     override fun observarGoleadores(): Flow<List<Goleador>> =
