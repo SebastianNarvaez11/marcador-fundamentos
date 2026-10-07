@@ -1,8 +1,7 @@
 package com.sebastiannarvaez.marcador.torneo
 
-// Función de nivel superior: no vive dentro de ninguna clase.
-// Función de expresión: el cuerpo es un único `when` que devuelve el valor.
-// Desde f10 la regla vive en el reglamento de la liga; esta función se queda
+// Función suelta: escrita directamente en el fichero.
+// La regla vive ahora en el reglamento de la liga; esta función se queda
 // como atajo y ya no repite los números.
 fun puntosPor(golesAFavor: Int, golesEnContra: Int): Int =
     ReglamentoLiga.puntosPor(golesAFavor, golesEnContra)

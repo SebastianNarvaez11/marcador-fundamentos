@@ -37,12 +37,12 @@ import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Marcador
 import com.sebastiannarvaez.marcador.torneo.Partido
 
-// f32 · PRIMEROS PASOS CON COMPOSE
+// PRIMEROS PASOS CON COMPOSE
 //
 // PARADIGMA DECLARATIVO. Con Views/XML describias un arbol de objetos y luego
 // lo MUTABAS a mano (`textView.text = "2-1"`). Con Compose describes como se ve
 // la pantalla PARA UN ESTADO DADO, con funciones; cuando el estado cambia, Compose
-// vuelve a llamar a esas funciones (recomposicion, f36) y actualiza lo necesario.
+// vuelve a llamar a esas funciones (recomposicion) y actualiza lo necesario.
 // Nadie hace `setText`: la pantalla es una funcion del estado.
 //
 // COMPOSABLE = funcion con @Composable. No devuelve nada: EMITE elementos al arbol.
@@ -56,15 +56,13 @@ import com.sebastiannarvaez.marcador.torneo.Partido
 // se dibuja dentro.
 //
 // CenterAlignedTopAppBar es «experimental» en Material 3: hay que aceptarlo con
-// @OptIn, o el compilador se niega (ver diario).
-// f41 · LA PANTALLA CON ESTADO («stateful»): la fina capa que conecta con el ViewModel.
+// @OptIn, o el compilador se niega.
+// LA PANTALLA CON ESTADO («stateful»): la fina capa que conecta con el ViewModel.
 // Recoge UN StateFlow y pasa el estado hacia abajo y los eventos hacia arriba.
 @Composable
 fun PantallaMarcador(
-    onVerDemos: () -> Unit,
     onVerGoleadores: () -> Unit,
     onVolver: () -> Unit,
-    onProvocarError: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PartidoViewModel,
 ) {
@@ -75,7 +73,7 @@ fun PantallaMarcador(
     var pausas by rememberSaveable { mutableIntStateOf(0) }
     ObservadorDelCiclo(alPararse = { pausas++ })
 
-    PantallaMarcadorContenido(estado, pausas, viewModel::alEvento, onVerDemos, onVerGoleadores, onVolver, onProvocarError, modifier)
+    PantallaMarcadorContenido(estado, pausas, viewModel::alEvento, onVerGoleadores, onVolver, modifier)
 }
 
 // SIN ESTADO: recibe el UiState y una lambda de eventos. Se puede previsualizar con
@@ -86,22 +84,14 @@ fun PantallaMarcadorContenido(
     estado: MarcadorUiState,
     pausas: Int,
     onEvento: (MarcadorEvento) -> Unit,
-    onVerDemos: () -> Unit,
     onVerGoleadores: () -> Unit,
     onVolver: () -> Unit,
-    onProvocarError: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets(0),
         topBar = { CenterAlignedTopAppBar(title = { Text("Marcador") }) },
-        bottomBar = {
-            // Otro slot: una barra inferior con un boton para ir a las demos de F3.
-            Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.Center) {
-                Button(onClick = onVerDemos) { Text("Demos de F3") }
-            }
-        },
     ) { paddingValues ->
         // `when` exhaustivo sobre el sealed: si manana hay una variante mas, no compila
         // hasta que la pantalla diga que hacer con ella.
@@ -115,7 +105,7 @@ fun PantallaMarcadorContenido(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(estado.mensaje, color = MaterialTheme.colorScheme.error)
-                // f47: «volver» es navegar (quitar esta clave de la pila), no cambiar de partido
+                // «Volver» es navegar (quitar esta clave de la pila), no cambiar de partido
                 // dentro del ViewModel: el id del partido vive en la PartidoKey, en un solo sitio.
                 Button(onClick = onVolver) { Text("Volver") }
             }
@@ -126,18 +116,18 @@ fun PantallaMarcadorContenido(
                     estado = EstadoMarcador(estado.partido, estado.marcador),
                     onGol = { lado -> onEvento(MarcadorEvento.Gol(lado)) },
                     modifier = Modifier.padding(paddingValues),
-                    // Un slot mas: lo que sobra de la pantalla (demos de f32 y f33) se inyecta desde fuera.
+                    // Un slot: lo que sobra de la pantalla se inyecta desde fuera.
                     extras = {
                         Text("Partido n.º ${estado.partidoId} (elegido en la lista de partidos)")
-                        // f47: empuja otra clave en la pila de Navigation 3.
+                        // Empuja otra clave en la pila de Navigation 3.
                         Button(onClick = onVerGoleadores) { Text("Ver goleadores") }
                         PanelDelCronometro(
                             estado.minuto, estado.corriendo, estado.ultimoAviso, pausas,
                             onEmpezar = { onEvento(MarcadorEvento.Empezar) },
                             duracion = estado.duracion,
                         )
-                        // f46 · La preferencia, guardada en DataStore: sobrevive a cerrar la app.
-                        Text("Duracion del partido (preferencia guardada)")
+                        // La preferencia, guardada en DataStore: sobrevive a cerrar la app.
+                        Text("Duración del partido (preferencia guardada)")
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             PreferenciasRepository.DURACIONES.forEach { minutos ->
                                 FilterChip(
@@ -147,11 +137,8 @@ fun PantallaMarcadorContenido(
                                 )
                             }
                         }
-                        // Para VER la variante Error: navega a un partido que no existe.
-                        Button(onClick = onProvocarError) { Text("Provocar error (partido 99)") }
-                        ComparacionDeEstado()
-                        OrdenDeLosModifiers()
-                        InsigniaSobreEscudo()
+                        // Aqui ya no van las demos de Android y Compose ni el «provocar error»:
+                        // esta pantalla es la del partido. El Error se prueba en los tests.
                     },
                 )
             }
@@ -203,7 +190,7 @@ fun OrdenDeLosModifiers() {
                 .padding(16.dp)
                 .background(MaterialTheme.colorScheme.primaryContainer),
         )
-        Text("B) background y luego padding: el color SI incluye el margen")
+        Text("B) background y luego padding: el color SÍ incluye el margen")
         Text(
             "Rayo FC",
             Modifier
@@ -247,8 +234,7 @@ private fun PantallaMarcadorPreview() {
     MaterialTheme {
         PantallaMarcadorContenido(
             MarcadorUiState.Exito(1, Ejemplo.rayoContraToros, Marcador(2, 1), 45, true, "minuto 30 con 1-1"),
-            pausas = 0, onEvento = {}, onVerDemos = {}, onVerGoleadores = {},
-            onVolver = {}, onProvocarError = {},
+            pausas = 0, onEvento = {}, onVerGoleadores = {}, onVolver = {},
         )
     }
 }

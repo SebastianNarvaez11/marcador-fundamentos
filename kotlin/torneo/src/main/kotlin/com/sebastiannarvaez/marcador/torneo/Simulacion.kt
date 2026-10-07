@@ -18,7 +18,7 @@ const val MINUTOS_DEL_PARTIDO = 90
 // minuto y devuelve el partido tal como quedó. `msPorMinuto` es cuánto dura un
 // minuto de juego en tiempo real (10 ms hace un partido de un segundo).
 //
-// Desde f20 el minuto a minuto vive en `PartidoEnVivo.eventos()` (un Flow) y
+// Ahora el minuto a minuto vive en `PartidoEnVivo.eventos()` (un Flow) y
 // aquí solo se acumula lo que emite: `fold` parte de un partido vacío y va
 // registrando cada evento.
 suspend fun jugarPartido(
@@ -35,7 +35,7 @@ suspend fun jugarPartido(
 // `async`; si solo quieres que ocurra, `launch`.
 //
 // Dos partidos a la vez: los dos `async` arrancan antes del primer `await`, así
-// que juegan en paralelo. El total dura lo que el más largo, no la suma.
+// que se turnan en el hilo. El total dura lo que el más largo, no la suma.
 suspend fun jugarJornada(primero: Partido, segundo: Partido, msPorMinuto: Long = 10): Pair<Partido, Partido> =
     coroutineScope {
         val a = async { jugarPartido(primero, msPorMinuto) }
@@ -46,7 +46,7 @@ suspend fun jugarJornada(primero: Partido, segundo: Partido, msPorMinuto: Long =
 data class Estadisticas(val goles: Int, val tarjetas: Int, val cambios: Int)
 
 // Tres consultas independientes (aquí simuladas con una espera de `msPorConsulta`,
-// como si fueran a una base de datos). Con `async` corren a la vez y el total es
+// como si fueran a una base de datos). Con `async` esperan a la vez y el total es
 // ~1 consulta; una detrás de otra serían ~3.
 suspend fun estadisticasDe(partido: Partido, msPorConsulta: Long = 50): Estadisticas = coroutineScope {
     val goles = async { delay(msPorConsulta); partido.eventos.count { it is Gol } }

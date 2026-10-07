@@ -11,6 +11,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -24,7 +25,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.serialization.Serializable
 
-// f47 · NAVIGATION 3
+// NAVIGATION 3
 //
 // En Navigation 3 la pila de pantallas ES UNA LISTA que tu posees: `pila.add(clave)` navega,
 // `pila.removeAt(pila.lastIndex)` vuelve. Nada de grafo XML, ni `navController`, ni rutas de
@@ -59,7 +60,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
     val pila = rememberNavBackStack(ListaKey)
     val actual = pila.lastOrNull()
 
-    // Un Scaffold dentro de otro (f35): el de fuera pone la barra inferior y los de dentro
+    // Un Scaffold dentro de otro: el de fuera pone la barra inferior y los de dentro
     // sus TopAppBar. Todos con `contentWindowInsets = WindowInsets(0)`, o sale margen doble.
     Scaffold(
         modifier = modifier,
@@ -104,7 +105,14 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                     val vm: ListaViewModel = hiltViewModel()
                     val partidos by vm.partidos.collectAsStateWithLifecycle()
                     Scaffold(
-                        topBar = { CenterAlignedTopAppBar(title = { Text("Partidos") }) },
+                        // Las demos de Android (ciclo de vida, intents, permisos...) ya no cuelgan de la
+                        // pantalla del partido: se abren desde la lista.
+                        topBar = {
+                            CenterAlignedTopAppBar(
+                                title = { Text("Partidos") },
+                                actions = { TextButton(onClick = onVerDemos) { Text("Pruebas de Android") } },
+                            )
+                        },
                         contentWindowInsets = WindowInsets(0),
                     ) { interior ->
                         PantallaPartidos(partidos, onElegir = { id -> pila.add(PartidoKey(id)) }, modifier = Modifier.padding(interior))
@@ -124,7 +132,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                     val vm: ListaViewModel = hiltViewModel()
                     val torneo by vm.torneo.collectAsStateWithLifecycle()
                     Scaffold(
-                        topBar = { CenterAlignedTopAppBar(title = { Text("Recomposicion") }) },
+                        topBar = { CenterAlignedTopAppBar(title = { Text("Recomposición") }) },
                         contentWindowInsets = WindowInsets(0),
                     ) { interior -> PantallaRecomposicion(torneo, Modifier.padding(interior)) }
                 }
@@ -138,11 +146,8 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                         fabrica.crear(clave.partidoId)
                     }
                     PantallaMarcador(
-                        onVerDemos = onVerDemos,
                         onVerGoleadores = { pila.add(GoleadoresKey) },
                         onVolver = { pila.removeAt(pila.lastIndex) },
-                        // Un partido que no existe: su propia entrada mostrara el Error.
-                        onProvocarError = { pila.add(PartidoKey(99)) },
                         viewModel = vm,
                     )
                 }

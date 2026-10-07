@@ -14,7 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-// f33 · ESTADO EN COMPOSE
+// ESTADO EN COMPOSE
 //
 // ESTADO = cualquier valor que puede cambiar y que la pantalla muestra. Compose
 // solo se entera de un cambio si el valor vive dentro de un `State<T>`
@@ -61,6 +61,6 @@ fun ComparacionDeEstado(modifier: Modifier = Modifier) {
         //  - Muerte del proceso: pulsa Home y ejecuta
         //            adb shell am kill com.sebastiannarvaez.marcador.debug
         //            luego reabre la app desde recientes -> igual: solo saveable sobrevive.
-        Text("Rota el movil o haz am kill: solo «saveable» conserva su valor")
+        Text("Rota el móvil o haz am kill: solo «saveable» conserva su valor")
     }
 }

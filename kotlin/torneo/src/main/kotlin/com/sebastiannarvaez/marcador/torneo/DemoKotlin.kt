@@ -2,7 +2,7 @@ package com.sebastiannarvaez.marcador.torneo
 
 import java.io.File
 
-// La demo de F1 (Kotlin sin corrutinas). Desde F2 ya no es el punto de entrada:
+// La demo del módulo de Kotlin, sin corrutinas. Ya no es el punto de entrada:
 // se lanza con ./gradlew :torneo:run --args=kotlin
 fun demoKotlin() {
     val nombreDelTorneo = "Copa Barrio"
@@ -44,7 +44,7 @@ fun demoKotlin() {
     val error = runCatching { Equipo("Toros", listOf(Jugador("A", 7), Jugador("B", 7))) }
     println("Toros: ${error.exceptionOrNull()?.message}")
 
-    // data class: copy, == frente a ===, desestructuración.
+    // data class: copy y == frente a ===.
     val toros = Equipo("Toros", listOf(Jugador("Iván", 7)))
     val ana = jugadores.first()
     val ivan = toros.plantilla.first()
@@ -112,7 +112,7 @@ fun demoKotlin() {
         onSuccess = { "${it.golesLocal}-${it.golesVisitante}" },
         onFailure = { "error" },
     ))
-    println("Partidos: " + torneo.registrar(lobos, lobos).map { it.eventos.size }.getOrElse { -1 })
+    println("Eventos (o -1 si falla): " + torneo.registrar(lobos, lobos).map { it.eventos.size }.getOrElse { -1 })
 
     // `try` es una expresión: devuelve un valor.
     for (texto in listOf("10", " 7 ", "diez", "")) {

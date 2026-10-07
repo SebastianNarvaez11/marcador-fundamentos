@@ -4,7 +4,7 @@ plugins {
     // Las claves de Navigation 3 son @Serializable (la pila sobrevive a am kill).
     alias(libs.plugins.kotlinxSerialization)
     // KSP (Kotlin Symbol Processing) es el motor que ejecuta procesadores: al compilar lee
-    // las anotaciones (@Inject, @Module...) y ESCRIBE codigo nuevo. El de Hilt lo necesita.
+    // las anotaciones (@Inject, @Module, @Entity...) y ESCRIBE codigo nuevo. Lo usan Hilt y Room.
     alias(libs.plugins.ksp)
     // El plugin `androidx.room3` de Room solo configura donde se exportan los esquemas.
     alias(libs.plugins.room)
@@ -59,7 +59,9 @@ android {
         release {
             // Sin minificar de momento: R8 (recortar y ofuscar el codigo) queda para
             // cuando toque publicar, porque hay que probar la app ya recortada.
-            isMinifyEnabled = false
+            optimization {
+                enable = false
+            }
             buildConfigField("String", "MODO", "\"PRODUCCION\"")
         }
     }
@@ -125,4 +127,16 @@ dependencies {
     debugImplementation(libs.leakcanary.android)
     // Las @Preview y el Layout Inspector necesitan ui-tooling, solo en debug.
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Pruebas unitarias del ViewModel (corren en la JVM, sin emulador).
+    // kotlin-test (assertEquals, @Test...). En :torneo basta `kotlin("test")` porque el plugin de
+    // Kotlin elige la variante JUnit; con el Kotlin integrado de AGP no, y hay que pedir
+    // `kotlin-test-junit` a mano (sin el, `AfterTest` da «Unresolved reference 'AfterTest'»).
+    // AGP ejecuta las pruebas unitarias con JUnit 4.
+    testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.junit)
+    // runTest, TestDispatcher, Dispatchers.setMain y el reloj virtual.
+    testImplementation(libs.kotlinx.coroutines.test)
+    // Turbine: probar Flow con `test { awaitItem() }`.
+    testImplementation(libs.turbine)
 }

@@ -69,7 +69,6 @@ class MainActivity : ComponentActivity() {
     // Este se guarda en el Bundle de onSaveInstanceState y se restaura en onCreate.
     private var golesQueSobreviven by mutableIntStateOf(0)
 
-    // ---- f29 ----
     // El dialogo del permiso es asincrono: pides y la respuesta llega despues, a este
     // lambda. Hay que registrarlo ANTES de que la Activity llegue a STARTED (por eso es
     // una propiedad, no algo dentro de un onClick).
@@ -91,13 +90,20 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // ---- f26 ----
     private var resultadoDelCalculo by mutableStateOf("sin calcular")
     private var marcadorEnVivo by mutableStateOf("0-0")
     // El partido solo se puede iniciar una vez (`iniciar` lanza IllegalStateException: «El
     // partido ya empezó»): el boton se deshabilita tras el primer toque.
     private var partidoEmpezado by mutableStateOf(false)
     private val partidoEnVivo = PartidoEnVivo(Ejemplo.rayoContraToros, msPorMinuto = 60)
+
+    // Intent EXPLICITO: el destino es una clase tuya, sin ambiguedad. Los datos
+    // viajan como extras (clave, valor).
+    private fun abrirDetalle() {
+        val intent = Intent(this, DetalleActivity::class.java)
+            .putExtra(DetalleActivity.EXTRA_RESUMEN, Ejemplo.rayoContraToros.resumen())
+        startActivity(intent)
+    }
 
     // EL BUG (ANR): el hilo principal es el UNICO que atiende los toques y dibuja
     // la pantalla. Si tarda mas de ~5 s en volver de un trabajo, Android muestra
@@ -107,20 +113,12 @@ class MainActivity : ComponentActivity() {
     //
     // Para reproducirlo: pulsa el boton y, MIENTRAS esta bloqueado, toca la pantalla
     // varias veces. A los ~5 s aparece el dialogo del ANR.
-    // Intent EXPLICITO: el destino es una clase tuya, sin ambiguedad. Los datos
-    // viajan como extras (clave, valor).
-    private fun abrirDetalle() {
-        val intent = Intent(this, DetalleActivity::class.java)
-            .putExtra(DetalleActivity.EXTRA_RESUMEN, Ejemplo.rayoContraToros.resumen())
-        startActivity(intent)
-    }
-
     private fun calcularBloqueando() {
         val ms = measureTimeMillis {
             val p = runBlocking { probabilidadDeVictoria(Ejemplo.rayoContraToros, SIMULACIONES) }
             resultadoDelCalculo = "victoria local: ${"%.1f".format(p * 100)}%"
         }
-        anotar("calculo bloqueante: $ms ms")
+        anotar("cálculo bloqueante: $ms ms")
     }
 
     // EL ARREGLO: `lifecycleScope` es un alcance atado a la Activity: se cancela
@@ -166,7 +164,7 @@ class MainActivity : ComponentActivity() {
         // un SharedFlow: solo ve los goles que ocurren MIENTRAS se recoge. Sin
         // repeatOnLifecycle a proposito: con la app en segundo plano tambien avisa
         // (hasta que la Activity se destruye; para avisar sin pantalla haria falta
-        // un servicio, ver f30).
+        // un servicio, que veras mas adelante).
         lifecycleScope.launch {
             partidoEnVivo.goles.collect { gol -> notificarGol(applicationContext, gol) }
         }
@@ -178,38 +176,40 @@ class MainActivity : ComponentActivity() {
         val tabla = Ejemplo.torneoConPartidos().tablaDePosiciones()
         setContent {
             MaterialTheme {
-                // f32: la pantalla de verdad es PantallaMarcador (ui/). Los botones de
-                // demostracion de F3 siguen ahi, detras de un boton, para no perderlos.
-                if (verDemosDeF3) DemosDeF3(tabla) else AppMarcador(onVerDemos = { verDemosDeF3 = true })
+                // La pantalla de verdad vive en ui/. Los botones de demostracion de las
+                // lecciones de Android siguen ahi, detras de un boton (en la barra de la
+                // lista de partidos), para no perderlos.
+                if (verPruebas) PantallaDePruebas(tabla) else AppMarcador(onVerDemos = { verPruebas = true })
             }
         }
     }
 
-    private var verDemosDeF3 by mutableStateOf(false)
+    private var verPruebas by mutableStateOf(false)
 
     @Composable
-    private fun DemosDeF3(tabla: List<FilaDePosicion>) {
+    private fun PantallaDePruebas(tabla: List<FilaDePosicion>) {
                 Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
-                    Button(onClick = { verDemosDeF3 = false }) { Text("Volver a la pantalla del marcador") }
+                    Button(onClick = { verPruebas = false }) { Text("Volver a la pantalla del marcador") }
                     Text("Marcador")
-                    // f31: datos que solo conoce la compilacion (BuildConfig se genera).
+                    // Datos que solo conoce la compilacion (BuildConfig se genera).
                     Text("Modo: ${BuildConfig.MODO} · plan ${BuildConfig.PLAN} · ${BuildConfig.APPLICATION_ID}")
-                    // f28: intents. El primero es EXPLICITO (nombras la clase destino).
-                    Button(onClick = { abrirDetalle() }) { Text("Ver detalle (intent explicito)") }
+                    // Intents. El primero es EXPLICITO (nombras la clase destino).
+                    Button(onClick = { abrirDetalle() }) { Text("Ver detalle (intent explícito)") }
                     Button(onClick = { compartir(Ejemplo.rayoContraToros.resumen()) }) {
                         Text("Compartir resultado (ACTION_SEND)")
                     }
                     Button(onClick = { abrirEnlace("https://kotlinlang.org") }) {
                         Text("Abrir web (ACTION_VIEW)")
                     }
-                    // f29: permiso y notificacion.
+                    // Permiso y notificacion.
                     Button(onClick = { activarAvisos() }) {
                         Text(if (avisosActivados) "Avisos de gol: activados" else "Activar avisos de gol")
                     }
-                    // f30: WorkManager. Para la demo el «una hora» son 15 segundos.
+                    // WorkManager. Para la demo el «una hora» son 60 segundos: margen de
+                    // sobra para matar el proceso con am kill antes de que llegue el aviso.
                     Button(onClick = {
-                        RecordatorioWorker.programar(applicationContext, Ejemplo.rayoContraToros.resumen(), retrasoSegundos = 15)
-                        Toast.makeText(this@MainActivity, "Recordatorio en 15 s (en la app real, 1 h)", Toast.LENGTH_SHORT).show()
+                        RecordatorioWorker.programar(applicationContext, Ejemplo.rayoContraToros.resumen(), retrasoSegundos = 60)
+                        Toast.makeText(this@MainActivity, "Recordatorio en 60 s (en la app real, 1 h)", Toast.LENGTH_SHORT).show()
                     }) { Text("Recordarme el partido") }
                     Button(onClick = { calcularBloqueando() }) {
                         Text("Calcular (BLOQUEA: ANR)")
@@ -228,7 +228,7 @@ class MainActivity : ComponentActivity() {
                         Text("Empezar partido")
                     }
                     Text("Marcador en vivo: $marcadorEnVivo")
-                    // f27. Para reproducir la fuga: pulsa el primero, gira el movil y
+                    // Para reproducir la fuga: pulsa el primero, gira el movil y
                     // pulsa Home; a los pocos segundos LeakCanary avisa en Logcat (tag
                     // LeakCanary) y con una notificacion. El segundo es el arreglo.
                     Button(onClick = { RegistroDeContexto.guardarSinCuidado(this@MainActivity) }) {
