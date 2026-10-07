@@ -1,5 +1,7 @@
 package com.sebastiannarvaez.marcador
 
+import com.sebastiannarvaez.marcador.domain.Arbitro
+import com.sebastiannarvaez.marcador.domain.ArbitrosRepository
 import com.sebastiannarvaez.marcador.domain.Goleador
 import com.sebastiannarvaez.marcador.domain.PartidoDeLista
 import com.sebastiannarvaez.marcador.domain.PartidosRepository
@@ -62,5 +64,16 @@ class FakePreferencias(inicial: Int = 90) : PreferenciasRepository {
     override val duracionDelPartido: Flow<Int> = duracion
     override suspend fun cambiarDuracion(minutos: Int) {
         duracion.value = minutos
+    }
+}
+
+// La red, de mentira: devuelve la lista o lanza el fallo que el test le ponga.
+class FakeArbitrosRepository(
+    var arbitros: List<Arbitro> = listOf(Arbitro(1, "Leanne Graham", "Gwenborough")),
+    var fallo: Exception? = null,
+) : ArbitrosRepository {
+    override suspend fun arbitros(): List<Arbitro> {
+        fallo?.let { throw it }
+        return arbitros
     }
 }

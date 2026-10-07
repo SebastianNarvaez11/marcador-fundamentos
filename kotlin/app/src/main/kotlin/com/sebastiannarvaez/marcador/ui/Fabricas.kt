@@ -40,4 +40,8 @@ object Fabricas {
     val goleadores = viewModelFactory {
         initializer { GoleadoresViewModel(contenedor.partidosRepository) }
     }
+
+    val arbitros = viewModelFactory {
+        initializer { ArbitrosViewModel(contenedor.arbitrosRepository) }
+    }
 }
