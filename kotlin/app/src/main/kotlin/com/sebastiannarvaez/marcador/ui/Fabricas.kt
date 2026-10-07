@@ -46,6 +46,6 @@ object Fabricas {
     }
 
     fun cronica(partidoId: Int) = viewModelFactory {
-        initializer { CronicaViewModel(contenedor.partidosRepository, contenedor.cronicasRepository, partidoId) }
+        initializer { CronicaViewModel(contenedor.publicarCronica, partidoId) }
     }
 }
