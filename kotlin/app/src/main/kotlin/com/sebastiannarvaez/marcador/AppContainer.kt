@@ -12,6 +12,7 @@ import com.sebastiannarvaez.marcador.domain.ArbitrosRepository
 import com.sebastiannarvaez.marcador.domain.CronicasRepository
 import com.sebastiannarvaez.marcador.domain.PartidosRepository
 import com.sebastiannarvaez.marcador.domain.PreferenciasRepository
+import com.sebastiannarvaez.marcador.domain.PublicarCronica
 import com.sebastiannarvaez.marcador.domain.RegistrarGol
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -60,4 +61,6 @@ class AppContainer(private val contexto: Context) {
     val arbitrosRepository: ArbitrosRepository by lazy { ArbitrosRepositoryDosFuentes(ligaApi, baseDeDatos.arbitroDao()) }
 
     val cronicasRepository: CronicasRepository by lazy { CronicasRepositoryRed(ligaApi) }
+
+    val publicarCronica: PublicarCronica by lazy { PublicarCronica(partidosRepository, cronicasRepository) }
 }
