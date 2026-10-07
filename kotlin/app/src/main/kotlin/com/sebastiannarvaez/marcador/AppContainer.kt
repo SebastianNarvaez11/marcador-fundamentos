@@ -1,8 +1,8 @@
 package com.sebastiannarvaez.marcador
 
 import android.content.Context
+import com.sebastiannarvaez.marcador.data.ArbitrosRepositoryDosFuentes
 import com.sebastiannarvaez.marcador.data.PreferenciasDataStore
-import com.sebastiannarvaez.marcador.data.red.ArbitrosRepositoryRed
 import com.sebastiannarvaez.marcador.data.red.CronicasRepositoryRed
 import com.sebastiannarvaez.marcador.data.red.crearLigaApi
 import com.sebastiannarvaez.marcador.data.red.crearOkHttp
@@ -56,7 +56,8 @@ class AppContainer(private val contexto: Context) {
     private val okHttp by lazy { crearOkHttp() }
     private val ligaApi by lazy { crearLigaApi(okHttp) }
 
-    val arbitrosRepository: ArbitrosRepository by lazy { ArbitrosRepositoryRed(ligaApi) }
+    // Dos fuentes: la red y la MISMA base de datos de los partidos (otra tabla, otro DAO).
+    val arbitrosRepository: ArbitrosRepository by lazy { ArbitrosRepositoryDosFuentes(ligaApi, baseDeDatos.arbitroDao()) }
 
     val cronicasRepository: CronicasRepository by lazy { CronicasRepositoryRed(ligaApi) }
 }
