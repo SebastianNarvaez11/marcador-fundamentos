@@ -3,6 +3,7 @@ package com.sebastiannarvaez.marcador.domain
 import com.sebastiannarvaez.marcador.resumen
 import com.sebastiannarvaez.marcador.torneo.Gol
 import com.sebastiannarvaez.marcador.torneo.intentar
+import javax.inject.Inject
 
 // CASO DE USO CON DOS REPOSITORIOS. Aqui SI vale la pena:
 //   - hay una REGLA de negocio: como se escribe una cronica (titulo = el resumen del
@@ -13,7 +14,9 @@ import com.sebastiannarvaez.marcador.torneo.intentar
 //
 // Contraejemplo: la pantalla de arbitros llama a ArbitrosRepository DIRECTO. Un
 // `ObtenerArbitros` que solo reenviara `observarArbitros()` seria pura ceremonia.
-class PublicarCronica(
+// @Inject constructor y SIN alcance: no guarda estado, asi que Hilt crea uno nuevo para
+// cada ViewModel que lo pide; no cuesta nada.
+class PublicarCronica @Inject constructor(
     private val partidos: PartidosRepository,
     private val cronicas: CronicasRepository,
 ) {

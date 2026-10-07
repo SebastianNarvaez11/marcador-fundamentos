@@ -3,10 +3,13 @@ plugins {
     alias(libs.plugins.composeCompiler)
     // Las claves de Navigation 3 son @Serializable (la pila sobrevive a am kill).
     alias(libs.plugins.kotlinxSerialization)
-    // KSP (Kotlin Symbol Processing) es el motor que ejecuta procesadores como el de
-    // Room; el plugin `androidx.room3` de Room solo configura donde se exportan los esquemas.
+    // KSP (Kotlin Symbol Processing) es el motor que ejecuta procesadores: al compilar lee
+    // las anotaciones (@Inject, @Module, @Entity...) y ESCRIBE codigo nuevo. Lo usan Hilt y Room.
     alias(libs.plugins.ksp)
+    // El plugin `androidx.room3` de Room solo configura donde se exportan los esquemas.
     alias(libs.plugins.room)
+    // Hilt (Dagger Hilt): genera el contenedor de dependencias de la app al compilar.
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -93,11 +96,17 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     // RED. Retrofit convierte una interfaz con anotaciones (@GET, @POST) en llamadas HTTP;
     // el conversor traduce el JSON con kotlinx.serialization (el plugin ya esta arriba).
-    // OkHttp se declara aparte: Retrofit 3.0.0 trae la 4.12 y el contenedor construye el
-    // OkHttpClient el mismo; asi manda la version del catalogo.
+    // OkHttp se declara aparte: Retrofit 3.0.0 trae la 4.12 y la app construye el
+    // OkHttpClient ella misma; asi manda la version del catalogo.
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.kotlinx.serialization)
     implementation(libs.okhttp)
+    // Hilt: la libreria viaja en la app; el procesador (`ksp`) solo corre al compilar y
+    // escribe las clases Hilt_... y el componente.
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    // hiltViewModel(): pide a Hilt un ViewModel desde una funcion @Composable.
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.room.runtime)
     // LA LINEA CLAVE: `ksp(...)` en un modulo com.android.application. El procesador de
     // Room lee las anotaciones al compilar y GENERA MarcadorDatabase_Impl y PartidoDao_Impl.

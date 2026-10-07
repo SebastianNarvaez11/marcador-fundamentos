@@ -2,6 +2,8 @@ package com.sebastiannarvaez.marcador.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import com.sebastiannarvaez.marcador.domain.ArbitrosRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -12,7 +14,8 @@ import kotlinx.coroutines.launch
 
 // La lista sale de lo guardado (observarArbitros) y se refresca al abrir y con
 // «Actualizar». Tres flujos -> un UiState con `combine`.
-class ArbitrosViewModel(private val repositorio: ArbitrosRepository) : ViewModel() {
+@HiltViewModel
+class ArbitrosViewModel @Inject constructor(private val repositorio: ArbitrosRepository) : ViewModel() {
 
     private val refrescando = MutableStateFlow(false)
     private val error = MutableStateFlow<String?>(null)

@@ -7,6 +7,10 @@ import com.sebastiannarvaez.marcador.domain.RegistrarGol
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -53,13 +57,28 @@ import kotlinx.coroutines.launch
 // (un identificador), no el objeto entero (un partido entero no cabe en un Bundle).
 // Aqui: el id del partido seleccionado. El minuto, el marcador en vivo y los goles de
 // los botones se pierden con `am kill`, y esta bien: se reconstruye el partido, no el directo.
-class PartidoViewModel(
+//
+// HILT, CON INYECCION ASISTIDA. Hilt sabe dar el repositorio, el caso de uso, las
+// preferencias y el SavedStateHandle, pero NO sabe que partido abrio el usuario: ese numero
+// sale de la PartidoKey de la pantalla. Por eso el constructor es MIXTO:
+//   @AssistedInject  -> constructor con piezas de Hilt y piezas que pone quien lo crea;
+//   @Assisted        -> esta la pone quien lo crea (la pantalla), no Hilt;
+//   @AssistedFactory -> la fabrica: tu declaras la funcion, Hilt escribe el codigo.
+// @HiltViewModel(assistedFactory = ...) une el ViewModel con su fabrica.
+@HiltViewModel(assistedFactory = PartidoViewModel.Fabrica::class)
+class PartidoViewModel @AssistedInject constructor(
     private val estadoGuardado: SavedStateHandle,
     private val repositorio: PartidosRepository,
     private val registrarGol: RegistrarGol,
     private val preferencias: PreferenciasRepository,
-    partidoInicial: Int = 1,
+    @Assisted partidoInicial: Int,
 ) : ViewModel() {
+
+    // La pantalla la usa asi: hiltViewModel<PartidoViewModel, PartidoViewModel.Fabrica> { it.crear(id) }
+    @AssistedFactory
+    interface Fabrica {
+        fun crear(partidoInicial: Int): PartidoViewModel
+    }
 
     // Las dependencias LLEGAN por el constructor (antes salian de un singleton
     // oculto). Este ViewModel no sabe si el repositorio es de memoria, de Room o de mentira.
