@@ -91,6 +91,13 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     // DataStore Preferences: pares clave-valor pequenos, asincronos, con Flow.
     implementation(libs.androidx.datastore.preferences)
+    // RED. Retrofit convierte una interfaz con anotaciones (@GET, @POST) en llamadas HTTP;
+    // el conversor traduce el JSON con kotlinx.serialization (el plugin ya esta arriba).
+    // OkHttp se declara aparte: Retrofit 3.0.0 trae la 4.12 y el contenedor construye el
+    // OkHttpClient el mismo; asi manda la version del catalogo.
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.kotlinx.serialization)
+    implementation(libs.okhttp)
     implementation(libs.androidx.room.runtime)
     // LA LINEA CLAVE: `ksp(...)` en un modulo com.android.application. El procesador de
     // Room lee las anotaciones al compilar y GENERA MarcadorDatabase_Impl y PartidoDao_Impl.
