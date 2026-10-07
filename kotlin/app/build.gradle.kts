@@ -4,6 +4,8 @@ plugins {
     // KSP (Kotlin Symbol Processing) es el motor que ejecuta procesadores: al compilar lee
     // las anotaciones (@Inject, @Module...) y ESCRIBE codigo nuevo. El de Hilt lo necesita.
     alias(libs.plugins.ksp)
+    // El plugin `androidx.room3` de Room solo configura donde se exportan los esquemas.
+    alias(libs.plugins.room)
     // Hilt (Dagger Hilt): genera el contenedor de dependencias de la app al compilar.
     alias(libs.plugins.hilt)
 }
@@ -73,6 +75,12 @@ kotlin {
     jvmToolchain(17)
 }
 
+// Los esquemas exportados (app/schemas/.../1.json, 2.json) se VERSIONAN con el codigo:
+// son lo unico con lo que Room puede comparar dos versiones y escribir la migracion.
+room3 {
+    schemaDirectory("$projectDir/schemas")
+}
+
 dependencies {
     // Hilt: la libreria viaja en la app; el procesador (`ksp`) solo corre al compilar y
     // escribe las clases Hilt_... y el componente.
@@ -80,6 +88,10 @@ dependencies {
     ksp(libs.hilt.compiler)
     // hiltViewModel(): pide a Hilt un ViewModel desde una funcion @Composable.
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.room.runtime)
+    // LA LINEA CLAVE: `ksp(...)` en un modulo com.android.application. El procesador de
+    // Room lee las anotaciones al compilar y GENERA MarcadorDatabase_Impl y PartidoDao_Impl.
+    ksp(libs.androidx.room.compiler)
     // El modulo de dominio: Partido, Torneo, PartidoEnVivo...
     implementation(project(":torneo"))
     implementation(libs.androidx.activity.compose)
