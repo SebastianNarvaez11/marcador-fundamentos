@@ -2,6 +2,8 @@ package com.sebastiannarvaez.marcador
 
 import app.cash.turbine.test
 import com.sebastiannarvaez.marcador.domain.Arbitro
+import com.sebastiannarvaez.marcador.domain.ErrorDeRed
+import com.sebastiannarvaez.marcador.domain.FalloDeRed
 import com.sebastiannarvaez.marcador.ui.ArbitrosUiState
 import com.sebastiannarvaez.marcador.ui.ArbitrosViewModel
 import kotlinx.coroutines.Dispatchers
@@ -10,7 +12,6 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import java.io.IOException
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -40,7 +41,7 @@ class ArbitrosViewModelTest {
 
     @Test
     fun sinRedSaleElErrorYReintentarVuelveACargar() = runTest {
-        val repositorio = FakeArbitrosRepository(fallo = IOException("sin red"))
+        val repositorio = FakeArbitrosRepository(fallo = FalloDeRed(ErrorDeRed.SinConexion))
         val viewModel = ArbitrosViewModel(repositorio)
         viewModel.uiState.test {
             assertEquals(ArbitrosUiState.Cargando, awaitItem())
