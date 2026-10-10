@@ -1,7 +1,7 @@
 package com.sebastiannarvaez.marcador.domain
 
-import com.sebastiannarvaez.marcador.torneo.Equipo
 import com.sebastiannarvaez.marcador.torneo.Gol
+import com.sebastiannarvaez.marcador.torneo.Jugador
 import com.sebastiannarvaez.marcador.torneo.Partido
 import com.sebastiannarvaez.marcador.torneo.Torneo
 import kotlinx.coroutines.flow.Flow
@@ -22,8 +22,6 @@ data class PartidoDeLista(val id: Int, val partido: Partido)
 //   - lo que cambia con el tiempo se expone como Flow; lo que ocurre una vez, como `suspend`;
 //   - es la fuente de la verdad: quien quiera saber los partidos, los OBSERVA aqui.
 interface PartidosRepository {
-    val equipos: List<Equipo>
-
     fun observarPartidos(): Flow<List<PartidoDeLista>>
 
     suspend fun partido(id: Int): Partido?
@@ -31,6 +29,9 @@ interface PartidosRepository {
     suspend fun registrarGol(partidoId: Int, gol: Gol)
 
     fun observarGoleadores(): Flow<List<Goleador>>
+
+    // La plantilla de un equipo, observada: si alguien anade un jugador, vuelve a emitir.
+    fun observarPlantilla(equipo: String): Flow<List<Jugador>>
 }
 
 // Cuantos goles lleva un jugador (la pantalla de goleadores los pinta). Se calcula en la base con GROUP BY.
@@ -38,7 +39,11 @@ data class Goleador(val jugador: String, val goles: Int)
 
 // Las tablas y los goleadores no se guardan: se CALCULAN a partir de los partidos. Guardar
 // ademas la tabla seria tener dos fuentes de verdad que se pueden contradecir.
-fun armarTorneo(equipos: List<Equipo>, partidos: List<PartidoDeLista>): Torneo =
-    Torneo("Copa Barrio", equipos).also { torneo ->
+// Los equipos salen de los PROPIOS partidos: son los mismos objetos que llevan dentro (Torneo
+// compara equipos por identidad) y vienen de la misma lectura de la base.
+fun armarTorneo(partidos: List<PartidoDeLista>): Torneo {
+    val equipos = partidos.flatMap { listOf(it.partido.local, it.partido.visitante) }.distinct()
+    return Torneo("Copa Barrio", equipos).also { torneo ->
         partidos.forEach { torneo.registrar(it.partido).getOrThrow() }
     }
+}

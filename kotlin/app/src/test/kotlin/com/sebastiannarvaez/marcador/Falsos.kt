@@ -15,8 +15,8 @@ import com.sebastiannarvaez.marcador.domain.PartidoDeLista
 import com.sebastiannarvaez.marcador.domain.PartidosRepository
 import com.sebastiannarvaez.marcador.domain.PreferenciasRepository
 import com.sebastiannarvaez.marcador.torneo.Ejemplo
-import com.sebastiannarvaez.marcador.torneo.Equipo
 import com.sebastiannarvaez.marcador.torneo.Gol
+import com.sebastiannarvaez.marcador.torneo.Jugador
 import com.sebastiannarvaez.marcador.torneo.Partido
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +38,8 @@ class FakePartidosRepository(
 ) : PartidosRepository {
     private val lista = MutableStateFlow(partidos)
 
-    override val equipos: List<Equipo> = listOf(Ejemplo.rayo, Ejemplo.toros)
+    // Las plantillas, por nombre de equipo: hacen de tabla `jugador`.
+    private val plantillas = MutableStateFlow(listOf(Ejemplo.rayo, Ejemplo.toros).associate { it.nombre to it.plantilla })
 
     override fun observarPartidos(): Flow<List<PartidoDeLista>> = lista
 
@@ -52,6 +53,8 @@ class FakePartidosRepository(
         filas.flatMap { it.partido.eventos.filterIsInstance<Gol>() }
             .groupingBy { it.jugador.nombre }.eachCount().map { Goleador(it.key, it.value) }
     }
+
+    override fun observarPlantilla(equipo: String): Flow<List<Jugador>> = plantillas.map { it[equipo].orEmpty() }
 }
 
 // Un guion CON goles: local al 15, visitante al 30 y local al 60. Los avisos caen cada 15

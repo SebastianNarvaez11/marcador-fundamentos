@@ -17,11 +17,13 @@ import androidx.sqlite.driver.AndroidSQLiteDriver
 // Version 3: la tabla nueva `arbitro`. Una tabla nueva es el caso facil de una migracion
 // automatica: Room compara 2.json con 3.json y escribe el CREATE TABLE. Los partidos y los
 // goles de la version 2 se quedan como estaban.
+// Version 4: otra tabla nueva, `jugador`. Llega VACIA tambien al movil que ya tenia partidos:
+// la rellena el repositorio al arrancar (ver PartidosRepositoryRoom).
 @Database(
-    entities = [PartidoEntity::class, GolEntity::class, ArbitroEntity::class],
-    version = 3,
+    entities = [PartidoEntity::class, GolEntity::class, ArbitroEntity::class, JugadorEntity::class],
+    version = 4,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4)],
 )
 abstract class MarcadorDatabase : RoomDatabase() {
     abstract fun partidoDao(): PartidoDao
