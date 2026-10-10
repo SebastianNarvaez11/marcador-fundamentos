@@ -116,6 +116,7 @@ fun FilaDePartido(local: String, visitante: String, resultado: String, modifier:
 fun PantallaTablas(
     tabla: List<FilaDePosicion>,
     goleadores: List<Pair<Jugador, Int>>,
+    onElegirEquipo: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -128,9 +129,14 @@ fun PantallaTablas(
         }
         // itemsIndexed da tambien la posicion: el puesto en la tabla.
         itemsIndexed(tabla, key = { _, fila -> "equipo-${fila.equipo.nombre}" }, contentType = { _, _ -> "fila" }) { indice, fila ->
-            Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                Modifier.fillMaxWidth()
+                    .clickable(onClickLabel = "Ver la plantilla") { onElegirEquipo(fila.equipo.nombre) }
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
                 Text("${indice + 1}. ${fila.equipo.nombre}", Modifier.weight(1f))
-                Text("${fila.jugados} PJ  ${fila.diferencia} DG  ${fila.puntos} pts")
+                Text("${fila.jugados} PJ  ${fila.diferencia} DG  ${fila.puntos} pts  ›")
             }
         }
         item(key = "cabecera-goleadores", contentType = "cabecera") {
@@ -150,7 +156,7 @@ fun PantallaTablas(
 @Composable
 private fun PantallaTablasPreview() {
     val torneo = DatosDeEjemplo.torneo
-    MaterialTheme { PantallaTablas(torneo.tablaDePosiciones(), torneo.goleadoresConGoles()) }
+    MaterialTheme { PantallaTablas(torneo.tablaDePosiciones(), torneo.goleadoresConGoles(), onElegirEquipo = {}) }
 }
 
 // El Ranking de :torneo sabe cuantos goles lleva cada uno (`puntosDe`); la pantalla
