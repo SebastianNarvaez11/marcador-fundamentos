@@ -49,6 +49,18 @@ data class GolEntity(
     val aMano: Boolean = false,
 )
 
+// La tabla `jugador` (VERSION 4 del esquema): la plantilla de cada equipo, que deja de ser un
+// catalogo fijo. El equipo se guarda por su NOMBRE, igual que en `partido` y en `gol`. El id lo
+// pone la base (autoGenerate): el orden de llegada es el orden de la plantilla.
+@Entity(tableName = "jugador")
+data class JugadorEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val equipo: String,
+    val nombre: String,
+    // `Int?` -> una columna que admite NULL: el dorsal es opcional.
+    val dorsal: Int?,
+)
+
 // El resultado de una consulta con GROUP BY no es una tabla: es una clase con las columnas
 // que devuelve el SELECT (los nombres deben coincidir con los alias).
 data class GoleadorFila(val jugador: String, val goles: Int)
