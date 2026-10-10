@@ -29,6 +29,18 @@ final class RepositorioFalso: PartidosRepositorio {
     func registrarGol(partidoId: Int, gol: EventoDePartido) {
         golesRegistrados.append((partidoId, gol))
     }
+
+    // Anota el jugador y lo suma a la plantilla (un equipo nuevo, como el de verdad).
+    private(set) var jugadoresAnadidos: [(jugador: Jugador, equipo: String)] = []
+
+    func anadirJugador(_ jugador: Jugador, a nombreDelEquipo: String) -> Bool {
+        guard let indice = equipos.firstIndex(where: { $0.nombre == nombreDelEquipo }),
+              let nuevo = Equipo(nombre: nombreDelEquipo, plantilla: equipos[indice].plantilla + [jugador])
+        else { return false }
+        equipos[indice] = nuevo
+        jugadoresAnadidos.append((jugador, nombreDelEquipo))
+        return true
+    }
 }
 
 // El espía de notificaciones (ahora en su sitio).

@@ -43,8 +43,9 @@ struct ListaDePartidosView: View {
             }
             .listStyle(.plain)
             .navigationTitle("Partidos")
-            // Un botón en la barra de arriba que empuja la pantalla de árbitros.
+            // Dos botones en la barra de arriba: empujan la lista de equipos y la de árbitros.
             .toolbar {
+                NavigationLink("Equipos", value: Destino.equipos)
                 NavigationLink("Árbitros", value: Destino.arbitros)
             }
             // UN solo sitio decide qué pantalla corresponde a cada destino.
@@ -58,6 +59,10 @@ struct ListaDePartidosView: View {
                     ArbitrosView(viewModel: contenedor.arbitrosViewModel())
                 case let .cronica(id):
                     CronicaView(viewModel: contenedor.cronicaViewModel(id: id))
+                case .equipos:
+                    EquiposView()
+                case let .plantilla(equipo):
+                    PlantillaView(equipo: equipo)
                 }
             }
         }
