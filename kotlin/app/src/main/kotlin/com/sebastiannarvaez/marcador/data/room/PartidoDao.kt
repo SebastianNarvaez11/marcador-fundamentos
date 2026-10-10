@@ -36,6 +36,19 @@ interface PartidoDao {
     @Query("SELECT * FROM gol WHERE partidoId = :partidoId ORDER BY minuto, id")
     suspend fun golesDe(partidoId: Int): List<GolEntity>
 
+    // La plantilla de todos los equipos, en el orden en que se apuntaron (el id).
+    @Query("SELECT * FROM jugador ORDER BY id")
+    fun observarJugadores(): Flow<List<JugadorEntity>>
+
+    @Query("SELECT * FROM jugador ORDER BY id")
+    suspend fun jugadores(): List<JugadorEntity>
+
+    @Query("SELECT COUNT(*) FROM jugador")
+    suspend fun contarJugadores(): Int
+
+    @Insert
+    suspend fun insertarJugadores(jugadores: List<JugadorEntity>)
+
     @Insert
     suspend fun insertarPartidos(partidos: List<PartidoEntity>)
 

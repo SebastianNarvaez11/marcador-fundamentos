@@ -63,9 +63,7 @@ object DatosModule {
     fun alcanceDeApp(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     // El repositorio de partidos, ahora con Room detras. Va con receta (@Provides) porque
-    // PartidosRepositoryRoom tiene un parametro con valor por defecto (los equipos), que
-    // Hilt no entiende, y recibe el alcance con su etiqueta. Quien pide PartidosRepository
-    // no se entera del cambio.
+    // recibe el alcance con su etiqueta. Quien pide PartidosRepository no se entera del cambio.
     @Provides
     @Singleton
     fun partidos(dao: PartidoDao, @AlcanceDeApp alcance: CoroutineScope): PartidosRepository =
