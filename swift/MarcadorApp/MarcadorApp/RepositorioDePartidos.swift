@@ -12,6 +12,7 @@ protocol PartidosRepositorio: AnyObject {
     var partidos: [PartidoDeLista] { get }
     func partido(id: Int) -> Partido?
     func registrarGol(partidoId: Int, gol: EventoDePartido)
+    func anadirJugador(_ jugador: Jugador, a nombreDelEquipo: String) -> Bool
 }
 
 // La implementación real: los partidos de ejemplo, y guardados en un JSON de `Documents`.
@@ -23,7 +24,7 @@ protocol PartidosRepositorio: AnyObject {
 // cuando alguien registra un gol (la lista muestra el marcador nuevo sin que nadie la avise).
 @Observable
 final class RepositorioDePartidos: PartidosRepositorio {
-    let equipos: [Equipo]
+    private(set) var equipos: [Equipo]
     private(set) var partidos: [PartidoDeLista]
 
     @ObservationIgnored private let almacen: AlmacenDelTorneo?
@@ -76,5 +77,36 @@ final class RepositorioDePartidos: PartidosRepositorio {
         guard let indice = partidos.firstIndex(where: { $0.id == partidoId }) else { return }
         partidos[indice] = PartidoDeLista(id: partidoId, partido: partidos[indice].partido.registrando(gol))
         guardar()
+    }
+
+    // Añadir un jugador. `Equipo` no se puede cambiar (sus propiedades son `let`): se construye
+    // OTRO con un jugador más y se pone en el sitio del viejo, en la lista de equipos y en cada
+    // partido donde juega. Su `init?` vuelve a comprobar la regla del dominio: si el dorsal se
+    // repitiera, devuelve `nil` y no se cambia nada. No hace falta ninguna migración: el JSON ya
+    // guardaba la plantilla de cada equipo (`EquipoGuardado.plantilla`).
+    @discardableResult
+    func anadirJugador(_ jugador: Jugador, a nombreDelEquipo: String) -> Bool {
+        guard let viejo = equipos.first(where: { $0.nombre == nombreDelEquipo }),
+              let nuevo = Equipo(nombre: viejo.nombre, plantilla: viejo.plantilla + [jugador])
+        else { return false }
+        equipos = equipos.map { $0 === viejo ? nuevo : $0 }
+        partidos = partidos.map { PartidoDeLista(id: $0.id, partido: $0.partido.cambiando(viejo, por: nuevo)) }
+        guardar()
+        return true
+    }
+}
+
+private extension Partido {
+    // El mismo partido con `nuevo` donde estaba `viejo`: de local, de visitante y en sus goles.
+    // `===` compara la IDENTIDAD: el mismo objeto, no uno con el mismo nombre.
+    func cambiando(_ viejo: Equipo, por nuevo: Equipo) -> Partido {
+        func cambiar(_ equipo: Equipo) -> Equipo { equipo === viejo ? nuevo : equipo }
+        let eventos = eventos.map { evento -> EventoDePartido in
+            if case let .gol(minuto, jugador, equipo) = evento {
+                return .gol(minuto: minuto, jugador: jugador, equipo: cambiar(equipo))
+            }
+            return evento
+        }
+        return Partido(local: cambiar(local), visitante: cambiar(visitante), eventos: eventos)
     }
 }

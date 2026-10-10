@@ -85,6 +85,28 @@ struct MarcadorAppTests {
         #expect(recargado.partido(id: 1)?.marcador() == esperado)
     }
 
+    // Un jugador añadido entra en su equipo y en sus partidos, puede marcar y sobrevive a cerrar la app.
+    @Test func unJugadorAnadidoJuegaYSeGuarda() throws {
+        let carpeta = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: carpeta, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: carpeta) }
+        let almacen = AlmacenDelTorneo(url: carpeta.appending(path: "torneo.json"))
+        let bea = Jugador(nombre: "Bea", dorsal: 7)
+
+        let repositorio = RepositorioDePartidos(almacen: almacen)
+        #expect(repositorio.anadirJugador(bea, a: "Rayo FC"))
+        // El partido 1 es Rayo FC - Toros: su local ya la lleva en la plantilla, y puede marcar.
+        let partido = try #require(repositorio.partido(id: 1))
+        #expect(partido.local.plantilla.contains(bea))
+        repositorio.registrarGol(partidoId: 1, gol: .gol(minuto: 3, jugador: bea, equipo: partido.local))
+        // Un dorsal repetido lo rechaza el dominio (`Equipo.init?`).
+        #expect(!repositorio.anadirJugador(Jugador(nombre: "Otra", dorsal: 7), a: "Rayo FC"))
+
+        let recargado = RepositorioDePartidos(almacen: almacen)
+        #expect(recargado.equipos.first { $0.nombre == "Rayo FC" }?.plantilla.last == bea)
+        #expect(recargado.partido(id: 1)?.goleadores().last == bea)
+    }
+
     // Un JSON roto no impide arrancar: se usan los datos de ejemplo.
     @Test func unJsonRotoNoImpideArrancar() throws {
         let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).json")
