@@ -57,6 +57,10 @@ data object ArbitrosKey : NavKey
 @Serializable
 data class CronicaKey(val partidoId: Int) : NavKey
 
+// La plantilla de un equipo: el argumento es su nombre (el mismo que guarda la base).
+@Serializable
+data class PlantillaKey(val equipo: String) : NavKey
+
 // Las pestanas de primer nivel, que nunca se apilan entre si (la barra solo sale en ellas).
 private val PESTANAS: List<NavKey> = listOf(ListaKey, TablasKey, RecomposicionKey)
 
@@ -134,7 +138,12 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                         topBar = { CenterAlignedTopAppBar(title = { Text("Tablas") }) },
                         contentWindowInsets = WindowInsets(0),
                     ) { interior ->
-                        PantallaTablas(torneo.tablaDePosiciones(), torneo.goleadoresConGoles(), Modifier.padding(interior))
+                        PantallaTablas(
+                            torneo.tablaDePosiciones(),
+                            torneo.goleadoresConGoles(),
+                            onElegirEquipo = { equipo -> pila.add(PlantillaKey(equipo)) },
+                            modifier = Modifier.padding(interior),
+                        )
                     }
                 }
                 entry<RecomposicionKey> {
@@ -170,6 +179,13 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                     val vm: ArbitrosViewModel = hiltViewModel()
                     val estado by vm.uiState.collectAsStateWithLifecycle()
                     PantallaArbitros(estado, onActualizar = vm::actualizar)
+                }
+                entry<PlantillaKey> { clave ->
+                    val vm = hiltViewModel<PlantillaViewModel, PlantillaViewModel.Fabrica> { fabrica ->
+                        fabrica.crear(clave.equipo)
+                    }
+                    val jugadores by vm.jugadores.collectAsStateWithLifecycle()
+                    PantallaPlantilla(clave.equipo, jugadores)
                 }
                 entry<CronicaKey> { clave ->
                     // La segunda inyeccion asistida: el id de la cronica sale de la clave.
