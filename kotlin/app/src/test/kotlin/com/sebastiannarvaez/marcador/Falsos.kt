@@ -55,6 +55,10 @@ class FakePartidosRepository(
     }
 
     override fun observarPlantilla(equipo: String): Flow<List<Jugador>> = plantillas.map { it[equipo].orEmpty() }
+
+    override suspend fun anadirJugador(equipo: String, jugador: Jugador) {
+        plantillas.value = plantillas.value + (equipo to plantillas.value[equipo].orEmpty() + jugador)
+    }
 }
 
 // Un guion CON goles: local al 15, visitante al 30 y local al 60. Los avisos caen cada 15
