@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,6 +61,9 @@ data class CronicaKey(val partidoId: Int) : NavKey
 // La plantilla de un equipo: el argumento es su nombre (el mismo que guarda la base).
 @Serializable
 data class PlantillaKey(val equipo: String) : NavKey
+
+@Serializable
+data class AnadirJugadorKey(val equipo: String) : NavKey
 
 // Las pestanas de primer nivel, que nunca se apilan entre si (la barra solo sale en ellas).
 private val PESTANAS: List<NavKey> = listOf(ListaKey, TablasKey, RecomposicionKey)
@@ -185,7 +189,26 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                         fabrica.crear(clave.equipo)
                     }
                     val jugadores by vm.jugadores.collectAsStateWithLifecycle()
-                    PantallaPlantilla(clave.equipo, jugadores)
+                    PantallaPlantilla(clave.equipo, jugadores, onAnadir = { pila.add(AnadirJugadorKey(clave.equipo)) })
+                }
+                entry<AnadirJugadorKey> { clave ->
+                    val vm = hiltViewModel<AnadirJugadorViewModel, AnadirJugadorViewModel.Fabrica> { fabrica ->
+                        fabrica.crear(clave.equipo)
+                    }
+                    // Guardado: se vuelve a la plantilla, que ya muestra al jugador nuevo (la observa).
+                    LaunchedEffect(vm.guardado) {
+                        if (vm.guardado) pila.removeAt(pila.lastIndex)
+                    }
+                    PantallaAnadirJugador(
+                        equipo = clave.equipo,
+                        formulario = vm.formulario,
+                        errorNombre = vm.errorNombre,
+                        errorDorsal = vm.errorDorsal,
+                        sePuedeGuardar = vm.sePuedeGuardar,
+                        onNombre = vm::alEscribirNombre,
+                        onDorsal = vm::alEscribirDorsal,
+                        onGuardar = vm::guardar,
+                    )
                 }
                 entry<CronicaKey> { clave ->
                     // La segunda inyeccion asistida: el id de la cronica sale de la clave.
