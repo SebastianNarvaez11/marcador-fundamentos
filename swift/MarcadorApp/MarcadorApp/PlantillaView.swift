@@ -18,6 +18,9 @@ struct PlantillaView: View {
         }
         .navigationTitle(equipo)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            NavigationLink("Añadir jugador", value: Destino.anadirJugador(equipo))
+        }
     }
 }
 

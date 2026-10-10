@@ -57,4 +57,8 @@ final class ContenedorDeLaApp {
     func cronicaViewModel(id: Int) -> CronicaViewModel {
         CronicaViewModel(partidoId: id, publicarCronica: publicarCronica)
     }
+
+    func anadirJugadorViewModel(equipo: String) -> AnadirJugadorViewModel {
+        AnadirJugadorViewModel(equipo: equipo, repositorio: partidos)
+    }
 }

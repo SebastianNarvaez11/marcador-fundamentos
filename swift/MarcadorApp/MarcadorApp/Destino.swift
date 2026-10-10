@@ -14,4 +14,5 @@ enum Destino: Hashable {
     case cronica(Int)   // la crónica del partido con ese id (botón «Crónica» del partido)
     case equipos        // la lista de equipos (botón «Equipos» de la barra de Partidos)
     case plantilla(String)   // la plantilla del equipo con ese nombre
+    case anadirJugador(String)   // el formulario para añadir un jugador a ese equipo
 }
