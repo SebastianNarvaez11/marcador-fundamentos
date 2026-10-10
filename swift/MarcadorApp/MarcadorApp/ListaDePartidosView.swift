@@ -63,6 +63,8 @@ struct ListaDePartidosView: View {
                     EquiposView()
                 case let .plantilla(equipo):
                     PlantillaView(equipo: equipo)
+                case let .anadirJugador(equipo):
+                    AnadirJugadorView(viewModel: contenedor.anadirJugadorViewModel(equipo: equipo))
                 }
             }
         }
