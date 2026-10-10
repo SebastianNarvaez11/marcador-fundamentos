@@ -80,6 +80,15 @@ class PartidosRepositoryRoom(
             .map { filas -> filas.filter { it.equipo == equipo }.map { Jugador(it.nombre, it.dorsal) } }
             .onStart { sembrado.join() }
 
+    // El formulario ya comprobo sus reglas. Aun asi, la del DOMINIO sigue mandando: se arma el
+    // equipo con el jugador nuevo y, si su dorsal se repitiera, `Equipo` lanza y no se guarda nada.
+    override suspend fun anadirJugador(equipo: String, jugador: Jugador) {
+        sembrado.join()
+        val plantilla = dao.jugadores().filter { it.equipo == equipo }.map { Jugador(it.nombre, it.dorsal) }
+        Equipo(equipo, plantilla + jugador)
+        dao.insertarJugador(JugadorEntity(equipo = equipo, nombre = jugador.nombre, dorsal = jugador.dorsal))
+    }
+
     // Filas -> equipos. `groupBy` junta los jugadores de cada equipo y conserva el orden (el id).
     // `Equipo(...)` vuelve a pasar su `init`: si la tabla tuviera dos dorsales iguales, lanzaria.
     private fun equiposDesde(jugadores: List<JugadorEntity>): List<Equipo> =
