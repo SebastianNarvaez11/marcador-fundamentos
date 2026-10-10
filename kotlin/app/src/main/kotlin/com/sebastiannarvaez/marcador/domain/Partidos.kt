@@ -32,6 +32,8 @@ interface PartidosRepository {
 
     // La plantilla de un equipo, observada: si alguien anade un jugador, vuelve a emitir.
     fun observarPlantilla(equipo: String): Flow<List<Jugador>>
+
+    suspend fun anadirJugador(equipo: String, jugador: Jugador)
 }
 
 // Cuantos goles lleva un jugador (la pantalla de goleadores los pinta). Se calcula en la base con GROUP BY.
