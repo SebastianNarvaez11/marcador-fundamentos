@@ -50,6 +50,9 @@ interface PartidoDao {
     suspend fun insertarJugadores(jugadores: List<JugadorEntity>)
 
     @Insert
+    suspend fun insertarJugador(jugador: JugadorEntity)
+
+    @Insert
     suspend fun insertarPartidos(partidos: List<PartidoEntity>)
 
     @Insert
