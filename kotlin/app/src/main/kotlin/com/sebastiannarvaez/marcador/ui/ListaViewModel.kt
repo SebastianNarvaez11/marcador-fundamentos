@@ -25,6 +25,6 @@ class ListaViewModel @Inject constructor(private val repositorio: PartidosReposi
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val torneo: StateFlow<Torneo> = repositorio.observarPartidos()
-        .map { armarTorneo(repositorio.equipos, it) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Torneo("Copa Barrio", repositorio.equipos))
+        .map { armarTorneo(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Torneo("Copa Barrio", emptyList()))
 }

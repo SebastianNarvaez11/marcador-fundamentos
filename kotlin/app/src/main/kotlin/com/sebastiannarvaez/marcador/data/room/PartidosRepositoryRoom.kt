@@ -6,26 +6,37 @@ import com.sebastiannarvaez.marcador.domain.PartidoDeLista
 import com.sebastiannarvaez.marcador.domain.PartidosRepository
 import com.sebastiannarvaez.marcador.torneo.Equipo
 import com.sebastiannarvaez.marcador.torneo.Gol
+import com.sebastiannarvaez.marcador.torneo.Jugador
 import com.sebastiannarvaez.marcador.torneo.Partido
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
-// El repositorio con Room detras. Implementa LA MISMA interfaz que el de memoria:
-// ni los casos de uso ni los ViewModels cambian. Su trabajo es TRADUCIR entre filas
+// El repositorio con Room detras. Implementa LA MISMA interfaz que el de memoria (ya borrado):
+// ni los casos de uso ni los ViewModels cambiaron. Su trabajo es TRADUCIR entre filas
 // (entidades) y dominio, y ser el unico que conoce el DAO.
+//
+// Desde la version 4 los equipos tambien salen de la base: su plantilla es la tabla `jugador`.
 class PartidosRepositoryRoom(
     private val dao: PartidoDao,
     alcance: CoroutineScope,
-    override val equipos: List<Equipo> = DatosDeEjemplo.torneo.equipos,
 ) : PartidosRepository {
 
-    // Primera vez que se abre la app: la base esta vacia y se llena con los partidos de
-    // ejemplo. Es un Job: `partido(id)` ESPERA a que termine, o pediria el partido 1 antes
-    // de que exista y la pantalla diria «No existe el partido».
+    // Primera vez que se abre la app: la base esta vacia y se llena con los datos de ejemplo.
+    // Es un Job: quien lee ESPERA a que termine (`join`), o veria la base a medio llenar.
+    // Los jugadores van PRIMERO y con su propia comprobacion: en un movil que ya tenia la
+    // version 3, la migracion crea la tabla `jugador` vacia pero los partidos ya estan.
     private val sembrado = alcance.launch {
+        if (dao.contarJugadores() == 0) {
+            dao.insertarJugadores(
+                DatosDeEjemplo.torneo.equipos.flatMap { equipo ->
+                    equipo.plantilla.map { JugadorEntity(equipo = equipo.nombre, nombre = it.nombre, dorsal = it.dorsal) }
+                },
+            )
+        }
         if (dao.contarPartidos() == 0) {
             dao.insertarPartidos(DatosDeEjemplo.partidos.map { PartidoEntity(it.id, it.partido.local.nombre, it.partido.visitante.nombre) })
             dao.insertarGoles(
@@ -38,18 +49,21 @@ class PartidosRepositoryRoom(
         }
     }
 
-    // Dos flujos de tablas distintas; `combine` reconstruye la lista cada vez que
-    // CUALQUIERA cambia. Asi un gol nuevo (INSERT en `gol`) refresca la lista sin recargar.
+    // TRES tablas; `combine` reconstruye la lista cada vez que CUALQUIERA cambia: un gol nuevo
+    // (INSERT en `gol`) o un jugador nuevo (INSERT en `jugador`) refrescan la lista sin recargar.
+    // `onStart { sembrado.join() }`: no se empieza a leer hasta que la siembra termina; sin
+    // jugadores no hay equipos con los que montar los partidos.
     override fun observarPartidos(): Flow<List<PartidoDeLista>> =
-        combine(dao.observarPartidos(), dao.observarGoles()) { partidos, goles ->
+        combine(dao.observarPartidos(), dao.observarGoles(), dao.observarJugadores()) { partidos, goles, jugadores ->
+            val equipos = equiposDesde(jugadores)
             val golesPorPartido = goles.groupBy { it.partidoId }
-            partidos.map { PartidoDeLista(it.id, aDominio(it, golesPorPartido[it.id].orEmpty())) }
-        }
+            partidos.map { PartidoDeLista(it.id, aDominio(it, golesPorPartido[it.id].orEmpty(), equipos)) }
+        }.onStart { sembrado.join() }
 
     override suspend fun partido(id: Int): Partido? {
         sembrado.join()
         val fila = dao.partido(id) ?: return null
-        return aDominio(fila, dao.golesDe(id))
+        return aDominio(fila, dao.golesDe(id), equiposDesde(dao.jugadores()))
     }
 
     override suspend fun registrarGol(partidoId: Int, gol: Gol) {
@@ -60,9 +74,22 @@ class PartidosRepositoryRoom(
     override fun observarGoleadores(): Flow<List<Goleador>> =
         dao.observarGoleadores().map { filas -> filas.map { Goleador(it.jugador, it.goles) } }
 
-    // Fila -> dominio. Los equipos se buscan en el catalogo POR NOMBRE: `Equipo` no define
-    // `equals`, asi que `Torneo` solo reconoce las MISMAS instancias.
-    private fun aDominio(fila: PartidoEntity, goles: List<GolEntity>): Partido {
+    // La plantilla de UN equipo: las filas de la tabla `jugador` con ese nombre, como Jugador.
+    override fun observarPlantilla(equipo: String): Flow<List<Jugador>> =
+        dao.observarJugadores()
+            .map { filas -> filas.filter { it.equipo == equipo }.map { Jugador(it.nombre, it.dorsal) } }
+            .onStart { sembrado.join() }
+
+    // Filas -> equipos. `groupBy` junta los jugadores de cada equipo y conserva el orden (el id).
+    // `Equipo(...)` vuelve a pasar su `init`: si la tabla tuviera dos dorsales iguales, lanzaria.
+    private fun equiposDesde(jugadores: List<JugadorEntity>): List<Equipo> =
+        jugadores.groupBy { it.equipo }.map { (nombre, filas) -> Equipo(nombre, filas.map { Jugador(it.nombre, it.dorsal) }) }
+
+    // Fila -> dominio. Los equipos se buscan POR NOMBRE en la lista que se acaba de construir:
+    // `Equipo` no define `equals`, asi que `Torneo` solo reconoce las MISMAS instancias, y todos
+    // los partidos de una lectura comparten los mismos equipos.
+    private fun aDominio(fila: PartidoEntity, goles: List<GolEntity>, equipos: List<Equipo>): Partido {
+        fun equipo(nombre: String): Equipo = equipos.firstOrNull { it.nombre == nombre } ?: error("Equipo desconocido: $nombre")
         val local = equipo(fila.local)
         val visitante = equipo(fila.visitante)
         return Partido(
@@ -73,7 +100,4 @@ class PartidosRepositoryRoom(
             },
         )
     }
-
-    private fun equipo(nombre: String): Equipo =
-        equipos.firstOrNull { it.nombre == nombre } ?: error("Equipo desconocido: $nombre")
 }
