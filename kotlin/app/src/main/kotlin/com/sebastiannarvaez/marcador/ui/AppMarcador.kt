@@ -1,8 +1,11 @@
 package com.sebastiannarvaez.marcador.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -74,27 +77,50 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
     val pila = rememberNavBackStack(ListaKey)
     val actual = pila.lastOrNull()
 
+    // ESTADO DE TODA LA APP, LEIDO EN LA RAIZ. Este ViewModel se pide aqui, FUERA de NavDisplay:
+    // es el de la Activity, no el de una pantalla (mira AppViewModel).
+    val appViewModel: AppViewModel = hiltViewModel()
+    val enJuego by appViewModel.enJuego.collectAsStateWithLifecycle()
+
     // Un Scaffold dentro de otro: el de fuera pone la barra inferior y los de dentro
     // sus TopAppBar. Todos con `contentWindowInsets = WindowInsets(0)`, o sale margen doble.
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
-            AnimatedVisibility(
-                visible = actual in PESTANAS,
-                enter = slideInVertically { it },
-                exit = slideOutVertically { it },
-            ) {
-                NavigationBar {
-                    listOf(ListaKey to "Partidos", TablasKey to "Tablas", RecomposicionKey to "Recomp.")
-                        .forEach { (clave, titulo) ->
-                            NavigationBarItem(
-                                selected = actual == clave,
-                                onClick = { irAPestana(pila, clave) },
-                                icon = {},
-                                label = { Text(titulo) },
-                            )
-                        }
+            // La barra del partido en juego va ENCIMA de las pestanas. No sale en la pantalla
+            // del propio partido (alli ya se ve todo).
+            Column {
+                AnimatedVisibility(
+                    visible = enJuego != null && actual != enJuego?.let { PartidoKey(it.partidoId) },
+                    enter = expandVertically(),
+                    exit = shrinkVertically(),
+                ) {
+                    enJuego?.let { partido ->
+                        BarraDelPartidoEnJuego(
+                            partido,
+                            onAbrir = { irAlPartido(pila, partido.partidoId) },
+                            onCerrar = appViewModel::cerrar,
+                            ultimaDeLaPantalla = actual !in PESTANAS,
+                        )
+                    }
+                }
+                AnimatedVisibility(
+                    visible = actual in PESTANAS,
+                    enter = slideInVertically { it },
+                    exit = slideOutVertically { it },
+                ) {
+                    NavigationBar {
+                        listOf(ListaKey to "Partidos", TablasKey to "Tablas", RecomposicionKey to "Recomp.")
+                            .forEach { (clave, titulo) ->
+                                NavigationBarItem(
+                                    selected = actual == clave,
+                                    onClick = { irAPestana(pila, clave) },
+                                    icon = {},
+                                    label = { Text(titulo) },
+                                )
+                            }
+                    }
                 }
             }
         },
