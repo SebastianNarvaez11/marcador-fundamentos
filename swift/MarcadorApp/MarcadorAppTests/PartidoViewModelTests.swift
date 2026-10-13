@@ -49,6 +49,24 @@ struct PartidoViewModelTests {
         #expect(segunda.directo === primera.directo)
     }
 
+    // UNO A LA VEZ: la pantalla de otro partido ve el aviso y su «Empezar» no hace nada.
+    @Test func otroPartidoVeElAvisoYNoEmpieza() {
+        let repo = RepositorioFalso(partidos: [
+            PartidoDeLista(id: 1, partido: Ejemplo.rayoContraToros),
+            PartidoDeLista(id: 2, partido: Ejemplo.rayoContraToros),
+        ])
+        let enJuego = PartidoEnJuego()
+        PartidoViewModel(partidoId: 1, repositorio: repo, partidoEnJuego: enJuego, msPorMinuto: 60_000).empezar()
+        let segundo = PartidoViewModel(partidoId: 2, repositorio: repo, partidoEnJuego: enJuego, msPorMinuto: 60_000)
+        guard case let .exito(datos) = segundo.uiState else {
+            Issue.record("Se esperaba .exito")
+            return
+        }
+        #expect(datos.otroEnJuego == 1)
+        segundo.empezar()
+        #expect(enJuego.directo?.partidoId == 1)
+    }
+
     // Mientras se juega, la duración no cambia; sin empezar, sí (un directo nuevo).
     @Test func laDuracionSoloCambiaSiNoSeJuega() {
         let enJuego = PartidoEnJuego()

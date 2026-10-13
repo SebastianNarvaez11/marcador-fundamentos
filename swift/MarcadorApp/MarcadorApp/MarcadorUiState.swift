@@ -17,5 +17,7 @@ enum MarcadorUiState: Equatable {
         let corriendo: Bool
         let ultimoAviso: String
         let duracion: Int
+        // El id de OTRO partido que se está jugando (nil si no hay): entonces no se puede empezar este.
+        var otroEnJuego: Int? = nil
     }
 }

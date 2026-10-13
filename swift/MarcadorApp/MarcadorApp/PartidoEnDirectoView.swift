@@ -76,8 +76,10 @@ struct PartidoEnDirectoView: View {
                     Text(estado(datos))
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("estado")
-                    // Solo antes de empezar: luego lo juega `PartidoEnJuego`.
-                    if datos.minuto == 0 && !datos.corriendo {
+                    // UNO A LA VEZ: si hay otro partido en juego, en vez de «Empezar partido» va el aviso.
+                    if let otro = datos.otroEnJuego {
+                        AvisoDePartidoEnJuego(otro: otro)
+                    } else if datos.minuto == 0 && !datos.corriendo {
                         Button("Empezar partido") { viewModel.empezar() }
                             .buttonStyle(.borderedProminent)
                     }
@@ -98,18 +100,22 @@ struct PartidoEnDirectoView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Duración del partido")
-                    // El selector guarda la preferencia (`duracion`); al cambiarla, el ViewModel prepara el
-                    // partido con ella. Bloqueado mientras se juega: ese partido ya no se puede reiniciar.
-                    Picker("Duración", selection: $duracion) {
+                    // El selector enseña la duración de ESTE partido y, al cambiarla, guarda la preferencia
+                    // (`duracion`) y prepara el partido con ella. Un Binding hecho a mano: lee de un sitio
+                    // y escribe en otro. Bloqueado mientras se juega.
+                    Picker("Duración", selection: Binding(
+                        get: { datos.duracion },
+                        set: { nueva in
+                            duracion = nueva
+                            viewModel.cambiarDuracion(nueva)
+                        }
+                    )) {
                         ForEach(Ajustes.duraciones, id: \.self) { minutos in
                             Text("\(minutos) min").tag(minutos)
                         }
                     }
                     .pickerStyle(.segmented)
                     .disabled(datos.corriendo)
-                    .onChange(of: duracion) { _, nueva in
-                        viewModel.cambiarDuracion(nueva)
-                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -121,6 +127,23 @@ struct PartidoEnDirectoView: View {
         if datos.minuto >= datos.duracion { "Partido terminado" }
         else if datos.corriendo { "En juego" }
         else { "Sin empezar" }
+    }
+}
+
+// El aviso de «uno a la vez»: lleva al partido que se está jugando.
+struct AvisoDePartidoEnJuego: View {
+    let otro: Int
+
+    var body: some View {
+        HStack {
+            Text("Ya hay un partido en juego")
+                .font(.subheadline.weight(.semibold))
+            Spacer()
+            NavigationLink("Ir al partido", value: Destino.partido(otro))
+                .buttonStyle(.borderedProminent)
+        }
+        .padding(12)
+        .background(.fill.tertiary, in: .rect(cornerRadius: 12))
     }
 }
 
