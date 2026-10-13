@@ -33,14 +33,14 @@ final class PartidoViewModelXCTests: XCTestCase {
     }
 
     func testUnPartidoQueNoExisteDaUnEstadoDeError() {
-        let viewModel = PartidoViewModel(partidoId: 99, repositorio: repositorio, msPorMinuto: 0)
+        let viewModel = PartidoViewModel(partidoId: 99, repositorio: repositorio, partidoEnJuego: PartidoEnJuego(), msPorMinuto: 0)
         XCTAssertEqual(viewModel.uiState, .error("No existe el partido n.º 99"))
     }
 
     func testElViewModelSeLiberaAlSoltarlo() async {
         weak var referencia: PartidoViewModel?
         do {
-            let viewModel = PartidoViewModel(partidoId: 1, repositorio: repositorio, msPorMinuto: 0)
+            let viewModel = PartidoViewModel(partidoId: 1, repositorio: repositorio, partidoEnJuego: PartidoEnJuego(), msPorMinuto: 0)
             referencia = viewModel
         }
         XCTAssertNil(referencia)

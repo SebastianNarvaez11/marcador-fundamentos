@@ -20,6 +20,10 @@ import Torneo
 //
 // EL VIEWMODEL, FINO. El reloj, los goles y el aviso viven en `Directo`; este ViewModel lo crea, lo
 // traduce a `uiState` y le pasa los toques. Las vistas siguen sin saber que existe el directo.
+//
+// LA PANTALLA OBSERVA, NO ES LA DUEÑA. El partido ya no lo juega un `.task` de la vista (moriría al
+// cerrarla): lo empieza `PartidoEnJuego`, el estado de toda la app. Si el partido de esta pantalla ya
+// está en juego (o acaba de terminar), el ViewModel REUTILIZA ese directo en vez de crear otro.
 @MainActor
 @Observable
 final class PartidoViewModel {
@@ -36,10 +40,14 @@ final class PartidoViewModel {
     @ObservationIgnored private let reintroducirElCiclo: Bool
     // Quien avisa de los goles (nil = nadie). Se lo pasa al directo.
     @ObservationIgnored private let notificador: (any Notificador)?
+    // El partido en juego de la app: lo empieza y guarda su directo, que sigue aunque se cierre la pantalla.
+    @ObservationIgnored private let enJuego: PartidoEnJuego
 
     init(
         partidoId: Int,
         repositorio: any PartidosRepositorio,
+        partidoEnJuego: PartidoEnJuego,
+        duracion: Int = 90,
         notificador: (any Notificador)? = nil,
         msPorMinuto: Int = Configuracion.msPorMinuto,
         reintroducirElCiclo: Bool = Configuracion.cicloDelCronometro
@@ -50,7 +58,12 @@ final class PartidoViewModel {
         self.notificador = notificador
         self.msPorMinuto = msPorMinuto
         self.reintroducirElCiclo = reintroducirElCiclo
-        cargar(duracion: Ajustes.duracionPorDefecto)
+        self.enJuego = partidoEnJuego
+        if let vivo = partidoEnJuego.directo(id: partidoId) {
+            directo = vivo
+        } else {
+            cargar(duracion: duracion)
+        }
     }
 
     // `deinit` sale en el registro cuando ARC libera el ViewModel.
@@ -78,13 +91,18 @@ final class PartidoViewModel {
         }
     }
 
-    // La vista la llama desde `.task(id: duración)`: se cancela sola al irse la pantalla.
-    // `.task` se CANCELA cuando otra pantalla se apila encima (Goleadores) y se RELANZA al volver, pero el
-    // ViewModel (y su directo) siguen vivos: si la duración no cambió, `jugar` SIGUE donde iba. Solo hace
-    // un directo nuevo si cambia la duración.
-    func jugar(duracion nueva: Int) async {
-        if directo?.duracion != nueva { cargar(duracion: nueva) }
-        await directo?.jugar()
+    // «Empezar»: lo empieza el partido en juego, no la vista. Si hay otro sin terminar, no hace nada.
+    func empezar() {
+        guard let directo else { return }
+        _ = enJuego.empezar(directo)
+    }
+
+    // Otra duración = un directo NUEVO sin empezar. Mientras este partido se juega, no (la vista
+    // desactiva el selector y aquí se ignora).
+    func cambiarDuracion(_ nueva: Int) {
+        guard let directo, directo.duracion != nueva else { return }
+        if let vivo = enJuego.directo(id: partidoId), !vivo.terminado { return }
+        cargar(duracion: nueva)
     }
 
     // Leer el partido del repositorio y preparar un directo sin empezar.

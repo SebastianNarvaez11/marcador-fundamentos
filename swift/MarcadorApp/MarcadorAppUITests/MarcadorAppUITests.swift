@@ -27,6 +27,7 @@ final class MarcadorAppUITests: XCTestCase {
         app.launchArguments = ["-msPorMinuto", "40"] + sinAvisos
         app.launch()
         app.buttons["partido-1"].tap()
+        app.buttons["Empezar partido"].tap()
         let minuto = app.staticTexts["minuto"]
         // Espera a que el reloj pase del minuto 10.
         let pasaDel10 = NSPredicate { objeto, _ in
@@ -46,19 +47,24 @@ final class MarcadorAppUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(numeroDespues, numeroAntes, "El partido se reinició: antes «\(antes)», después «\(despues)»")
     }
 
-    // Al volver atrás se cancela el `.task` del partido (mira el registro: «partido CANCELADO»).
+    // El partido SIGUE al volver atrás: lo juega el partido en juego, no la pantalla. Al volver a
+    // abrirlo, el minuto ha seguido avanzando.
     @MainActor
-    func testAlSalirDelPartidoSeCancelaElTask() throws {
+    func testAlSalirDelPartidoSigueEnJuego() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-msPorMinuto", "100"] + sinAvisos
         app.launch()
         app.buttons["partido-2"].tap()
-        XCTAssertTrue(app.staticTexts["minuto"].waitForExistence(timeout: 5))
-        let enJuego = app.staticTexts["En juego"]
-        XCTAssertTrue(enJuego.waitForExistence(timeout: 5))
+        app.buttons["Empezar partido"].tap()
+        XCTAssertTrue(app.staticTexts["En juego"].waitForExistence(timeout: 5))
         capturar(app, "en-juego")
         app.navigationBars.buttons.firstMatch.tap()   // «atrás»
         XCTAssertTrue(app.buttons["partido-2"].waitForExistence(timeout: 5))
+        Thread.sleep(forTimeInterval: 2)
+        app.buttons["partido-2"].tap()
+        let minuto = app.staticTexts["minuto"]
+        XCTAssertTrue(minuto.waitForExistence(timeout: 5))
+        XCTAssertGreaterThanOrEqual(Int(minuto.label.filter(\.isNumber)) ?? 0, 15, "El partido no siguió: \(minuto.label)")
     }
 
     // `.task` frente a `.onAppear { Task }`: se abre y se cierra a los 2 s.
@@ -114,8 +120,9 @@ final class MarcadorAppUITests: XCTestCase {
             }
         }
         XCTAssertTrue(app.buttons["Avisos de gol: activados"].waitForExistence(timeout: 5))
-        // Cambiar la duración relanza el partido (`.task(id:)`) y los goles del minuto 10 vuelven a ocurrir.
+        // Con la duración de 60 y «Empezar partido», los goles del minuto 10 sacan el banner.
         app.buttons["60 min"].tap()
+        app.buttons["Empezar partido"].tap()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let banner = springboard.staticTexts["¡Gol!"]
         XCTAssertTrue(banner.waitForExistence(timeout: 10), "No salió el banner de «¡Gol!»")
@@ -171,14 +178,14 @@ final class MarcadorAppUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Partidos"].waitForExistence(timeout: 5))
     }
 
-    // Volver de «Goleadores» NO reinicia el partido. Al apilar otra pantalla SwiftUI cancela el `.task` y
-    // lo relanza al volver; si `jugar` empezara de cero, el minuto volvería a 0 y el marcador a 0 - 0.
+    // Volver de «Goleadores» NO reinicia el partido: el partido en juego sigue mientras se mira otra pantalla.
     @MainActor
     func testVolverDeGoleadoresNoReiniciaElPartido() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-msPorMinuto", "150"] + sinAvisos
+        app.launchArguments = ["-msPorMinuto", "150", "-reiniciarDatos", "YES"] + sinAvisos
         app.launch()
         app.buttons["partido-1"].tap()
+        app.buttons["Empezar partido"].tap()
         let minuto = app.staticTexts["minuto"]
         let marcador = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", "\\d+ - \\d+")).firstMatch
         // Espera a que el reloj pase del minuto 14: los goles del minuto 10 ya están en el marcador.
