@@ -1,7 +1,7 @@
 package com.sebastiannarvaez.marcador.ui
 
 import androidx.lifecycle.ViewModel
-import com.sebastiannarvaez.marcador.domain.PartidoEnJuego
+import com.sebastiannarvaez.marcador.feature.marcador.domain.PartidoEnJuego
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
