@@ -40,7 +40,8 @@ final class PartidoViewModel {
     @ObservationIgnored private let reintroducirElCiclo: Bool
     // Quien avisa de los goles (nil = nadie). Se lo pasa al directo.
     @ObservationIgnored private let notificador: (any Notificador)?
-    // El partido en juego de la app: lo empieza y guarda su directo, que sigue aunque se cierre la pantalla.
+    // El partido en juego de la app. Es `@Observable`: leerlo en `uiState` basta para que la vista se
+    // entere cuando empieza o termina OTRO partido.
     @ObservationIgnored private let enJuego: PartidoEnJuego
 
     init(
@@ -77,8 +78,15 @@ final class PartidoViewModel {
         guard let directo else { return .cargando }
         return .exito(.init(
             partidoId: partidoId, partido: directo.partido, marcador: directo.marcador, minuto: directo.minuto,
-            corriendo: directo.corriendo, ultimoAviso: directo.ultimoAviso, duracion: directo.duracion
+            corriendo: directo.corriendo, ultimoAviso: directo.ultimoAviso, duracion: directo.duracion,
+            otroEnJuego: otroEnJuego
         ))
+    }
+
+    // El id de OTRO partido sin terminar (nil si no hay). Entonces este no se puede empezar.
+    private var otroEnJuego: Int? {
+        guard let vivo = enJuego.directo, vivo.partidoId != partidoId, !vivo.terminado else { return nil }
+        return vivo.partidoId
     }
 
     // ---- eventos de la pantalla ----
@@ -91,7 +99,8 @@ final class PartidoViewModel {
         }
     }
 
-    // «Empezar»: lo empieza el partido en juego, no la vista. Si hay otro sin terminar, no hace nada.
+    // «Empezar»: lo empieza el partido en juego, no la vista. Si hay otro sin terminar, no hace nada
+    // (la vista ni siquiera enseña el botón: enseña el aviso).
     func empezar() {
         guard let directo else { return }
         _ = enJuego.empezar(directo)
