@@ -23,6 +23,15 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.sebastiannarvaez.marcador.feature.goleadores.ui.GoleadoresViewModel
+import com.sebastiannarvaez.marcador.feature.goleadores.ui.PantallaGoleadores
+import com.sebastiannarvaez.marcador.feature.marcador.ui.PantallaMarcador
+import com.sebastiannarvaez.marcador.feature.marcador.ui.PartidoViewModel
+import com.sebastiannarvaez.marcador.feature.partidos.ui.ListaViewModel
+import com.sebastiannarvaez.marcador.feature.partidos.ui.PantallaPartidos
+import com.sebastiannarvaez.marcador.feature.partidos.ui.PantallaTablas
+import com.sebastiannarvaez.marcador.feature.partidos.ui.goleadoresConGoles
+import com.sebastiannarvaez.marcador.laboratorio.PantallaRecomposicion
 import kotlinx.serialization.Serializable
 
 // NAVIGATION 3

@@ -1,13 +1,13 @@
 package com.sebastiannarvaez.marcador.di
 
 import android.content.Context
-import com.sebastiannarvaez.marcador.data.PreferenciasDataStore
-import com.sebastiannarvaez.marcador.data.room.MarcadorDatabase
-import com.sebastiannarvaez.marcador.data.room.PartidoDao
-import com.sebastiannarvaez.marcador.data.room.PartidosRepositoryRoom
-import com.sebastiannarvaez.marcador.data.room.crearBaseDeDatos
-import com.sebastiannarvaez.marcador.domain.PartidosRepository
-import com.sebastiannarvaez.marcador.domain.PreferenciasRepository
+import com.sebastiannarvaez.marcador.core.database.MarcadorDatabase
+import com.sebastiannarvaez.marcador.core.database.PartidoDao
+import com.sebastiannarvaez.marcador.core.database.crearBaseDeDatos
+import com.sebastiannarvaez.marcador.feature.marcador.data.PreferenciasDataStore
+import com.sebastiannarvaez.marcador.feature.marcador.domain.PreferenciasRepository
+import com.sebastiannarvaez.marcador.feature.partidos.data.PartidosRepositoryRoom
+import com.sebastiannarvaez.marcador.feature.partidos.domain.PartidosRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
