@@ -1,9 +1,9 @@
 package com.sebastiannarvaez.marcador.di
 
-import com.sebastiannarvaez.marcador.data.ArbitrosRepositoryDosFuentes
-import com.sebastiannarvaez.marcador.data.red.CronicasRepositoryRed
-import com.sebastiannarvaez.marcador.domain.ArbitrosRepository
-import com.sebastiannarvaez.marcador.domain.CronicasRepository
+import com.sebastiannarvaez.marcador.feature.arbitros.data.ArbitrosRepositoryDosFuentes
+import com.sebastiannarvaez.marcador.feature.arbitros.domain.ArbitrosRepository
+import com.sebastiannarvaez.marcador.feature.cronica.data.CronicasRepositoryRed
+import com.sebastiannarvaez.marcador.feature.cronica.domain.CronicasRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
