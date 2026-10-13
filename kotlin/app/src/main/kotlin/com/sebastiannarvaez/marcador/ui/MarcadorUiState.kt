@@ -31,6 +31,8 @@ sealed interface MarcadorUiState {
         val corriendo: Boolean,
         val ultimoAviso: String,
         val duracion: Int = 90,
+        // El id de OTRO partido que se esta jugando (null si no hay): entonces no se puede empezar este.
+        val otroEnJuego: Int? = null,
     ) : MarcadorUiState
 
     data class Error(val mensaje: String) : MarcadorUiState
