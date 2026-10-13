@@ -1,6 +1,7 @@
 package com.sebastiannarvaez.marcador.ui
 
 import com.sebastiannarvaez.marcador.domain.Directo
+import com.sebastiannarvaez.marcador.domain.PartidoEnJuego
 import com.sebastiannarvaez.marcador.domain.PartidosRepository
 import com.sebastiannarvaez.marcador.domain.PreferenciasRepository
 import com.sebastiannarvaez.marcador.domain.RegistrarGol
@@ -12,7 +13,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -65,12 +65,17 @@ import kotlinx.coroutines.launch
 //   @Assisted        -> esta la pone quien lo crea (la pantalla), no Hilt;
 //   @AssistedFactory -> la fabrica: tu declaras la funcion, Hilt escribe el codigo.
 // @HiltViewModel(assistedFactory = ...) une el ViewModel con su fabrica.
+//
+// LA PANTALLA OBSERVA, NO ES LA DUENA. El partido ya no corre en viewModelScope (moriria al
+// cerrar la pantalla): lo empieza `PartidoEnJuego`, en el alcance de la app. Este ViewModel
+// solo lo busca (si ya esta en juego, lo reutiliza), lo traduce a un UiState y le pasa los eventos.
 @HiltViewModel(assistedFactory = PartidoViewModel.Fabrica::class)
 class PartidoViewModel @AssistedInject constructor(
     private val estadoGuardado: SavedStateHandle,
     private val repositorio: PartidosRepository,
     private val registrarGol: RegistrarGol,
     private val preferencias: PreferenciasRepository,
+    private val enJuego: PartidoEnJuego,
     @Assisted partidoInicial: Int,
 ) : ViewModel() {
 
@@ -93,7 +98,6 @@ class PartidoViewModel @AssistedInject constructor(
     }
 
     private val carga = MutableStateFlow<Carga>(Carga.EnCurso)
-    private var trabajos: List<Job> = emptyList()
 
     // EL ESTADO QUE VE LA PANTALLA, en un solo StateFlow.
     // Ya no calcula nada: traduce el `Directo` (dominio) a un MarcadorUiState.
@@ -122,9 +126,15 @@ class PartidoViewModel @AssistedInject constructor(
 
     // UNICA puerta de entrada de los eventos de la pantalla.
     fun alEvento(evento: MarcadorEvento) = when (evento) {
-        MarcadorEvento.Empezar -> (carga.value as? Carga.Lista)?.let { trabajos = it.directo.iniciar(viewModelScope) } ?: Unit
+        // Lo empieza el partido en juego, no este ViewModel. Si hay otro sin terminar, no hace
+        // nada.
+        MarcadorEvento.Empezar -> {
+            (carga.value as? Carga.Lista)?.let { enJuego.empezar(it.directo) }
+            Unit
+        }
         is MarcadorEvento.Gol -> (carga.value as? Carga.Lista)?.directo?.let { directo ->
-            // Se ve al instante en el directo Y se guarda con el caso de uso.
+            // Se ve al instante en el directo Y se guarda con el caso de uso (que termina de
+            // guardarlo aunque esta pantalla se cierre: mira RegistrarGol).
             directo.golAMano(evento.lado)
             // El `Result` con el fallo (no existe el partido, plantilla vacia) se descarta:
             // por ahora no hay donde mostrarlo, y el gol ya se ve en el directo.
@@ -133,23 +143,32 @@ class PartidoViewModel @AssistedInject constructor(
             }
             Unit
         } ?: Unit
-        // Se guarda en DataStore y se recarga el partido: el reloj y el guion cambian.
+        // Se guarda en DataStore y se prepara un directo NUEVO con esa duracion. Mientras este
+        // partido se juega, se ignora: lo juega `PartidoEnJuego` y esta pantalla no puede reiniciarlo.
         is MarcadorEvento.CambiarDuracion -> {
-            viewModelScope.launch {
-                preferencias.cambiarDuracion(evento.minutos)
-                cargar(partidoId.value)
+            val directo = (carga.value as? Carga.Lista)?.directo
+            if (directo?.instante?.value?.corriendo != true) {
+                viewModelScope.launch {
+                    preferencias.cambiarDuracion(evento.minutos)
+                    cargar(partidoId.value, reutilizar = false)
+                }
             }
             Unit
         }
     }
 
-    // Cargar el partido `id`: para el directo, y pasa por `Cargando`. Ahora el id llega en la
+    // Cargar el partido `id`. Si es el que esta en juego (o el que acaba de terminar), se REUTILIZA
+    // su directo: volver a la pantalla no lo reinicia. Si no, uno nuevo, sin empezar. Ahora el id llega en la
     // NavKey de la pantalla y solo se pide aqui (al crear y al cambiar la duracion): nadie lo cambia
     // desde dentro, asi que el handle y la clave no pueden discrepar.
     // La lectura va al repositorio: es `suspend`, asi que ya puede tardar (con Room).
-    private fun cargar(id: Int) {
-        trabajos.forEach { it.cancel() }
-        trabajos = emptyList()
+    private fun cargar(id: Int, reutilizar: Boolean = true) {
+        val vivo = enJuego.directo(id)
+        if (reutilizar && vivo != null) {
+            estadoGuardado[CLAVE_PARTIDO] = id
+            carga.value = Carga.Lista(vivo)
+            return
+        }
         carga.value = Carga.EnCurso
         viewModelScope.launch {
             val elegido = repositorio.partido(id)
