@@ -1,8 +1,8 @@
 package com.sebastiannarvaez.marcador.di
 
-import com.sebastiannarvaez.marcador.data.red.LigaApi
-import com.sebastiannarvaez.marcador.data.red.crearLigaApi
-import com.sebastiannarvaez.marcador.data.red.crearOkHttp
+import com.sebastiannarvaez.marcador.core.network.LigaApi
+import com.sebastiannarvaez.marcador.core.network.crearLigaApi
+import com.sebastiannarvaez.marcador.core.network.crearOkHttp
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
