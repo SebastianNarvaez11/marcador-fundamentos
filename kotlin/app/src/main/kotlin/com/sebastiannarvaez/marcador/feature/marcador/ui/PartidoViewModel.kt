@@ -1,0 +1,193 @@
+package com.sebastiannarvaez.marcador.feature.marcador.ui
+
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.sebastiannarvaez.marcador.feature.marcador.domain.Directo
+import com.sebastiannarvaez.marcador.feature.marcador.domain.PartidoEnJuego
+import com.sebastiannarvaez.marcador.feature.marcador.domain.PreferenciasRepository
+import com.sebastiannarvaez.marcador.feature.marcador.domain.RegistrarGol
+import com.sebastiannarvaez.marcador.feature.partidos.domain.PartidosRepository
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+// VIEWMODEL
+//
+// Un ViewModel es un objeto que Android guarda EN UN ALMACEN (ViewModelStore) que
+// pertenece a la Activity, no a la composicion. Al rotar, la Activity se destruye y se
+// vuelve a crear, pero ese almacen se conserva: `viewModel()` devuelve la MISMA instancia.
+//
+//   sobrevive a  -> recomposiciones, rotacion, cambios de tema/idioma/tamano de ventana
+//   NO sobrevive -> a que el usuario cierre la pantalla (back, finish()) ni a la MUERTE
+//                   DEL PROCESO (am kill, Android necesita memoria). Eso lo cubre SavedStateHandle.
+//
+// `onCleared()` es el ultimo aviso: el almacen se vacia porque la Activity se va para
+// siempre. Es donde se liberan recursos que NO son corrutinas (un listener, un fichero
+// abierto). Aqui no hay ninguno, asi que no se sobrescribe. NO se escribe en Logcat desde
+// el ViewModel: un `Log.d` en un ViewModel rompe sus tests en la JVM o obliga a
+// parchearlos; lo que necesita verse (que sobrevive a rotar) se ve en pantalla.
+//
+// viewModelScope es un CoroutineScope (SupervisorJob + Dispatchers.Main.immediate) que
+// el propio ViewModel cancela justo antes de onCleared. Es el alcance de las corrutinas con la
+// vida del ViewModel: lo que se lanza aqui sigue vivo al rotar y muere al irse la pantalla.
+// Por eso NO se usa GlobalScope: no lo cancela nadie, y una corrutina que sostiene
+// `this` en un proceso que dura horas es una fuga.
+//
+// SAVEDSTATEHANDLE. El ViewModel sobrevive a rotar pero NO a la muerte del
+// proceso: si Android mata la app en segundo plano para ganar memoria, al volver el
+// ViewModel es nuevo y su estado, cero. Para lo pequeno que DEBE sobrevivir, Android da
+// un `SavedStateHandle`: un mapa clave-valor que se guarda en el mismo Bundle de
+// onSaveInstanceState y que el sistema conserva FUERA del proceso. Se pide como
+// parametro del constructor y la fabrica por defecto de `viewModel()` lo entiende.
+//
+// Regla: en el handle va lo POCO y BARATO que hace falta para reconstruir la pantalla
+// (un identificador), no el objeto entero (un partido entero no cabe en un Bundle).
+// Aqui: el id del partido seleccionado. El minuto, el marcador en vivo y los goles de
+// los botones se pierden con `am kill`, y esta bien: se reconstruye el partido, no el directo.
+//
+// HILT, CON INYECCION ASISTIDA. Hilt sabe dar el repositorio, el caso de uso, las
+// preferencias y el SavedStateHandle, pero NO sabe que partido abrio el usuario: ese numero
+// sale de la PartidoKey de la pantalla. Por eso el constructor es MIXTO:
+//   @AssistedInject  -> constructor con piezas de Hilt y piezas que pone quien lo crea;
+//   @Assisted        -> esta la pone quien lo crea (la pantalla), no Hilt;
+//   @AssistedFactory -> la fabrica: tu declaras la funcion, Hilt escribe el codigo.
+// @HiltViewModel(assistedFactory = ...) une el ViewModel con su fabrica.
+//
+// LA PANTALLA OBSERVA, NO ES LA DUENA. El partido ya no corre en viewModelScope (moriria al
+// cerrar la pantalla): lo empieza `PartidoEnJuego`, en el alcance de la app. Este ViewModel
+// solo lo busca (si ya esta en juego, lo reutiliza), lo traduce a un UiState y le pasa los eventos.
+@HiltViewModel(assistedFactory = PartidoViewModel.Fabrica::class)
+class PartidoViewModel @AssistedInject constructor(
+    private val estadoGuardado: SavedStateHandle,
+    private val repositorio: PartidosRepository,
+    private val registrarGol: RegistrarGol,
+    private val preferencias: PreferenciasRepository,
+    private val enJuego: PartidoEnJuego,
+    @Assisted partidoInicial: Int,
+) : ViewModel() {
+
+    // La pantalla la usa asi: hiltViewModel<PartidoViewModel, PartidoViewModel.Fabrica> { it.crear(id) }
+    @AssistedFactory
+    interface Fabrica {
+        fun crear(partidoInicial: Int): PartidoViewModel
+    }
+
+    // Las dependencias LLEGAN por el constructor (antes salian de un singleton
+    // oculto). Este ViewModel no sabe si el repositorio es de memoria, de Room o de mentira.
+    // Un StateFlow LEIDO DEL HANDLE: cada vez que se escribe `estadoGuardado[CLAVE]`, cambia.
+    val partidoId: StateFlow<Int> = estadoGuardado.getStateFlow(CLAVE_PARTIDO, partidoInicial)
+
+    // Los pasos de la carga. PRIVADO: la pantalla solo ve MarcadorUiState.
+    private sealed interface Carga {
+        data object EnCurso : Carga
+        data class Lista(val directo: Directo) : Carga
+        data class Fallo(val motivo: String) : Carga
+    }
+
+    private val carga = MutableStateFlow<Carga>(Carga.EnCurso)
+
+    // EL ESTADO QUE VE LA PANTALLA, en un solo StateFlow.
+    // Ya no calcula nada: traduce el `Directo` (dominio) a un MarcadorUiState.
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val uiState: StateFlow<MarcadorUiState> = carga.flatMapLatest { paso ->
+        when (paso) {
+            Carga.EnCurso -> flowOf(MarcadorUiState.Cargando)
+            is Carga.Fallo -> flowOf(MarcadorUiState.Error(paso.motivo))
+            // Tres flujos: el marcador y el reloj de ESTE directo, y el partido en juego de la app
+            // (para saber si hay OTRO sin terminar).
+            is Carga.Lista -> combine(paso.directo.marcador, paso.directo.instante, enJuego.actual) { marcador, instante, actual ->
+                MarcadorUiState.Exito(
+                    partidoId = paso.directo.partidoId,
+                    partido = paso.directo.partido,
+                    marcador = marcador,
+                    minuto = instante.minuto,
+                    corriendo = instante.corriendo,
+                    ultimoAviso = instante.ultimoAviso,
+                    duracion = paso.directo.minutosDelPartido,
+                    otroEnJuego = actual?.takeIf { it.partidoId != paso.directo.partidoId && !it.terminado }?.partidoId,
+                )
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MarcadorUiState.Cargando)
+
+    init {
+        cargar(partidoId.value)
+    }
+
+    // UNICA puerta de entrada de los eventos de la pantalla.
+    fun alEvento(evento: MarcadorEvento) = when (evento) {
+        // Lo empieza el partido en juego, no este ViewModel. Si hay otro sin terminar, no hace
+        // nada (la pantalla ni siquiera ensena el boton: ensena el aviso).
+        MarcadorEvento.Empezar -> {
+            (carga.value as? Carga.Lista)?.let { enJuego.empezar(it.directo) }
+            Unit
+        }
+        is MarcadorEvento.Gol -> (carga.value as? Carga.Lista)?.directo?.let { directo ->
+            // Se ve al instante en el directo Y se guarda con el caso de uso (que termina de
+            // guardarlo aunque esta pantalla se cierre: mira RegistrarGol).
+            directo.golAMano(evento.lado)
+            // El `Result` con el fallo (no existe el partido, plantilla vacia) se descarta:
+            // por ahora no hay donde mostrarlo, y el gol ya se ve en el directo.
+            viewModelScope.launch {
+                registrarGol(directo.partidoId, evento.lado, directo.instante.value.minuto)
+            }
+            Unit
+        } ?: Unit
+        // Se guarda en DataStore y se prepara un directo NUEVO con esa duracion. Mientras este
+        // partido se juega, no: la pantalla desactiva los chips y aqui se ignora.
+        is MarcadorEvento.CambiarDuracion -> {
+            val directo = (carga.value as? Carga.Lista)?.directo
+            if (directo?.instante?.value?.corriendo != true) {
+                viewModelScope.launch {
+                    preferencias.cambiarDuracion(evento.minutos)
+                    cargar(partidoId.value, reutilizar = false)
+                }
+            }
+            Unit
+        }
+    }
+
+    // Cargar el partido `id`. Si es el que esta en juego (o el que acaba de terminar), se REUTILIZA
+    // su directo: volver a la pantalla no lo reinicia. Si no, uno nuevo, sin empezar. Ahora el id llega en la
+    // NavKey de la pantalla y solo se pide aqui (al crear y al cambiar la duracion): nadie lo cambia
+    // desde dentro, asi que el handle y la clave no pueden discrepar.
+    // La lectura va al repositorio: es `suspend`, asi que ya puede tardar (con Room).
+    private fun cargar(id: Int, reutilizar: Boolean = true) {
+        val vivo = enJuego.directo(id)
+        if (reutilizar && vivo != null) {
+            estadoGuardado[CLAVE_PARTIDO] = id
+            carga.value = Carga.Lista(vivo)
+            return
+        }
+        carga.value = Carga.EnCurso
+        viewModelScope.launch {
+            val elegido = repositorio.partido(id)
+            if (elegido == null) {
+                carga.value = Carga.Fallo("No existe el partido n.º $id")
+            } else {
+                // Solo se guarda el id si es valido: un id malo en el handle
+                // rompería la app tambien tras un am kill.
+                estadoGuardado[CLAVE_PARTIDO] = id
+                carga.value = Carga.Lista(Directo(id, elegido, MS_POR_MINUTO, preferencias.duracionDelPartido.first()))
+            }
+        }
+    }
+
+    companion object {
+        const val MS_POR_MINUTO = 250L
+        const val CLAVE_PARTIDO = "partidoId"
+    }
+}
