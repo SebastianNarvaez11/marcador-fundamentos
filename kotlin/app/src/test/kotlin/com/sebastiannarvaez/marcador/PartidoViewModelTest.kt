@@ -13,6 +13,7 @@ import com.sebastiannarvaez.marcador.domain.RegistrarGol
 import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Gol
 import com.sebastiannarvaez.marcador.torneo.Marcador
+import com.sebastiannarvaez.marcador.torneo.Partido
 import com.sebastiannarvaez.marcador.ui.MarcadorEvento
 import com.sebastiannarvaez.marcador.ui.MarcadorUiState
 import com.sebastiannarvaez.marcador.ui.PartidoViewModel
@@ -208,7 +209,29 @@ class PartidoViewModelTest {
         }
     }
 
-    // Mientras se juega, la duracion no cambia (el ViewModel lo ignora).
+    // UNO A LA VEZ: la pantalla de otro partido ve el aviso y su «Empezar» no hace nada.
+    @Test
+    fun otroPartidoVeElAvisoYNoEmpieza() = runTest {
+        val repo = FakePartidosRepository(
+            listOf(PartidoDeLista(1, Partido(Ejemplo.rayo, Ejemplo.toros)), PartidoDeLista(2, Partido(Ejemplo.toros, Ejemplo.rayo))),
+        )
+        val enJuego = PartidoEnJuego(backgroundScope)
+        val primero = crear(repo, enJuego = enJuego)
+        runCurrent()
+        primero.alEvento(MarcadorEvento.Empezar)
+        val segundo = crear(repo, partidoInicial = 2, enJuego = enJuego)
+        segundo.uiState.test {
+            skipItems(1)
+            runCurrent()
+            assertEquals(1, (expectMostRecentItem() as MarcadorUiState.Exito).otroEnJuego)
+            segundo.alEvento(MarcadorEvento.Empezar)
+            runCurrent()
+            assertEquals(1, enJuego.actual.value?.partidoId)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    // Mientras se juega, la duracion no cambia (la pantalla desactiva los chips; aqui se ignora).
     @Test
     fun laDuracionNoCambiaMientrasSeJuega() = runTest {
         val preferencias = FakePreferencias()

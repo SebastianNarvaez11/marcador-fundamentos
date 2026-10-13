@@ -130,12 +130,16 @@ fun PanelDelCronometro(
     pausas: Int,
     onEmpezar: () -> Unit,
     duracion: Int = MINUTOS_DEL_PARTIDO,
+    sePuedeEmpezar: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Minuto $minuto'", style = MaterialTheme.typography.headlineMedium)
-        Button(onClick = onEmpezar, enabled = !corriendo && minuto == 0) {
-            Text(if (minuto >= duracion) "Partido terminado" else if (corriendo) "En juego" else "Empezar partido")
+        // Sin el boton si hay otro partido en juego: ahi va el aviso «Ya hay un partido en juego».
+        if (sePuedeEmpezar) {
+            Button(onClick = onEmpezar, enabled = !corriendo && minuto == 0) {
+                Text(if (minuto >= duracion) "Partido terminado" else if (corriendo) "En juego" else "Empezar partido")
+            }
         }
         Text("Último aviso (cada 15'): $ultimoAviso")
         Text("Veces que la pantalla pasó a segundo plano: $pausas")
