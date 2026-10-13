@@ -17,7 +17,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.sebastiannarvaez.marcador.domain.PartidoEnJuego
+import com.sebastiannarvaez.marcador.feature.marcador.domain.PartidoEnJuego
 import com.sebastiannarvaez.marcador.torneo.Marcador
 
 // LA BARRA DEL PARTIDO EN JUEGO: abajo, encima de las pestanas, en todas las pantallas menos
