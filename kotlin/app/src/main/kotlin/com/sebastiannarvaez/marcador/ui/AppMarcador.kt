@@ -14,6 +14,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.sebastiannarvaez.marcador.feature.marcador.ui.PantallaMarcador
+import com.sebastiannarvaez.marcador.feature.partidos.data.DatosDeEjemplo
+import com.sebastiannarvaez.marcador.feature.partidos.ui.PantallaPartidos
+import com.sebastiannarvaez.marcador.feature.partidos.ui.PantallaTablas
+import com.sebastiannarvaez.marcador.feature.partidos.ui.goleadoresConGoles
+import com.sebastiannarvaez.marcador.laboratorio.PantallaRecomposicion
 
 // RAIZ DE LA APP: cuatro pestañas. No es navegacion de verdad (Navigation 3 llega
 // mas adelante): es un `Int` con rememberSaveable y un `when`. Vale para llegar a las listas.

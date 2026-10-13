@@ -1,4 +1,4 @@
-package com.sebastiannarvaez.marcador.ui
+package com.sebastiannarvaez.marcador.laboratorio
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

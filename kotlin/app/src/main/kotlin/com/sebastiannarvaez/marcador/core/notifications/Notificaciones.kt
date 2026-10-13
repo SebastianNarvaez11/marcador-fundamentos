@@ -1,4 +1,4 @@
-package com.sebastiannarvaez.marcador
+package com.sebastiannarvaez.marcador.core.notifications
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -11,6 +11,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import com.sebastiannarvaez.marcador.laboratorio.DetalleActivity
 import com.sebastiannarvaez.marcador.torneo.Gol
 
 const val CANAL_GOLES = "goles"

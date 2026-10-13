@@ -1,4 +1,4 @@
-package com.sebastiannarvaez.marcador
+package com.sebastiannarvaez.marcador.core.notifications
 
 import android.annotation.SuppressLint
 import android.app.NotificationManager

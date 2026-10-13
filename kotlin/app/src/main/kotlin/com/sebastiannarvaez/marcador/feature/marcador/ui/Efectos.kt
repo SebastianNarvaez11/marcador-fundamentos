@@ -1,4 +1,4 @@
-package com.sebastiannarvaez.marcador.ui
+package com.sebastiannarvaez.marcador.feature.marcador.ui
 
 import android.util.Log
 import androidx.activity.compose.LocalActivity

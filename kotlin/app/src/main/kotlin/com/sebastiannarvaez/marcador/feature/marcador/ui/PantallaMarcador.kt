@@ -1,4 +1,4 @@
-package com.sebastiannarvaez.marcador.ui
+package com.sebastiannarvaez.marcador.feature.marcador.ui
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sebastiannarvaez.marcador.laboratorio.ComparacionDeEstado
 import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Marcador
 import com.sebastiannarvaez.marcador.torneo.despuesDe

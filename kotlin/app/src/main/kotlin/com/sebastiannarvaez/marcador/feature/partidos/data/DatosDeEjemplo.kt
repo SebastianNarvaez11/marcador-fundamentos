@@ -1,4 +1,4 @@
-package com.sebastiannarvaez.marcador.ui
+package com.sebastiannarvaez.marcador.feature.partidos.data
 
 import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Equipo

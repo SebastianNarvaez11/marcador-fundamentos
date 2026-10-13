@@ -1,4 +1,4 @@
-package com.sebastiannarvaez.marcador.ui
+package com.sebastiannarvaez.marcador.feature.partidos.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sebastiannarvaez.marcador.feature.partidos.data.DatosDeEjemplo
+import com.sebastiannarvaez.marcador.feature.partidos.data.PartidoDeLista
 import com.sebastiannarvaez.marcador.torneo.FilaDePosicion
 import com.sebastiannarvaez.marcador.torneo.Jugador
 import com.sebastiannarvaez.marcador.torneo.Torneo
