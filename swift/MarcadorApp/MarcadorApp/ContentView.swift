@@ -9,20 +9,23 @@ struct ContentView: View {
             }
             Tab("Marcador", systemImage: "sportscourt") {
                 PantallaMarcador()
+                    .barraDelPartidoEnJuego()
             }
             Tab("Laboratorio", systemImage: "flask") {
                 LaboratorioView()
+                    .barraDelPartidoEnJuego()
             }
         }
     }
 }
 
 #Preview {
-    // La lista y el partido leen el contenedor, el repositorio y el notificador del entorno: aquí se los
-    // da la vista previa, con un contenedor sin almacenes (no toca el disco).
+    // La lista y el partido leen el contenedor, el repositorio, el notificador y el partido en juego del
+    // entorno: aquí se los da la vista previa, con un contenedor sin almacenes (no toca el disco).
     let contenedor = ContenedorDeLaApp(servicio: ServicioJSONPlaceholder(), almacenDelTorneo: nil, almacenDeArbitros: nil)
     ContentView()
         .environment(contenedor)
         .environment(contenedor.partidos)
         .environment(contenedor.notificador)
+        .environment(contenedor.partidoEnJuego)
 }
