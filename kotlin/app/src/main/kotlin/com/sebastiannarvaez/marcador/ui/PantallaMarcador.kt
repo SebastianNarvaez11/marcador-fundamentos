@@ -64,6 +64,7 @@ fun PantallaMarcador(
     onVerGoleadores: () -> Unit,
     onVerCronica: () -> Unit,
     onVolver: () -> Unit,
+    onIrAlPartido: (Int) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PartidoViewModel,
 ) {
@@ -74,7 +75,7 @@ fun PantallaMarcador(
     var pausas by rememberSaveable { mutableIntStateOf(0) }
     ObservadorDelCiclo(alPararse = { pausas++ })
 
-    PantallaMarcadorContenido(estado, pausas, viewModel::alEvento, onVerGoleadores, onVerCronica, onVolver, modifier)
+    PantallaMarcadorContenido(estado, pausas, viewModel::alEvento, onVerGoleadores, onVerCronica, onVolver, onIrAlPartido, modifier)
 }
 
 // SIN ESTADO: recibe el UiState y una lambda de eventos. Se puede previsualizar con
@@ -88,6 +89,7 @@ fun PantallaMarcadorContenido(
     onVerGoleadores: () -> Unit,
     onVerCronica: () -> Unit,
     onVolver: () -> Unit,
+    onIrAlPartido: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -126,10 +128,13 @@ fun PantallaMarcadorContenido(
                             Button(onClick = onVerGoleadores) { Text("Ver goleadores") }
                             Button(onClick = onVerCronica) { Text("Crónica") }
                         }
+                        // UNO A LA VEZ: si hay otro partido en juego, en vez de «Empezar» va el aviso.
+                        estado.otroEnJuego?.let { otro -> AvisoDePartidoEnJuego(onIrAlPartido = { onIrAlPartido(otro) }) }
                         PanelDelCronometro(
                             estado.minuto, estado.corriendo, estado.ultimoAviso, pausas,
                             onEmpezar = { onEvento(MarcadorEvento.Empezar) },
                             duracion = estado.duracion,
+                            sePuedeEmpezar = estado.otroEnJuego == null,
                         )
                         // La preferencia, guardada en DataStore: sobrevive a cerrar la app.
                         Text("Duración del partido (preferencia guardada)")
@@ -139,6 +144,8 @@ fun PantallaMarcadorContenido(
                                     selected = estado.duracion == minutos,
                                     onClick = { onEvento(MarcadorEvento.CambiarDuracion(minutos)) },
                                     label = { Text("$minutos min") },
+                                    // Bloqueada solo mientras ESTE partido se juega.
+                                    enabled = !estado.corriendo,
                                 )
                             }
                         }
@@ -147,6 +154,21 @@ fun PantallaMarcadorContenido(
                     },
                 )
             }
+        }
+    }
+}
+
+// El aviso de «uno a la vez»: una tarjeta con el boton que lleva al partido que se esta jugando.
+@Composable
+fun AvisoDePartidoEnJuego(onIrAlPartido: () -> Unit, modifier: Modifier = Modifier) {
+    Card(modifier.fillMaxWidth()) {
+        Row(
+            Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("Ya hay un partido en juego", style = MaterialTheme.typography.titleSmall)
+            Button(onClick = onIrAlPartido) { Text("Ir al partido") }
         }
     }
 }
@@ -239,7 +261,19 @@ private fun PantallaMarcadorPreview() {
     MaterialTheme {
         PantallaMarcadorContenido(
             MarcadorUiState.Exito(1, Ejemplo.rayoContraToros, Marcador(2, 1), 45, true, "minuto 30 con 1-1"),
-            pausas = 0, onEvento = {}, onVerGoleadores = {}, onVerCronica = {}, onVolver = {},
+            pausas = 0, onEvento = {}, onVerGoleadores = {}, onVerCronica = {}, onVolver = {}, onIrAlPartido = {},
+        )
+    }
+}
+
+// Otro partido en juego: el aviso sustituye al boton «Empezar».
+@Preview(showBackground = true)
+@Composable
+private fun PantallaMarcadorConOtroEnJuegoPreview() {
+    MaterialTheme {
+        PantallaMarcadorContenido(
+            MarcadorUiState.Exito(2, Ejemplo.lobosContraAguilas, Marcador(0, 0), 0, false, "ninguno", otroEnJuego = 1),
+            pausas = 0, onEvento = {}, onVerGoleadores = {}, onVerCronica = {}, onVolver = {}, onIrAlPartido = {},
         )
     }
 }
