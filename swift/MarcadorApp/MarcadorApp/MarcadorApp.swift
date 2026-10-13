@@ -39,6 +39,8 @@ struct MarcadorApp: App {
                 // encontrando en el entorno: son las mismas piezas, sacadas del contenedor.
                 .environment(contenedor.partidos)
                 .environment(contenedor.notificador)
+                // Estado de toda la app: cualquier vista lo lee con `@Environment(PartidoEnJuego.self)`.
+                .environment(contenedor.partidoEnJuego)
         }
         // `onChange(of:)` con dos parámetros (antiguo, nuevo) es la forma de iOS 17+.
         .onChange(of: fase) { antigua, nueva in
