@@ -31,6 +31,11 @@ final class ContenedorDeLaApp {
     // ---- dominio ----
     let publicarCronica: PublicarCronica
 
+    // ---- estado de toda la app ----
+    // El partido en juego: UNO para toda la app (si cada pantalla tuviera el suyo, la barra y el partido
+    // verían cosas distintas). Vive lo que el contenedor, es decir, lo que la app.
+    let partidoEnJuego = PartidoEnJuego()
+
     // ---- sistema ----
     let notificador: NotificadorDeSistema
 
