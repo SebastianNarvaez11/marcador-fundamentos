@@ -18,6 +18,7 @@ import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Gol
 import com.sebastiannarvaez.marcador.torneo.Jugador
 import com.sebastiannarvaez.marcador.torneo.Partido
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -35,6 +36,8 @@ import kotlinx.coroutines.flow.map
 // la interfaz del repositorio y la inyeccion son lo que hace esto posible.
 class FakePartidosRepository(
     partidos: List<PartidoDeLista> = listOf(PartidoDeLista(1, Partido(Ejemplo.rayo, Ejemplo.toros))),
+    // Lo que tarda en guardar un gol (Room tambien tarda): para probar que no se pierde a medias.
+    private val retrasoAlGuardar: Long = 0,
 ) : PartidosRepository {
     private val lista = MutableStateFlow(partidos)
 
@@ -46,6 +49,7 @@ class FakePartidosRepository(
     override suspend fun partido(id: Int): Partido? = lista.value.firstOrNull { it.id == id }?.partido
 
     override suspend fun registrarGol(partidoId: Int, gol: Gol) {
+        delay(retrasoAlGuardar)
         lista.value = lista.value.map { if (it.id == partidoId) it.copy(partido = it.partido.registrar(gol)) else it }
     }
 
