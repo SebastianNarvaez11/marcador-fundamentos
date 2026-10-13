@@ -68,6 +68,9 @@ struct ListaDePartidosView: View {
                 }
             }
         }
+        // La barra del partido en juego, debajo de toda la pila. Con la pantalla de arriba (`ruta.last`)
+        // sabe si se está viendo el propio partido, y entonces no sale.
+        .barraDelPartidoEnJuego(pantallaActual: ruta.last)
     }
 }
 
@@ -95,4 +98,5 @@ struct FilaDePartido: View {
         .environment(contenedor)
         .environment(contenedor.partidos)
         .environment(contenedor.notificador)   // lo lee el partido al navegar
+        .environment(contenedor.partidoEnJuego) // lo lee la barra del partido en juego
 }
