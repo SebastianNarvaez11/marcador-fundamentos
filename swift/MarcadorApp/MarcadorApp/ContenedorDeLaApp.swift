@@ -51,8 +51,9 @@ final class ContenedorDeLaApp {
     }
 
     // ---- interfaz: un ViewModel por pantalla ----
-    func partidoViewModel(id: Int) -> PartidoViewModel {
-        PartidoViewModel(partidoId: id, repositorio: partidos, notificador: notificador)
+    // La duración llega de la vista (`@AppStorage`); el partido en juego, del propio contenedor.
+    func partidoViewModel(id: Int, duracion: Int) -> PartidoViewModel {
+        PartidoViewModel(partidoId: id, repositorio: partidos, partidoEnJuego: partidoEnJuego, duracion: duracion, notificador: notificador)
     }
 
     func arbitrosViewModel() -> ArbitrosViewModel {

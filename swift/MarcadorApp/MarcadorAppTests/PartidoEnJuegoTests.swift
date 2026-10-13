@@ -59,4 +59,19 @@ struct PartidoEnJuegoTests {
         enJuego.cerrar()
         #expect(referencia == nil)
     }
+
+    // EL PARTIDO SIGUE CON EL VIEWMODEL LIBERADO (salir de la pantalla ya no lo para).
+    @Test func elPartidoSigueConElViewModelLiberado() async {
+        let enJuego = PartidoEnJuego()
+        weak var referencia: PartidoViewModel?
+        do {
+            let viewModel = PartidoViewModel(partidoId: 1, repositorio: RepositorioFalso(), partidoEnJuego: enJuego, msPorMinuto: 0)
+            referencia = viewModel
+            viewModel.empezar()
+        }
+        #expect(referencia == nil)
+        await enJuego.tarea?.value
+        #expect(enJuego.directo?.minuto == 90)
+        #expect(enJuego.directo?.marcador == Marcador(local: 2, visitante: 1))
+    }
 }

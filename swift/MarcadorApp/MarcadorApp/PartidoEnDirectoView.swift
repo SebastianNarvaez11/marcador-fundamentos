@@ -3,7 +3,8 @@ import Torneo
 
 // @StateObject FRENTE A @ObservedObject FRENTE A @EnvironmentObject (el bug de `@ObservedObject`)
 // @State, @Bindable Y @Environment (con `@Observable`)
-// `.task`: el partido arranca solo y se cancela al salir
+// El partido ya no arranca solo con `.task`: arranca con «Empezar partido» y lo juega `PartidoEnJuego`
+// (estado de toda la app), así que sigue aunque salgas de esta pantalla
 // La duración vive en `@AppStorage`
 // MVVM: la vista solo PINTA el `uiState` del ViewModel y le pasa los toques
 //
@@ -20,7 +21,8 @@ struct PartidoEnDirectoView: View {
     // guardado en `Library/Preferences/<bundle id>.plist` dentro del sandbox). Funciona como un `@State`
     // (cambiar el valor redibuja la vista) y además sobrevive a cerrar la app: es el DataStore de
     // Android en una línea. Solo vale para cosas pequeñas y simples (Bool, Int, String, Double, URL).
-    // Sustituye al `AjustesModelo` de antes.
+    // Sustituye al `AjustesModelo` de antes. También es ESTADO DE TODA LA APP: todas las vistas que usan
+    // la misma clave leen el mismo valor y se redibujan juntas. Aquí es la duración del PRÓXIMO partido.
     @AppStorage(Ajustes.claveDuracion) private var duracion = Ajustes.duracionPorDefecto
     @Environment(\.dismiss) private var cerrar
 
@@ -52,10 +54,6 @@ struct PartidoEnDirectoView: View {
                 contenido(datos)
             }
         }
-        // `.task(id:)`: arranca al aparecer, se CANCELA al irse la vista y se relanza si cambia la duración.
-        .task(id: duracion) {
-            await viewModel.jugar(duracion: duracion)
-        }
         .task { await notificador.actualizarPermiso() }
         .onChange(of: fase) { _, nueva in
             if nueva == .background { pausas += 1 }
@@ -78,6 +76,11 @@ struct PartidoEnDirectoView: View {
                     Text(estado(datos))
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("estado")
+                    // Solo antes de empezar: luego lo juega `PartidoEnJuego`.
+                    if datos.minuto == 0 && !datos.corriendo {
+                        Button("Empezar partido") { viewModel.empezar() }
+                            .buttonStyle(.borderedProminent)
+                    }
                     Text("Último aviso (cada 15'): \(datos.ultimoAviso)")
                     Text("Veces que la pantalla pasó a segundo plano: \(pausas)")
                     // Empuja OTRO valor en la pila (gemelo del botón que empuja `Goleadores` en Kotlin).
@@ -95,12 +98,18 @@ struct PartidoEnDirectoView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Duración del partido")
+                    // El selector guarda la preferencia (`duracion`); al cambiarla, el ViewModel prepara el
+                    // partido con ella. Bloqueado mientras se juega: ese partido ya no se puede reiniciar.
                     Picker("Duración", selection: $duracion) {
                         ForEach(Ajustes.duraciones, id: \.self) { minutos in
                             Text("\(minutos) min").tag(minutos)
                         }
                     }
                     .pickerStyle(.segmented)
+                    .disabled(datos.corriendo)
+                    .onChange(of: duracion) { _, nueva in
+                        viewModel.cambiarDuracion(nueva)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -136,6 +145,8 @@ struct PartidoContenedor: View {
     let id: Int
     @Environment(ContenedorDeLaApp.self) private var contenedor
     @State private var redibujados = 0
+    // La duración guardada: con ella se prepara el partido si aún no está en juego.
+    @AppStorage(Ajustes.claveDuracion) private var duracion = Ajustes.duracionPorDefecto
 
     var body: some View {
         VStack(spacing: 0) {
@@ -146,7 +157,7 @@ struct PartidoContenedor: View {
             }
             .padding([.horizontal, .top], 16)
 
-            PartidoEnDirectoView(viewModel: contenedor.partidoViewModel(id: id))
+            PartidoEnDirectoView(viewModel: contenedor.partidoViewModel(id: id, duracion: duracion))
         }
         .navigationTitle("Partido n.º \(id)")
         .navigationBarTitleDisplayMode(.inline)
