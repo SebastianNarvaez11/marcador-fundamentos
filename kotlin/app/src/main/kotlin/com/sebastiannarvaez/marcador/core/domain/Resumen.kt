@@ -1,4 +1,4 @@
-package com.sebastiannarvaez.marcador
+package com.sebastiannarvaez.marcador.core.domain
 
 import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Partido

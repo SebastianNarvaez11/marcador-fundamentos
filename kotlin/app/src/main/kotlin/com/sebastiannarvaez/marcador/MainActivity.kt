@@ -26,6 +26,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.sebastiannarvaez.marcador.core.domain.resumen
+import com.sebastiannarvaez.marcador.core.notifications.RecordatorioWorker
+import com.sebastiannarvaez.marcador.core.notifications.notificarGol
+import com.sebastiannarvaez.marcador.core.notifications.puedeNotificar
+import com.sebastiannarvaez.marcador.core.ui.abrirEnlace
+import com.sebastiannarvaez.marcador.core.ui.compartir
+import com.sebastiannarvaez.marcador.laboratorio.DetalleActivity
+import com.sebastiannarvaez.marcador.laboratorio.RegistroDeContexto
 import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.PartidoEnVivo
 import com.sebastiannarvaez.marcador.torneo.probabilidadDeVictoria

@@ -1,4 +1,4 @@
-package com.sebastiannarvaez.marcador
+package com.sebastiannarvaez.marcador.laboratorio
 
 import android.content.Context
 

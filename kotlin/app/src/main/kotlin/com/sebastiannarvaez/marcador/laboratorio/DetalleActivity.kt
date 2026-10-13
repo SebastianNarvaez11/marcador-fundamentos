@@ -1,4 +1,4 @@
-package com.sebastiannarvaez.marcador
+package com.sebastiannarvaez.marcador.laboratorio
 
 import android.content.Intent
 import android.os.Bundle
@@ -12,6 +12,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.sebastiannarvaez.marcador.core.domain.partidosDeEjemplo
+import com.sebastiannarvaez.marcador.core.domain.resumen
+import com.sebastiannarvaez.marcador.core.ui.compartir
 
 // Segunda pantalla. Se puede abrir de DOS formas:
 //  1. Con un intent EXPLICITO desde MainActivity (`EXTRA_RESUMEN` en el Intent).

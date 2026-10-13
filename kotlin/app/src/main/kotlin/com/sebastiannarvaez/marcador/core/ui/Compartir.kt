@@ -1,4 +1,4 @@
-package com.sebastiannarvaez.marcador
+package com.sebastiannarvaez.marcador.core.ui
 
 import android.content.ActivityNotFoundException
 import android.content.Context

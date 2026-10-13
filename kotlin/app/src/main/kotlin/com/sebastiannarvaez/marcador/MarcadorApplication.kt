@@ -2,6 +2,7 @@ package com.sebastiannarvaez.marcador
 
 import android.app.Application
 import android.util.Log
+import com.sebastiannarvaez.marcador.core.notifications.crearCanalDeGoles
 
 // La clase Application: la crea Android UNA vez, antes que cualquier Activity, y
 // vive tanto como el proceso. Se registra en el Manifest con android:name.

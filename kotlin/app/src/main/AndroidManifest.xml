@@ -28,7 +28,7 @@
              VIEW = «ver esto»; DEFAULT = imprescindible para los intents implicitos
              de startActivity; BROWSABLE = permite abrirla desde un enlace del navegador. -->
         <activity
-            android:name=".DetalleActivity"
+            android:name=".laboratorio.DetalleActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
