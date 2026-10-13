@@ -171,6 +171,7 @@ fun AppMarcador(onVerDemos: () -> Unit, modifier: Modifier = Modifier) {
                         onVerGoleadores = { pila.add(GoleadoresKey) },
                         onVerCronica = { pila.add(CronicaKey(clave.partidoId)) },
                         onVolver = { pila.removeAt(pila.lastIndex) },
+                        onIrAlPartido = { id -> irAlPartido(pila, id) },
                         viewModel = vm,
                     )
                 }
@@ -230,4 +231,15 @@ private fun irAPestana(pila: MutableList<NavKey>, destino: NavKey) {
     pila.clear()
     if (destino != ListaKey) pila.add(ListaKey)
     pila.add(destino)
+}
+
+// Ir a un partido: si ya esta en la pila, se vuelve hasta el (quitando lo de encima); si no, se abre.
+internal fun irAlPartido(pila: MutableList<NavKey>, partidoId: Int) {
+    val clave = PartidoKey(partidoId)
+    val donde = pila.lastIndexOf(clave)
+    if (donde == -1) {
+        pila.add(clave)
+    } else {
+        while (pila.lastIndex > donde) pila.removeAt(pila.lastIndex)
+    }
 }
