@@ -106,7 +106,9 @@ class PartidoViewModel @AssistedInject constructor(
         when (paso) {
             Carga.EnCurso -> flowOf(MarcadorUiState.Cargando)
             is Carga.Fallo -> flowOf(MarcadorUiState.Error(paso.motivo))
-            is Carga.Lista -> combine(paso.directo.marcador, paso.directo.instante) { marcador, instante ->
+            // Tres flujos: el marcador y el reloj de ESTE directo, y el partido en juego de la app
+            // (para saber si hay OTRO sin terminar).
+            is Carga.Lista -> combine(paso.directo.marcador, paso.directo.instante, enJuego.actual) { marcador, instante, actual ->
                 MarcadorUiState.Exito(
                     partidoId = paso.directo.partidoId,
                     partido = paso.directo.partido,
@@ -115,6 +117,7 @@ class PartidoViewModel @AssistedInject constructor(
                     corriendo = instante.corriendo,
                     ultimoAviso = instante.ultimoAviso,
                     duracion = paso.directo.minutosDelPartido,
+                    otroEnJuego = actual?.takeIf { it.partidoId != paso.directo.partidoId && !it.terminado }?.partidoId,
                 )
             }
         }
@@ -127,7 +130,7 @@ class PartidoViewModel @AssistedInject constructor(
     // UNICA puerta de entrada de los eventos de la pantalla.
     fun alEvento(evento: MarcadorEvento) = when (evento) {
         // Lo empieza el partido en juego, no este ViewModel. Si hay otro sin terminar, no hace
-        // nada.
+        // nada (la pantalla ni siquiera ensena el boton: ensena el aviso).
         MarcadorEvento.Empezar -> {
             (carga.value as? Carga.Lista)?.let { enJuego.empezar(it.directo) }
             Unit
@@ -144,7 +147,7 @@ class PartidoViewModel @AssistedInject constructor(
             Unit
         } ?: Unit
         // Se guarda en DataStore y se prepara un directo NUEVO con esa duracion. Mientras este
-        // partido se juega, se ignora: lo juega `PartidoEnJuego` y esta pantalla no puede reiniciarlo.
+        // partido se juega, no: la pantalla desactiva los chips y aqui se ignora.
         is MarcadorEvento.CambiarDuracion -> {
             val directo = (carga.value as? Carga.Lista)?.directo
             if (directo?.instante?.value?.corriendo != true) {
