@@ -1,9 +1,14 @@
 package com.sebastiannarvaez.marcador
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import app.cash.turbine.test
 import com.sebastiannarvaez.marcador.domain.Lado
 import com.sebastiannarvaez.marcador.domain.PartidoDeLista
+import com.sebastiannarvaez.marcador.domain.PartidoEnJuego
 import com.sebastiannarvaez.marcador.domain.RegistrarGol
 import com.sebastiannarvaez.marcador.torneo.Ejemplo
 import com.sebastiannarvaez.marcador.torneo.Gol
@@ -52,7 +57,14 @@ class PartidoViewModelTest {
         repo: FakePartidosRepository = FakePartidosRepository(),
         preferencias: FakePreferencias = FakePreferencias(),
         partidoInicial: Int = 1,
-    ) = PartidoViewModel(SavedStateHandle(), repo, RegistrarGol(repo), preferencias, partidoInicial)
+        // `backgroundScope` hace de alcance de la app: el partido en juego vive ahi, no en el ViewModel.
+        enJuego: PartidoEnJuego = PartidoEnJuego(backgroundScope),
+    ) = PartidoViewModel(SavedStateHandle(), repo, RegistrarGol(repo, backgroundScope), preferencias, enJuego, partidoInicial)
+
+    // Crea el ViewModel DENTRO de un almacen, como hace Android: `almacen.clear()` es cerrar la
+    // pantalla (llama a onCleared y cancela viewModelScope).
+    private fun TestScope.crearEn(almacen: ViewModelStore, crearlo: TestScope.() -> PartidoViewModel) =
+        ViewModelProvider.create(almacen, viewModelFactory { initializer { crearlo() } })[PartidoViewModel::class]
 
     @Test
     fun pasaDeCargandoAExito() = runTest {
@@ -151,12 +163,60 @@ class PartidoViewModelTest {
     @Test
     fun elGolDelCasoDeUsoLoMarcaElJugadorPorTurno() = runTest {
         val repo = FakePartidosRepository()
-        val registrar = RegistrarGol(repo)
+        val registrar = RegistrarGol(repo, backgroundScope)
         val primero = registrar(1, Lado.LOCAL, 10).getOrThrow()
         val segundo = registrar(1, Lado.LOCAL, 20).getOrThrow()
         assertEquals(Ejemplo.rayo.plantilla[0], primero.jugador)
         assertEquals(Ejemplo.rayo.plantilla[1 % Ejemplo.rayo.plantilla.size], segundo.jugador)
         assertIs<Result<*>>(registrar(99, Lado.LOCAL, 1))
         assertEquals(true, registrar(99, Lado.LOCAL, 1).isFailure)
+    }
+
+    // Cerrar la pantalla justo despues de un gol no lo pierde, aunque guardar tarde (como Room).
+    @Test
+    fun unGolSeGuardaAunqueSeCierreLaPantalla() = runTest {
+        val repo = FakePartidosRepository(retrasoAlGuardar = 100)
+        val almacen = ViewModelStore()
+        val viewModel = crearEn(almacen) { crear(repo) }
+        runCurrent()
+        viewModel.alEvento(MarcadorEvento.Gol(Lado.LOCAL))
+        runCurrent()          // el guardado empieza...
+        almacen.clear()       // ...y la pantalla se cierra antes de que termine
+        advanceTimeBy(1_000)  // (advanceUntilIdle no espera a lo que corre en backgroundScope)
+        runCurrent()
+        assertEquals(1, repo.partido(1)!!.eventos.filterIsInstance<Gol>().size)
+    }
+
+    // EL PARTIDO SIGUE AUNQUE SE CIERRE SU PANTALLA, y al volver se ve por donde va.
+    @Test
+    fun elPartidoSigueAunqueSeCierreLaPantalla() = runTest {
+        val enJuego = PartidoEnJuego(backgroundScope)
+        val almacen = ViewModelStore()
+        val viewModel = crearEn(almacen) { crear(enJuego = enJuego) }
+        runCurrent()
+        viewModel.alEvento(MarcadorEvento.Empezar)
+        advanceTimeBy(10 * PartidoViewModel.MS_POR_MINUTO + 1)
+        almacen.clear()
+        advanceTimeBy(20 * PartidoViewModel.MS_POR_MINUTO)
+        runCurrent()
+        assertEquals(30, enJuego.actual.value?.minuto)
+        // Otra pantalla del MISMO partido reutiliza el directo: no empieza de cero.
+        crear(enJuego = enJuego).uiState.test {
+            skipItems(1) // Cargando, el valor inicial de stateIn
+            assertEquals(30, (awaitItem() as MarcadorUiState.Exito).minuto)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    // Mientras se juega, la duracion no cambia (el ViewModel lo ignora).
+    @Test
+    fun laDuracionNoCambiaMientrasSeJuega() = runTest {
+        val preferencias = FakePreferencias()
+        val viewModel = crear(preferencias = preferencias)
+        runCurrent()
+        viewModel.alEvento(MarcadorEvento.Empezar)
+        viewModel.alEvento(MarcadorEvento.CambiarDuracion(60))
+        runCurrent()
+        assertEquals(90, preferencias.duracion.value)
     }
 }
