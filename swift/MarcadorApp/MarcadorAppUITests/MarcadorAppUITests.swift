@@ -318,4 +318,30 @@ final class MarcadorAppUITests: XCTestCase {
         inicio.press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)))
         XCTAssertTrue(app.buttons["Ciclo de vida (UIKit)"].waitForExistence(timeout: 5))
     }
+
+    // LA BARRA DEL PARTIDO EN JUEGO: sale en otra pestaña, lleva al partido, y al final se cierra con la X.
+    @MainActor
+    func testLaBarraLlevaAlPartidoYSeCierraAlFinal() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-msPorMinuto", "60"] + sinAvisos
+        app.launch()
+        app.buttons["partido-1"].tap()
+        app.buttons["Empezar partido"].tap()
+        let barra = app.buttons["barraDelPartido"]
+        XCTAssertFalse(barra.exists, "La barra no debe salir en el propio partido")
+        app.tabBars.buttons["Laboratorio"].tap()
+        XCTAssertTrue(barra.waitForExistence(timeout: 5))
+        capturar(app, "barra-en-juego")
+        barra.tap()
+        XCTAssertTrue(app.navigationBars["Partido n.º 1"].waitForExistence(timeout: 5))
+        XCTAssertFalse(barra.exists)
+        app.navigationBars.buttons.firstMatch.tap()   // «atrás»: ahora sale en la lista
+        XCTAssertTrue(barra.waitForExistence(timeout: 5))
+        let cerrar = app.buttons["Cerrar"]
+        XCTAssertTrue(cerrar.waitForExistence(timeout: 15), "Al terminar debería salir la X")
+        XCTAssertTrue(barra.label.hasPrefix("Final · "), barra.label)
+        capturar(app, "barra-final")
+        cerrar.tap()
+        XCTAssertFalse(barra.waitForExistence(timeout: 2))
+    }
 }
