@@ -133,13 +133,14 @@ struct PartidoEnDirectoView: View {
 // El aviso de «uno a la vez»: lleva al partido que se está jugando.
 struct AvisoDePartidoEnJuego: View {
     let otro: Int
+    @Environment(\.abrirPartido) private var abrirPartido
 
     var body: some View {
         HStack {
             Text("Ya hay un partido en juego")
                 .font(.subheadline.weight(.semibold))
             Spacer()
-            NavigationLink("Ir al partido", value: Destino.partido(otro))
+            Button("Ir al partido") { abrirPartido(otro) }
                 .buttonStyle(.borderedProminent)
         }
         .padding(12)

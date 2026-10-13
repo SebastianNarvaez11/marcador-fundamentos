@@ -26,8 +26,9 @@ struct ListaDePartidosView: View {
     // El contenedor fabrica los ViewModels de las pantallas que se apilan.
     @Environment(ContenedorDeLaApp.self) private var contenedor
 
-    // La pila entera es un array de destinos, en un `@State`: se puede inspeccionar y manipular.
-    @State private var ruta: [Destino] = []
+    // La pila entera es un array de destinos: se puede inspeccionar y manipular. Es de la raíz
+    // (`ContentView`), que la necesita para la barra del partido en juego: aquí llega con `@Binding`.
+    @Binding var ruta: [Destino]
 
     var body: some View {
         NavigationStack(path: $ruta) {
@@ -68,9 +69,6 @@ struct ListaDePartidosView: View {
                 }
             }
         }
-        // La barra del partido en juego, debajo de toda la pila. Con la pantalla de arriba (`ruta.last`)
-        // sabe si se está viendo el propio partido, y entonces no sale.
-        .barraDelPartidoEnJuego(pantallaActual: ruta.last)
     }
 }
 
@@ -92,11 +90,13 @@ struct FilaDePartido: View {
 }
 
 #Preview {
+    // La pila, como `@State` de la vista previa (`@Previewable`): así se puede navegar en ella.
+    @Previewable @State var ruta: [Destino] = []
     // Un contenedor sin almacenes: la vista previa no lee ni escribe en el disco.
     let contenedor = ContenedorDeLaApp(servicio: ServicioJSONPlaceholder(), almacenDelTorneo: nil, almacenDeArbitros: nil)
-    ListaDePartidosView()
+    ListaDePartidosView(ruta: $ruta)
         .environment(contenedor)
         .environment(contenedor.partidos)
         .environment(contenedor.notificador)   // lo lee el partido al navegar
-        .environment(contenedor.partidoEnJuego) // lo lee la barra del partido en juego
+        .environment(contenedor.partidoEnJuego)
 }
