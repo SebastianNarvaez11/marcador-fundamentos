@@ -7,6 +7,7 @@ import com.sebastiannarvaez.marcador.data.room.MarcadorDatabase
 import com.sebastiannarvaez.marcador.data.room.PartidoDao
 import com.sebastiannarvaez.marcador.data.room.PartidosRepositoryRoom
 import com.sebastiannarvaez.marcador.data.room.crearBaseDeDatos
+import com.sebastiannarvaez.marcador.domain.PartidoEnJuego
 import com.sebastiannarvaez.marcador.domain.PartidosRepository
 import com.sebastiannarvaez.marcador.domain.PreferenciasRepository
 import dagger.Module
@@ -68,4 +69,12 @@ object DatosModule {
     @Singleton
     fun partidos(dao: PartidoDao, @AlcanceDeApp alcance: CoroutineScope): PartidosRepository =
         PartidosRepositoryRoom(dao, alcance)
+
+    // EL PARTIDO EN JUEGO: estado de toda la app. @Singleton, porque lo comparten la pantalla
+    // del partido, la de otro partido y la barra de abajo: con dos instancias, cada una veria
+    // un partido distinto. Recibe el alcance de la app, asi que el partido sigue aunque se
+    // cierre su pantalla. La misma pauta que el repositorio de partidos.
+    @Provides
+    @Singleton
+    fun partidoEnJuego(@AlcanceDeApp alcance: CoroutineScope): PartidoEnJuego = PartidoEnJuego(alcance)
 }
