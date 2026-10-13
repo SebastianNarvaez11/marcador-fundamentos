@@ -5,7 +5,7 @@ import Torneo
 // LAS MISMAS PRUEBAS, EN XCTEST (el marco anterior a Swift Testing, de 2014).
 //
 // Es lo que vas a encontrar en casi todo el código que ya existe, y sigue siendo OBLIGATORIO para
-// las pruebas de UI y de rendimiento. Diferencias con Swift Testing (`PartidoViewModelTests`):
+// las pruebas de UI y de rendimiento. Diferencias con Swift Testing (`PartidoViewModelTests` y `DirectoTests`):
 //
 //   Swift Testing                     XCTest
 //   struct + @Test                    clase que hereda de XCTestCase; el método debe EMPEZAR por `test`
@@ -25,11 +25,11 @@ final class PartidoViewModelXCTests: XCTestCase {
     }
 
     func testJugarAplicaLosGolesDelGuion() async {
-        let viewModel = PartidoViewModel(partidoId: 1, repositorio: repositorio, msPorMinuto: 0)
-        await viewModel.jugar(duracion: 90)
-        XCTAssertEqual(viewModel.marcador, Marcador(local: 2, visitante: 1))
-        XCTAssertEqual(viewModel.minuto, 90)
-        XCTAssertFalse(viewModel.corriendo)
+        let directo = Directo(partidoId: 1, partido: Ejemplo.rayoContraToros, duracion: 90, msPorMinuto: 0)
+        await directo.jugar()
+        XCTAssertEqual(directo.marcador, Marcador(local: 2, visitante: 1))
+        XCTAssertEqual(directo.minuto, 90)
+        XCTAssertFalse(directo.corriendo)
     }
 
     func testUnPartidoQueNoExisteDaUnEstadoDeError() {
@@ -40,9 +40,8 @@ final class PartidoViewModelXCTests: XCTestCase {
     func testElViewModelSeLiberaAlSoltarlo() async {
         weak var referencia: PartidoViewModel?
         do {
-            let viewModel = PartidoViewModel(partidoId: 1, repositorio: repositorio, msPorMinuto: 0, reintroducirElCiclo: false)
+            let viewModel = PartidoViewModel(partidoId: 1, repositorio: repositorio, msPorMinuto: 0)
             referencia = viewModel
-            await viewModel.jugar(duracion: 3)
         }
         XCTAssertNil(referencia)
     }
@@ -51,10 +50,10 @@ final class PartidoViewModelXCTests: XCTestCase {
     // varias veces y compara con una línea base. Aquí, jugar 90 minutos sin esperas.
     func testRendimientoDeJugarUnPartidoEntero() {
         measure {
-            let viewModel = PartidoViewModel(partidoId: 1, repositorio: repositorio, msPorMinuto: 0)
+            let directo = Directo(partidoId: 1, partido: Ejemplo.rayoContraToros, duracion: 90, msPorMinuto: 0)
             let terminado = expectation(description: "el partido termina")
             Task { @MainActor in
-                await viewModel.jugar(duracion: 90)
+                await directo.jugar()
                 terminado.fulfill()
             }
             wait(for: [terminado], timeout: 10)
